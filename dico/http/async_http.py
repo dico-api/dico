@@ -9,11 +9,16 @@ from ..base.http import HTTPRequestBase
 class AsyncHTTPRequest(HTTPRequestBase):
     BASE_URL = "https://discord.com/api/v8"
 
-    def __init__(self, token: str, loop: asyncio.AbstractEventLoop = None, session: aiohttp.ClientSession = None):
+    def __init__(self,
+                 token: str,
+                 loop: asyncio.AbstractEventLoop = None,
+                 session: aiohttp.ClientSession = None,
+                 default_retry: int = 3):
         self.token = token.lstrip("Bot ")
         self.logger = logging.getLogger("dico.http")
         self.loop = loop or asyncio.get_event_loop()
         self.session = session or aiohttp.ClientSession(loop=self.loop)
+        self.default_retry = default_retry
         self._close_on_del = False
         if not session:
             self._close_on_del = True
@@ -29,9 +34,10 @@ class AsyncHTTPRequest(HTTPRequestBase):
             await self.session.close()
             self._closed = True
 
-    async def request(self, route: str, meth: str, body: dict = None, *, retry: int = 3, **kwargs) -> dict:
+    async def request(self, route: str, meth: str, body: dict = None, *, retry: int = None, **kwargs) -> dict:
         code = 429  # Empty code in case of rate limit fail.
         resp = {}   # Empty resp in case of rate limit fail.
+        retry = (retry if retry > 0 else 1) if retry is not None else self.default_retry
         for x in range(retry):
             code, resp = await self._request(route, meth, body, **kwargs)
             if code == 200:

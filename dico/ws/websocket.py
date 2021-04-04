@@ -5,9 +5,10 @@ from ..model import gateway
 class WebSocketClient:
     BASE_URL = ""
 
-    def __init__(self, http):
+    def __init__(self, http, cache):
         self.ws = None
         self.http = http
+        self.cache = cache
         self.logger = logging.getLogger("dico.ws")
 
     async def connect(self):
