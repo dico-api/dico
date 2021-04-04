@@ -18,7 +18,7 @@ class ClientCacheContainer(CacheContainerBase):
         self.__cache_dict[obj_type].add(snowflake_id, obj, expire_at)
 
 
-class CacheStroage:
+class CacheStorage:
     def __init__(self):
         pass
 
