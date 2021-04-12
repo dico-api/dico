@@ -9,7 +9,7 @@ class ClientCacheContainer(CacheContainerBase):
     def get(self, snowflake_id: int, safe=True):
         pass
 
-    def add(self, snowflake_id: int, obj_type, obj, expire_at=None):
+    def add(self, snowflake_id: int, obj_type: str, obj, expire_at=None):
         if not expire_at:
             expire_at = self.default_expiration_time
 
