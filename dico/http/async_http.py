@@ -44,7 +44,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 return resp
             elif code == 429:
                 wait_sec = resp["retry_after"]
-                self.logger.warning(f"Rate limited, waiting for {wait_sec} second{'s' if wait_sec ==1 else ''}...")
+                self.logger.warning(f"Rate limited, waiting for {wait_sec} second{'s' if wait_sec == 1 else ''}...")
                 await asyncio.sleep(wait_sec)
                 continue
             elif 500 <= code < 600:
@@ -57,6 +57,31 @@ class AsyncHTTPRequest(HTTPRequestBase):
         headers = {"Authorization": f"Bot {self.token}"}
         kw = {}
         if meth not in ["GET"]:
-            kw["body"] = body
+            kw["json"] = body
         async with self.session.request(meth, self.BASE_URL+route, headers=headers, **kw) as resp:
             return resp.status, await resp.json()  # if resp.headers.get("Content-Type") == "applications/json" else {"text": await resp.text()}
+
+    def create_message(self,
+                       channel_id,
+                       content: str,
+                       nonce: typing.Union[int, str],
+                       tts: bool,
+                       embed: dict,
+                       allowed_mentions: dict,
+                       message_reference: dict):
+        if not content or embed:
+            raise
+        body = {}
+        if content:
+            body["content"] = content
+        if embed:
+            body["embed"] = embed
+        if nonce:
+            body["nonce"] = nonce
+        if tts:
+            body["tts"] = tts
+        if allowed_mentions:
+            body["allowed_mentions"] = allowed_mentions
+        if message_reference:
+            body["message_reference"] = message_reference
+        return self.request(f"/channels/{channel_id}/messages", "POST", body)
