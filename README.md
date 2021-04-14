@@ -2,8 +2,7 @@
 Yet another Discord API wrapper for Python.
 
 ## Features
-- Supports both async/request, to support both standalone and backend.
-- Cache with expiration time.
+soon™
 
 ## Quick Example
 ```py
