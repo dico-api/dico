@@ -20,18 +20,21 @@ class Client:
         self.ws: typing.Union[None, WebSocketClient] = None
         self.events = EventHandler(self.dispatch)
 
+        # Custom events dispatch
+        # self.events.add("MESSAGE_CREATE", lambda x: self.events.dispatch("MESSAGE", x.message))
+
     def on_(self, name: str = None):
         """
         Adds new event listener.
-        :param name: Name of the event. Case-insensitive. Default name of the coroutine.
+        :param name: Name of the event. Case-insensitive. Default name of the function.
         """
         def wrap(func):
-            self.events.add(name, func)
+            self.events.add(name.upper(), func)
             return func
         return wrap
 
     def dispatch(self, name, *args, **kwargs):
-        [self.loop.create_task(utils.safe_call(x(*args, **kwargs))) for x in self.events.get(name)]
+        [self.loop.create_task(utils.safe_call(x(*args, **kwargs))) for x in self.events.get(name.upper())]
 
     async def start(self):
         self.ws = await self.__ws_class.connect(self.http, self.intents, self.events)

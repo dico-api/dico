@@ -6,7 +6,7 @@ import traceback
 async def safe_call(coro, additional_message: typing.Optional[str] = None):
     """
     Calls coroutine, ignoring raised exception and only print traceback.
-    This is used for event listener call.
+    This is used for event listener call, and intended to be used at creating task.
 
     :param coro: Coroutine to safely call
     :param additional_message: Additional traceback message to print at the top.

@@ -99,7 +99,7 @@ class WebSocketClient:
             raise WSClosing(resp.data)
 
     async def reconnect(self, fresh: bool = False):
-        if self._reconnecting:
+        if self._reconnecting or self._fresh_reconnecting:
             self.logger.warning("Reconnection is already running, but another reconnection is requested. This request is ignored.")
             return
         self._reconnecting = not fresh
