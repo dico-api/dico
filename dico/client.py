@@ -2,11 +2,20 @@ import typing
 import asyncio
 import traceback
 from . import utils
+from .base.http import HTTPRequestBase
 from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import ClientCacheContainer
 from .handler import EventHandler
 from .model import Intents
+
+
+class APIClient:
+    def __init__(self, token, *, base: HTTPRequestBase, **http_options):
+        self.http = base.create(token, **http_options)
+
+    def send_message(self):
+        pass
 
 
 class Client:
