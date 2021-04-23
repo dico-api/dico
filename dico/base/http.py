@@ -15,7 +15,7 @@ class HTTPRequestBase(ABC):
         pass
 
     @abstractmethod
-    def _request(self, route: str, meth: str, body: dict = None, content_type: str = "applications/json", **kwargs) -> typing.Tuple[int, dict]:
+    def _request(self, route: str, meth: str, body: dict = None, is_json: bool = False, **kwargs) -> typing.Tuple[int, dict]:
         """
         HTTP Requesting part.
         :return: Tuple[int, dict]
