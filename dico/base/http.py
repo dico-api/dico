@@ -7,7 +7,7 @@ class HTTPRequestBase(ABC):
     BASE_URL = "https://discord.com/api/v8"
 
     @abstractmethod
-    def request(self, route: str, meth: str, body: dict = None, *, retry: int = 3, **kwargs):
+    def request(self, route: str, meth: str, body: dict = None, is_json: bool = False, *, retry: int = 3, **kwargs):
         """
         This function should wrap :meth:`._request` with rate limit handling.
         :return:
