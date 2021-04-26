@@ -47,13 +47,18 @@ class Intents:
         "DIRECT_MESSAGE_TYPING": 1 << 14,
     }
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         self.enabled = []
         self.__setattr__ = self.__setattr
         for x in args:
             if x.upper() not in self.values.keys():
                 raise
             self.enabled.append(x.upper())
+        for k, v in kwargs.items():
+            if k.upper() not in self.values:
+                raise AttributeError(f"invalid name: `{k}`")
+            if v:
+                self.enabled.append(k.upper())
 
     def __int__(self):
         return sum([self.values[x] for x in self.enabled])
