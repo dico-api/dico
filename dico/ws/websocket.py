@@ -37,9 +37,10 @@ class WebSocketClient:
             self.http.loop.run_until_complete(self.close())
 
     async def close(self, code: int = 1000):
+        if not self._heartbeat_task.cancelled():
+            self._heartbeat_task.cancel()
         if self._closed:
             return
-        self._heartbeat_task.cancel()
         await self.ws.close(code=code)
         self._closed = True
 
@@ -80,8 +81,9 @@ class WebSocketClient:
                     await self.reconnect(fresh=True)
                     break
 
-                elif resp.op == gateway.Opcodes.RESUME:
-                    self.logger.debug("Successfully resumed from gateway reconnection.")
+                elif resp.op == gateway.Opcodes.RECONNECT:
+                    await self.reconnect()
+                    break
 
             if self._reconnecting or self._fresh_reconnecting:
                 self.ws = await self.http.session.ws_connect(self.base_url)
@@ -106,7 +108,7 @@ class WebSocketClient:
         self._fresh_reconnecting = fresh
         self.logger.info("Reconnecting to Websocket...")
         if not self._closed:
-            await self.close(4009)
+            await self.close(4000)
 
     async def resume(self):
         data = {
