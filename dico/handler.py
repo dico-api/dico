@@ -3,9 +3,9 @@ from .model.event import *
 
 
 class EventHandler:
-    def __init__(self, dispatch):
+    def __init__(self, client):
         self.events = {}
-        self.dispatch = dispatch
+        self.client = client
 
     def add(self, event, func):
         if event not in self.events:
@@ -31,7 +31,7 @@ class EventHandler:
             "CHANNEL_DELETE": ChannelDelete
         }
         if name in model_dict:
-            ret = model_dict[name].create(resp)
+            ret = model_dict[name].create(self.client, resp)
         else:
             ret = resp
-        self.dispatch(name, ret)
+        self.client.dispatch(name, ret)

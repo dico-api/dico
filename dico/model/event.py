@@ -1,19 +1,11 @@
 import datetime
 from .channel import *
-
-
-class EventBase:
-    def __init__(self, resp: dict):
-        self.raw = resp
-
-    @classmethod
-    def create(cls, resp: dict):
-        return cls(resp)
+from ..base.model import EventBase
 
 
 class Ready(EventBase):
-    def __init__(self, resp: dict):
-        super().__init__(resp)
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
         self.v = resp["v"]
         self.user = resp["user"]
         self.private_channels = resp["private_channels"]
@@ -24,41 +16,41 @@ class Ready(EventBase):
 
 
 class ApplicationCommandCreate(EventBase):
-    def __init__(self, resp: dict):
-        super().__init__(resp)
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
 
 
 class ApplicationCommandUpdate(EventBase):
-    def __init__(self, resp: dict):
-        super().__init__(resp)
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
 
 
 class ApplicationCommandDelete(EventBase):
-    def __init__(self, resp: dict):
-        super().__init__(resp)
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
 
 
 class ChannelCreate(EventBase, Channel):
-    def __init__(self, resp: dict):
-        Channel.__init__(self, resp)
-        EventBase.__init__(self, resp)
+    def __init__(self, client, resp: dict):
+        Channel.__init__(self, client, resp)
+        EventBase.__init__(self, client, resp)
 
 
 class ChannelUpdate(EventBase, Channel):
-    def __init__(self, resp: dict):
-        Channel.__init__(self, resp)
-        EventBase.__init__(self, resp)
+    def __init__(self, client, resp: dict):
+        Channel.__init__(self, client, resp)
+        EventBase.__init__(self, client, resp)
 
 
 class ChannelDelete(EventBase, Channel):
-    def __init__(self, resp: dict):
-        Channel.__init__(self, resp)
-        EventBase.__init__(self, resp)
+    def __init__(self, client, resp: dict):
+        Channel.__init__(self, client, resp)
+        EventBase.__init__(self, client, resp)
 
 
 class ChannelPinsUpdate(EventBase):
-    def __init__(self, resp: dict):
-        super().__init__(resp)
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
         self.guild_id = resp.get("guild_id")
         self.channel_id = resp["channel_id"]
         self.__last_pin_timestamp = resp.get("last_pin_timestamp")
@@ -66,6 +58,6 @@ class ChannelPinsUpdate(EventBase):
 
 
 class MessageCreate(EventBase, Message):
-    def __init__(self, resp: dict):
-        Message.__init__(self, resp)
-        EventBase.__init__(self, resp)
+    def __init__(self, client, resp: dict):
+        Message.__init__(self, client, resp)
+        EventBase.__init__(self, client, resp)
