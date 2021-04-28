@@ -20,7 +20,6 @@ client = dico.Client("YOUR_TOKEN_HERE", intents=dico.Intents.full())
 @client.on_("MESSAGE_CREATE")
 async def on_message_create(message: dico.MessageCreate):
     if message.content.startswith("!hello"):
-        # This request part will be improved later.
         await message.reply("Hello, World!")
 
 
