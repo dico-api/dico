@@ -10,52 +10,92 @@ class Channel(DiscordObjectBase):
     def __init__(self, client, resp):
         super().__init__(client, resp)
         self.type = resp["type"]
-        self.guild_id = resp.get("guild_id")
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
         self.position = resp.get("position")
         self.permission_overwrites = resp.get("permission_overwrites", [])
         self.name = resp.get("name")
         self.topic = resp.get("topic")
         self.nsfw = resp.get("nsfw")
-        self.last_message_id = resp.get("last_message_id")
+        self.last_message_id = Snowflake.optional(resp.get("last_message_id"))
         self.bitrate = resp.get("bitrate")
         self.user_limit = resp.get("user_limit")
         self.rate_limit_per_user = resp.get("rate_limit_per_user")
         self.recipients = resp.get("recipients", [])
         self.icon = resp.get("icon")
-        self.owner_id = resp.get("owner_id")
-        self.application_id = resp.get("application_id")
-        self.parent_id = resp.get("parent_id")
+        self.owner_id = Snowflake.optional(resp.get("owner_id"))
+        self.application_id = Snowflake.optional(resp.get("application_id"))
+        self.parent_id = Snowflake.optional(resp.get("parent_id"))
         self.__last_pin_timestamp = resp.get("last_pin_timestamp")
         self.rtc_region = resp.get("rtc_region")
         self.video_quality_mode = resp.get("video_quality_mode")
 
         self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
 
-        if self.guild_id:
-            self.guild_id = Snowflake(self.guild_id)
-        if self.last_message_id:
-            self.last_message_id = Snowflake(self.last_message_id)
-        if self.owner_id:
-            self.owner_id = Snowflake(self.owner_id)
-        if self.application_id:
-            self.application_id = Snowflake(self.application_id)
-        if self.parent_id:
-            self.parent_id = Snowflake(self.parent_id)
-
     @property
     def create_message(self):
+        if self.is_store_channel() or self.is_guild_voice_channel() or self.is_channel_category():
+            raise TypeError("You can't send message in this type of channel.")
         return self.client.create_message
 
     @property
     def mention(self):
         return f"<#{self.id}>"
 
+    def is_guild_text_channel(self):
+        return self.type == ChannelTypes.GUILD_TEXT
+
+    def is_guild_news_channel(self):
+        return self.type == ChannelTypes.GUILD_NEWS
+
+    def is_guild_voice_channel(self):
+        return self.type == ChannelTypes.GUILD_VOICE
+
+    def is_dm_channel(self):
+        return self.type == ChannelTypes.DM
+
+    def is_group_dm_channel(self):
+        return self.type == ChannelTypes.GROUP_DM
+
+    def is_channel_category(self):
+        return self.type == ChannelTypes.GUILD_CATEGORY
+
+    def is_store_channel(self):
+        return self.type == ChannelTypes.GUILD_STORE
+
+
+class ChannelTypes:
+    GUILD_TEXT = 0
+    DM = 1
+    GUILD_VOICE = 2
+    GROUP_DM = 3
+    GUILD_CATEGORY = 4
+    GUILD_NEWS = 5
+    GUILD_STORE = 6
+    GUILD_STAGE_VOICE = 13
+
+    @staticmethod
+    def to_string(type_id):
+        values = {0: "GUILD_TEXT",
+                  1: "DM",
+                  2: "GUILD_VOICE",
+                  3: "GROUP_DM",
+                  4: "GUILD_CATEGORY",
+                  5: "GUILD_NEWS",
+                  6: "GUILD_STORE",
+                  13: "GUILD_STAGE_VOICE"}
+        return values.get(type_id)
+
+
+class VideoQualityModes:
+    AUTO = 1
+    FULL = 2
+
 
 class Message(DiscordObjectBase):
     def __init__(self, client, resp):
         super().__init__(client, resp)
         self.channel_id = Snowflake(resp["channel_id"])
-        self.guild_id = resp.get("guild_id")
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
         self.author = resp["author"]
         self.member = resp.get("member")
         self.content = resp["content"]
@@ -70,7 +110,7 @@ class Message(DiscordObjectBase):
         self.reactions = resp.get("reactions", [])
         self.nonce = resp.get("nonce")
         self.pinned = resp["pinned"]
-        self.webhook_id = resp.get("webhook_id")
+        self.webhook_id = Snowflake.optional(resp.get("webhook_id"))
         self.type = resp["type"]
         self.activity = resp.get("activity")
         self.application = resp.get("application")
@@ -85,11 +125,6 @@ class Message(DiscordObjectBase):
         if self.message_reference.message_id:
             self.referenced_message = Message(self.client, self.referenced_message)
 
-        if self.guild_id:
-            self.guild_id = Snowflake(self.guild_id)
-        if self.webhook_id:
-            self.guild_id = Snowflake(self.webhook_id)
-
     def reply(self, content, **kwargs):
         kwargs["message_reference"] = self
         mention = kwargs.pop("mention") if "mention" in kwargs.keys() else True
@@ -101,9 +136,9 @@ class Message(DiscordObjectBase):
 
 class MessageReference:
     def __init__(self, resp):
-        self.message_id = resp.get("message_id")
-        self.channel_id = resp.get("channel_id")
-        self.guild_id = resp.get("guild_id")
+        self.message_id = Snowflake.optional(resp.get("message_id"))
+        self.channel_id = Snowflake.optional(resp.get("channel_id"))
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
         self.fail_if_not_exists = resp.get("fail_if_not_exists", True)
 
     def to_dict(self):
@@ -138,10 +173,10 @@ class AllowedMentions:
             ret["parsed"].append("everyone")
         if self.users:
             ret["parsed"].append("users")
-            ret["users"] = self.users
+            ret["users"] = [str(x) for x in self.users]
         if self.roles:
             ret["parsed"].append("roles")
-            ret["roles"] = self.roles
+            ret["roles"] = [str(x) for x in self.roles]
         if reply:
             ret["replied_user"] = self.replied_user
         return ret

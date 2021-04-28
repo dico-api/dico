@@ -21,6 +21,10 @@ class Snowflake:
     def pid(self):
         return (self.__snowflake & 0x1F000) >> 12
 
+    @property
+    def id(self):
+        return self.__snowflake
+
     def __str__(self):
         return str(self.__snowflake)
 
@@ -44,3 +48,7 @@ class Snowflake:
 
     def __ge__(self, other):
         return self.__snowflake >= int(other)
+
+    @classmethod
+    def optional(cls, snowflake):
+        return cls(snowflake) if snowflake else snowflake

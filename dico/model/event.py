@@ -1,5 +1,6 @@
 import datetime
 from .channel import *
+from .snowflake import Snowflake
 from ..base.model import EventBase
 
 
@@ -52,7 +53,7 @@ class ChannelPinsUpdate(EventBase):
     def __init__(self, client, resp: dict):
         super().__init__(client, resp)
         self.guild_id = resp.get("guild_id")
-        self.channel_id = resp["channel_id"]
+        self.channel_id = Snowflake(resp["channel_id"])
         self.__last_pin_timestamp = resp.get("last_pin_timestamp")
         self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
 
