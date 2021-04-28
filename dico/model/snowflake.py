@@ -52,3 +52,7 @@ class Snowflake:
     @classmethod
     def optional(cls, snowflake):
         return cls(snowflake) if snowflake else snowflake
+
+    @classmethod
+    def ensure_snowflake(cls, target):
+        return target if isinstance(target, cls) else cls.optional(target)

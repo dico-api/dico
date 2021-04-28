@@ -9,7 +9,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import ClientCacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, MessageReference, AllowedMentions
+from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake
 
 
 class APIClient:
@@ -66,7 +66,7 @@ class Client(APIClient):
         self.loop = loop or asyncio.get_event_loop()
         super().__init__(token, base=AsyncHTTPRequest, loop=loop)
         self.token = token
-        self.cache = ClientCacheContainer()
+        self.cache = ClientCacheContainer()  # The reason only supporting caching with WS is to ensure up-to-date object.
         self.__ws_class = WebSocketClient
         self.intents = intents
         self.ws: typing.Union[None, WebSocketClient] = None
@@ -87,6 +87,19 @@ class Client(APIClient):
 
     def dispatch(self, name, *args, **kwargs):
         [self.loop.create_task(utils.safe_call(x(*args, **kwargs))) for x in self.events.get(name.upper())]
+
+    @property
+    def get(self):
+        """Alias of ``Client.cache.get``."""
+        return self.cache.get
+
+    @property
+    def get_user(self):
+        return self.cache.get_storage("user").get
+
+    @property
+    def get_guild(self):
+        return self.cache.get_storage("guild").get
 
     async def start(self):
         self.ws = await self.__ws_class.connect(self.http, self.intents, self.events)

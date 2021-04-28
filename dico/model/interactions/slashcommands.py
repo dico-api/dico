@@ -34,7 +34,7 @@ class ApplicationCommandOption:
                "required": self.required, "choices": [x.to_dict() for x in self.choices], "options": [x.to_dict() for x in self.options]}
         if not ret["options"]:
             del ret["options"]
-        else:
+        elif not ret["choices"]:
             del ret["choices"]
         return ret
 

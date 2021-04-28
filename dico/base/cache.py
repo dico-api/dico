@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class CacheContainerBase(ABC):
 
     @abstractmethod
-    def get(self, snowflake_id: int, safe=True):
+    def get(self, snowflake_id: int, ignore_expiration=True):
         pass
 
     @abstractmethod
