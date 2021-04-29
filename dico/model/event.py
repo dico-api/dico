@@ -1,5 +1,6 @@
 import datetime
-from .channel import *
+from .channel import Channel, Message
+from .guild import Guild
 from .snowflake import Snowflake
 from ..base.model import EventBase
 
@@ -61,4 +62,22 @@ class ChannelPinsUpdate(EventBase):
 class MessageCreate(EventBase, Message):
     def __init__(self, client, resp: dict):
         Message.__init__(self, client, resp)
+        EventBase.__init__(self, client, resp)
+
+
+class GuildCreate(EventBase, Guild):
+    def __init__(self, client, resp):
+        Guild.__init__(self, client, resp)
+        EventBase.__init__(self, client, resp)
+
+
+class GuildUpdate(EventBase, Guild):
+    def __init__(self, client, resp):
+        Guild.__init__(self, client, resp)
+        EventBase.__init__(self, client, resp)
+
+
+class GuildDelete(EventBase, Guild):
+    def __init__(self, client, resp):
+        Guild.__init__(self, client, resp)
         EventBase.__init__(self, client, resp)

@@ -49,6 +49,9 @@ class Snowflake:
     def __ge__(self, other):
         return self.__snowflake >= int(other)
 
+    def __hash__(self):
+        return hash(self.__snowflake)
+
     @classmethod
     def optional(cls, snowflake):
         return cls(snowflake) if snowflake else snowflake

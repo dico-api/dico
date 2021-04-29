@@ -31,6 +31,10 @@ class Channel(DiscordObjectBase):
 
         self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
 
+        self.client.cache.add(self.id, "channel", self)
+        if self.guild_id:
+            self.client.cache.get_guild_container(self.guild_id).add(self.id, "channel", self)
+
     @property
     def create_message(self):
         if self.is_store_channel() or self.is_guild_voice_channel() or self.is_channel_category():
@@ -40,6 +44,11 @@ class Channel(DiscordObjectBase):
     @property
     def mention(self):
         return f"<#{self.id}>"
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.cache.get_guild(self.guild_id)
 
     def is_guild_text_channel(self):
         return self.type == ChannelTypes.GUILD_TEXT
@@ -125,6 +134,8 @@ class Message(DiscordObjectBase):
         if self.message_reference.message_id:
             self.referenced_message = Message(self.client, self.referenced_message)
 
+        self.client.cache.add(self.id, "message", self)
+
     def reply(self, content, **kwargs):
         kwargs["message_reference"] = self
         mention = kwargs.pop("mention") if "mention" in kwargs.keys() else True
@@ -132,6 +143,19 @@ class Message(DiscordObjectBase):
         allowed_mentions.replied_user = mention
         kwargs["allowed_mentions"] = allowed_mentions.to_dict(reply=True)
         return self.client.create_message(self.channel_id, content, **kwargs)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+    @property
+    def channel(self):
+        if self.channel_id:
+            if self.guild_id:
+                return self.guild.get_channel(self.channel_id) or self.client.get_channel(self.channel_id)
+            else:
+                return self.client.get_channel(self.channel_id)
 
 
 class MessageReference:

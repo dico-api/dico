@@ -28,7 +28,10 @@ class EventHandler:
             "MESSAGE_CREATE": MessageCreate,
             "CHANNEL_CREATE": ChannelCreate,
             "CHANNEL_UPDATE": ChannelUpdate,
-            "CHANNEL_DELETE": ChannelDelete
+            "CHANNEL_DELETE": ChannelDelete,
+            "GUILD_CREATE": GuildCreate,
+            "GUILD_UPDATE": GuildUpdate,
+            "GUILD_DELETE": GuildDelete
         }
         if name in model_dict:
             ret = model_dict[name].create(self.client, resp)

@@ -21,3 +21,11 @@ async def safe_call(coro, additional_message: typing.Optional[str] = None):
         else:
             _p = tb
         print(_p, file=sys.stderr)
+
+
+def cdn_url(route, *, image_hash, extension="webp", size=1024, **snowflake_ids):
+    if not 16 <= size <= 4096:
+        raise ValueError("size must be between 16 and 4096.")
+    if snowflake_ids:
+        route = route.format(**snowflake_ids)
+    return f"https://cdn.discordapp.com/{route}/{image_hash}.{extension}?size={size}"
