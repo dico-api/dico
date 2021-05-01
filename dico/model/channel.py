@@ -9,6 +9,7 @@ from ..base.model import DiscordObjectBase
 class Channel(DiscordObjectBase):
     def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
+        self._cache_type = "channel"
         self.type = resp["type"]
         self.guild_id = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
         self.position = resp.get("position")
@@ -30,10 +31,6 @@ class Channel(DiscordObjectBase):
         self.video_quality_mode = resp.get("video_quality_mode")
 
         self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
-
-        self.client.cache.add(self.id, "channel", self)
-        if self.guild_id:
-            self.client.cache.get_guild_container(self.guild_id).add(self.id, "channel", self)
 
     @property
     def create_message(self):
@@ -101,10 +98,11 @@ class VideoQualityModes:
 
 
 class Message(DiscordObjectBase):
-    def __init__(self, client, resp):
+    def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
+        self._cache_type = "message"
         self.channel_id = Snowflake(resp["channel_id"])
-        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id = Snowflake.optional(resp.get("guild_id") or guild_id)
         self.author = resp["author"]
         self.member = resp.get("member")
         self.content = resp["content"]
@@ -126,15 +124,13 @@ class Message(DiscordObjectBase):
         self.message_reference = MessageReference(resp.get("message_reference", {}))
         self.flags = resp.get("flags")
         self.stickers = resp.get("stickers", [])
-        self.referenced_message = resp.get("referenced_message")
+        self.__referenced_message = resp.get("referenced_message")
         self.interaction = resp.get("interaction")
 
         self.edited_timestamp = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
 
-        if self.message_reference.message_id:
-            self.referenced_message = Message(self.client, self.referenced_message)
-
-        self.client.cache.add(self.id, "message", self)
+        if self.__referenced_message:
+            self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id)
 
     def reply(self, content, **kwargs):
         kwargs["message_reference"] = self

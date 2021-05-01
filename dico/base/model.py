@@ -11,13 +11,32 @@ class EventBase:
 
 
 class DiscordObjectBase:
-    def __init__(self, client, resp):
+    def __init__(self, client, resp, **kwargs):
+        resp.update(kwargs)
+        self._cache_type = None
         self.raw = resp
         self.id = Snowflake(resp["id"])
         self.client = client
 
     def __int__(self):
         return int(self.id)
+
+    @classmethod
+    def create(cls, client, resp, **kwargs):
+        maybe_exist = client.cache.get(resp["id"])
+        if maybe_exist:
+            orig = maybe_exist.raw
+            for k, v in resp.items():
+                if orig.get(k) != v:
+                    orig[k] = v
+            maybe_exist.__init__(client, orig, **kwargs)
+            return maybe_exist
+        else:
+            ret = cls(client, resp, **kwargs)
+            client.cache.add(ret.id, ret._cache_type, ret)
+            if hasattr(ret, "guild_id") and ret.guild_id:
+                client.cache.get_guild_container(ret.guild_id).add(ret.id, ret._cache_type, ret)
+            return ret
 
 
 class FlagBase:

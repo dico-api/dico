@@ -32,22 +32,9 @@ class ApplicationCommandDelete(EventBase):
         super().__init__(client, resp)
 
 
-class ChannelCreate(EventBase, Channel):
-    def __init__(self, client, resp: dict):
-        Channel.__init__(self, client, resp)
-        EventBase.__init__(self, client, resp)
-
-
-class ChannelUpdate(EventBase, Channel):
-    def __init__(self, client, resp: dict):
-        Channel.__init__(self, client, resp)
-        EventBase.__init__(self, client, resp)
-
-
-class ChannelDelete(EventBase, Channel):
-    def __init__(self, client, resp: dict):
-        Channel.__init__(self, client, resp)
-        EventBase.__init__(self, client, resp)
+ChannelCreate = Channel
+ChannelUpdate = Channel
+ChannelDelete = Channel
 
 
 class ChannelPinsUpdate(EventBase):
@@ -59,25 +46,8 @@ class ChannelPinsUpdate(EventBase):
         self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
 
 
-class MessageCreate(EventBase, Message):
-    def __init__(self, client, resp: dict):
-        Message.__init__(self, client, resp)
-        EventBase.__init__(self, client, resp)
+MessageCreate = Message
 
-
-class GuildCreate(EventBase, Guild):
-    def __init__(self, client, resp):
-        Guild.__init__(self, client, resp)
-        EventBase.__init__(self, client, resp)
-
-
-class GuildUpdate(EventBase, Guild):
-    def __init__(self, client, resp):
-        Guild.__init__(self, client, resp)
-        EventBase.__init__(self, client, resp)
-
-
-class GuildDelete(EventBase, Guild):
-    def __init__(self, client, resp):
-        Guild.__init__(self, client, resp)
-        EventBase.__init__(self, client, resp)
+GuildCreate = Guild
+GuildUpdate = Guild
+GuildDelete = Guild

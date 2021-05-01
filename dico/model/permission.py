@@ -44,6 +44,7 @@ class PermissionFlags(FlagBase):
 class Role(DiscordObjectBase):
     def __init__(self, client, resp):
         super().__init__(client, resp)
+        self._cache_type = "role"
         self.name = resp["name"]
         self.color = resp["color"]
         self.hoist = resp["hoist"]

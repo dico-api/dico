@@ -9,6 +9,7 @@ from ..base.model import DiscordObjectBase
 class Guild(DiscordObjectBase):
     def __init__(self, client, resp):
         super().__init__(client, resp)
+        self._cache_type = "guild"
         self.name = resp["name"]
         self.icon = resp["icon"]
         self.icon_hash = resp.get("icon_hash")
@@ -39,7 +40,7 @@ class Guild(DiscordObjectBase):
         self.member_count = resp.get("member_count", 0)
         self.voice_states = resp.get("voice_states", [])
         self.members = resp.get("members", [])
-        self.channels = [Channel(client, x, guild_id=self.id) for x in resp.get("channels", [])]
+        self.channels = [Channel.create(client, x, guild_id=self.id) for x in resp.get("channels", [])]
         self.presences = resp.get("presences", [])
         self.max_presences = resp.get("max_presences", 25000)
         self.max_members = resp.get("max_members")
@@ -58,7 +59,6 @@ class Guild(DiscordObjectBase):
 
         self.joined_at = datetime.datetime.fromisoformat(self.__joined_at) if self.__joined_at else self.__joined_at
 
-        self.client.cache.add(self.id, "guild", self)
         self.cache = client.cache.get_guild_container(self.id)
 
     def icon_url(self, *, extension="webp", size=1024):
