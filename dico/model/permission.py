@@ -1,8 +1,8 @@
 from .snowflake import Snowflake
-from ..base.model import DiscordObjectBase
+from ..base.model import DiscordObjectBase, FlagBase
 
 
-class Permission:
+class PermissionFlags(FlagBase):
     CREATE_INSTANT_INVITE = 0x0000000001
     KICK_MEMBERS = 0x0000000002
     BAN_MEMBERS = 0x0000000004
