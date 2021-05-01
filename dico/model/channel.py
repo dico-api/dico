@@ -68,6 +68,9 @@ class Channel(DiscordObjectBase):
     def is_store_channel(self):
         return self.type == ChannelTypes.GUILD_STORE
 
+    def is_stage_channel(self):
+        return self.type == ChannelTypes.GUILD_STAGE_VOICE
+
 
 class ChannelTypes:
     GUILD_TEXT = 0

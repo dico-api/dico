@@ -42,21 +42,29 @@ class DiscordObjectBase:
 
 class FlagBase:
     def __init__(self, *args, **kwargs):
+        self.value = 0
         self.values = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
-        self.enabled = []
         self.__setattr__ = self.__setattr
         for x in args:
-            if x.upper() not in self.values.keys():
-                raise
-            self.enabled.append(x.upper())
+            if x.upper() not in self.values:
+                raise AttributeError(f"invalid name: `{x}`")
+            self.value += self.values[x.upper()]
         for k, v in kwargs.items():
             if k.upper() not in self.values:
                 raise AttributeError(f"invalid name: `{k}`")
             if v:
-                self.enabled.append(k.upper())
+                self.value += self.values[k.upper()]
 
     def __int__(self):
-        return sum([self.values[x] for x in self.enabled])
+        return self.value
+
+    def __getattr__(self, item):
+        return self.has(item)
+
+    def has(self, name: str):
+        if name.upper() not in self.values:
+            raise AttributeError(f"invalid name: `{name}`")
+        return (self.value & self.values[name.upper()]) == self.values[name.upper()]
 
     def __setattr(self, key, value):
         if not isinstance(value, bool):
@@ -65,23 +73,20 @@ class FlagBase:
         key = key.upper()
         if key not in self.values.keys():
             raise AttributeError(f"invalid name: `{o_key}`")
-        if not value and key in self.enabled:
-            self.enabled.remove(key)
-        elif value and key not in self.enabled:
-            self.enabled.append(key)
+        has_value = self.has(key)
+        if value and not has_value:
+            self.value += self.values[key]
+        elif not value and has_value:
+            self.value -= self.values[key]
 
     def add(self, value):
-        o_value = value
-        value = value.upper()
-        if value not in self.values.keys():
-            raise AttributeError(f"invalid name: `{o_value}`")
-        if value not in self.enabled:
-            self.enabled.append(value)
+        return self.__setattr(value, True)
 
     def remove(self, value):
-        o_value = value
-        value = value.upper()
-        if value not in self.values.keys():
-            raise AttributeError(f"invalid name: `{o_value}`")
-        if value in self.enabled:
-            self.enabled.remove(value)
+        return self.__setattr(value, False)
+
+    @classmethod
+    def from_value(cls, value: int):
+        ret = cls()
+        ret.value = value
+        return ret
