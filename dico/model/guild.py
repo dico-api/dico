@@ -1,6 +1,5 @@
 import datetime
 
-from .channel import Channel
 from .permission import Role, PermissionFlags
 from .snowflake import Snowflake
 from .user import User
@@ -10,6 +9,7 @@ from ..base.model import DiscordObjectBase
 
 class Guild(DiscordObjectBase):
     def __init__(self, client, resp):
+        from .channel import Channel  # Prevent circular import.
         super().__init__(client, resp)
         self._cache_type = "guild"
         self.name = resp["name"]
