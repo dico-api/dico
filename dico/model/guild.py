@@ -1,8 +1,9 @@
 import datetime
 
 from .channel import Channel
-from .permission import Role
+from .permission import Role, PermissionFlags
 from .snowflake import Snowflake
+from .user import User
 from ..utils import cdn_url
 from ..base.model import DiscordObjectBase
 
@@ -84,8 +85,8 @@ class Guild(DiscordObjectBase):
         return self.cache.get
 
     @property
-    def get_member(self):
-        return self.cache.get_storage("member").get
+    def get_user(self):
+        return self.cache.get_storage("user").get
 
     @property
     def get_channel(self):
@@ -96,4 +97,45 @@ class Guild(DiscordObjectBase):
         return self.cache.get_storage("role").get
 
     def get_owner(self):
-        return self.get_member(self.owner_id)
+        return self.get_user(self.owner_id)
+
+
+class Member:
+    def __init__(self, client, resp, *, user: User = None):
+        self.user = user
+        self.__user = resp.get("user")
+        self.nick = resp.get("nick")
+        self.roles = [client.get(x) for x in resp["roles"]]
+        self.joined_at = datetime.datetime.fromisoformat(resp["joined_at"])
+        self.__premium_since = resp.get("premium_since")
+        self.deaf = resp["deaf"]
+        self.mute = resp["mute"]
+        self.pending = resp.get("pending", False)
+        self.__permissions = resp.get("permissions")
+
+        if self.__user and not self.user:
+            self.user = User.create(client, resp)
+
+        if self.__premium_since:
+            self.premium_since = datetime.datetime.fromisoformat(self.__premium_since)
+
+    def __str__(self):
+        return self.nick or (self.user.username if self.user else None)
+
+    def __int__(self):
+        if self.user:
+            return self.user.id
+
+    @property
+    def mention(self):
+        if self.user:
+            return f"<@!{self.user.id}>"
+
+    @property
+    def permissions(self):
+        if self.__permissions:
+            return PermissionFlags.from_value(int(self.__permissions))
+        elif self.roles:
+            pass
+        else:
+            return PermissionFlags.from_value(0)

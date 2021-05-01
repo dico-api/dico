@@ -1,4 +1,5 @@
 from ..base.model import DiscordObjectBase, FlagBase, TypeBase
+from ..utils import cdn_url
 
 
 class User(DiscordObjectBase):
@@ -24,6 +25,12 @@ class User(DiscordObjectBase):
     @property
     def mention(self):
         return f"<@{self.id}>"
+
+    def avatar_url(self, *, extension="webp", size=1024):
+        if self.avatar:
+            return cdn_url("avatars/{user_id}", image_hash=self.avatar, extension=extension, size=size, user_id=self.id)
+        else:
+            return cdn_url("embed/avatars", image_hash=self.discriminator % 5, extension=extension)
 
 
 class UserFlags(FlagBase):

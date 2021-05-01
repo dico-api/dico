@@ -2,7 +2,9 @@ import copy
 import typing
 import datetime
 
+from .guild import Member
 from .snowflake import Snowflake
+from .user import User
 from ..base.model import DiscordObjectBase, TypeBase, FlagBase
 
 
@@ -94,8 +96,8 @@ class Message(DiscordObjectBase):
         self._cache_type = "message"
         self.channel_id = Snowflake(resp["channel_id"])
         self.guild_id = Snowflake.optional(resp.get("guild_id") or guild_id)
-        self.author = resp["author"]
-        self.member = resp.get("member")
+        self.author = User.create(client, resp["author"])
+        self.__member = resp.get("member")
         self.content = resp["content"]
         self.timestamp = datetime.datetime.fromisoformat(resp["timestamp"])
         self.__edited_timestamp = resp["edited_timestamp"]
@@ -119,6 +121,9 @@ class Message(DiscordObjectBase):
         self.interaction = resp.get("interaction")
 
         self.edited_timestamp = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
+
+        if self.__member:
+            self.member = Member(self.client, self.__member, user=self.author)
 
         if self.__referenced_message:
             self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id)

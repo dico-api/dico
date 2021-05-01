@@ -95,7 +95,7 @@ class FlagBase:
 class TypeBase:
     def __init__(self, value):
         self.value = value
-        self.values = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.values = {getattr(self, x): x for x in dir(self) if isinstance(getattr(self, x), int)}
 
         if self.value not in self.values:
             raise AttributeError(f"invalid value: `{value}`")
@@ -110,11 +110,12 @@ class TypeBase:
         return self.is_type(item)
 
     def is_type(self, name: str):
-        if name.upper() not in self.values:
+        values = {y: x for x, y in self.values.items()}
+        if name.upper() not in values:
             raise AttributeError(f"invalid name: `{name}`")
-        return self.value == self.values[name.upper()]
+        return self.value == values[name.upper()]
 
     @classmethod
     def to_string(cls, value):
-        values = {x: getattr(cls, x) for x in dir(cls) if isinstance(getattr(cls, x), int)}
+        values = {getattr(cls, x): x for x in dir(cls) if isinstance(getattr(cls, x), int)}
         return values.get(value)
