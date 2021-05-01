@@ -3,14 +3,14 @@ import typing
 import datetime
 
 from .snowflake import Snowflake
-from ..base.model import DiscordObjectBase
+from ..base.model import DiscordObjectBase, TypeBase, FlagBase
 
 
 class Channel(DiscordObjectBase):
     def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
         self._cache_type = "channel"
-        self.type = resp["type"]
+        self.type = ChannelTypes(resp["type"])
         self.guild_id = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
         self.position = resp.get("position")
         self.permission_overwrites = resp.get("permission_overwrites", [])
@@ -48,31 +48,31 @@ class Channel(DiscordObjectBase):
             return self.client.cache.get_guild(self.guild_id)
 
     def is_guild_text_channel(self):
-        return self.type == ChannelTypes.GUILD_TEXT
+        return self.type.guild_text
 
     def is_guild_news_channel(self):
-        return self.type == ChannelTypes.GUILD_NEWS
+        return self.type.guild_news
 
     def is_guild_voice_channel(self):
-        return self.type == ChannelTypes.GUILD_VOICE
+        return self.type.guild_voice
 
     def is_dm_channel(self):
-        return self.type == ChannelTypes.DM
+        return self.type.dm
 
     def is_group_dm_channel(self):
-        return self.type == ChannelTypes.GROUP_DM
+        return self.type.group_dm
 
     def is_channel_category(self):
-        return self.type == ChannelTypes.GUILD_CATEGORY
+        return self.type.guild_category
 
     def is_store_channel(self):
-        return self.type == ChannelTypes.GUILD_STORE
+        return self.type.guild_store
 
     def is_stage_channel(self):
-        return self.type == ChannelTypes.GUILD_STAGE_VOICE
+        return self.type.guild_stage_voice
 
 
-class ChannelTypes:
+class ChannelTypes(TypeBase):
     GUILD_TEXT = 0
     DM = 1
     GUILD_VOICE = 2
@@ -81,18 +81,6 @@ class ChannelTypes:
     GUILD_NEWS = 5
     GUILD_STORE = 6
     GUILD_STAGE_VOICE = 13
-
-    @staticmethod
-    def to_string(type_id):
-        values = {0: "GUILD_TEXT",
-                  1: "DM",
-                  2: "GUILD_VOICE",
-                  3: "GROUP_DM",
-                  4: "GUILD_CATEGORY",
-                  5: "GUILD_NEWS",
-                  6: "GUILD_STORE",
-                  13: "GUILD_STAGE_VOICE"}
-        return values.get(type_id)
 
 
 class VideoQualityModes:
@@ -121,12 +109,12 @@ class Message(DiscordObjectBase):
         self.nonce = resp.get("nonce")
         self.pinned = resp["pinned"]
         self.webhook_id = Snowflake.optional(resp.get("webhook_id"))
-        self.type = resp["type"]
-        self.activity = resp.get("activity")
+        self.type = MessageTypes(resp["type"])
+        self.activity = MessageActivity.optional(resp.get("activity"))
         self.application = resp.get("application")
         self.message_reference = MessageReference(resp.get("message_reference", {}))
-        self.flags = resp.get("flags")
-        self.stickers = resp.get("stickers", [])
+        self.__flags = resp.get("flags")
+        self.stickers = [MessageSticker(x) for x in resp.get("stickers", [])]
         self.__referenced_message = resp.get("referenced_message")
         self.interaction = resp.get("interaction")
 
@@ -134,6 +122,9 @@ class Message(DiscordObjectBase):
 
         if self.__referenced_message:
             self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id)
+
+        if self.__flags:
+            self.flags = MessageFlags(self.__flags)
 
     def reply(self, content, **kwargs):
         kwargs["message_reference"] = self
@@ -155,6 +146,77 @@ class Message(DiscordObjectBase):
                 return self.guild.get_channel(self.channel_id) or self.client.get_channel(self.channel_id)
             else:
                 return self.client.get_channel(self.channel_id)
+
+
+class MessageTypes(TypeBase):
+    DEFAULT = 0
+    RECIPIENT_ADD = 1
+    RECIPIENT_REMOVE = 2
+    CALL = 3
+    CHANNEL_NAME_CHANGE = 4
+    CHANNEL_ICON_CHANGE = 5
+    CHANNEL_PINNED_MESSAGE = 6
+    GUILD_MEMBER_JOIN = 7
+    USER_PREMIUM_GUILD_SUBSCRIPTION = 8
+    USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_1 = 9
+    USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_2 = 10
+    USER_PREMIUM_GUILD_SUBSCRIPTION_TIER_3 = 11
+    CHANNEL_FOLLOW_ADD = 12
+    GUILD_DISCOVERY_DISQUALIFIED = 14
+    GUILD_DISCOVERY_REQUALIFIED = 15
+    GUILD_DISCOVERY_GRACE_PERIOD_INITIAL_WARNING = 16
+    GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING = 17
+    THREAD_CREATED = 18
+    REPLY = 19
+    APPLICATION_COMMAND = 20
+    THREAD_STARTER_MESSAGE = 21
+    GUILD_INVITE_REMINDER = 22
+
+
+class MessageActivity:
+    def __init__(self, resp):
+        self.type = MessageActivityTypes(resp["type"])
+        self.party_id = resp.get("party_id")  # This is actually set as string in discord docs.
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class MessageActivityTypes(TypeBase):
+    JOIN = 1
+    SPECTATE = 2
+    LISTEN = 3
+    JOIN_REQUEST = 4
+
+
+class MessageFlags(FlagBase):
+    CROSSPOSTED = 1 << 0
+    IS_CROSSPOST = 1 << 1
+    SUPPRESS_EMBEDS = 1 << 2
+    SOURCE_MESSAGE_DELETED = 1 << 3
+    URGENT = 1 << 4
+    HAS_THREAD = 1 << 5
+    EPHEMERAL = 1 << 6
+    LOADING = 1 << 7
+
+
+class MessageSticker:
+    def __init__(self, resp):
+        self.id = Snowflake(resp["id"])
+        self.pack_id = Snowflake(resp["pack_id"])
+        self.name = resp["name"]
+        self.description = resp["description"]
+        self.tags = resp.get("tags")
+        self.asset = resp["asset"]
+        self.format_type = MessageStickerFormatTypes(resp["format_type"])
+
+
+class MessageStickerFormatTypes(TypeBase):
+    PNG = 1
+    APNG = 2
+    LOTTIE = 3
 
 
 class MessageReference:

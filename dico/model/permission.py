@@ -50,7 +50,7 @@ class Role(DiscordObjectBase):
         self.color = resp["color"]
         self.hoist = resp["hoist"]
         self.position = resp["position"]
-        self.permissions = resp["permissions"]
+        self.permissions = PermissionFlags.from_value(int(resp["permissions"]))
         self.managed = resp["managed"]
         self.mentionable = resp["mentionable"]
         self.tags = RoleTags.optional(resp.get("tags"))

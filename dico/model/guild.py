@@ -16,7 +16,7 @@ class Guild(DiscordObjectBase):
         self.icon_hash = resp.get("icon_hash")
         self.splash = resp["splash"]
         self.discovery_splash = resp["discovery_splash"]
-        self.owner = resp.get("owner")
+        self.owner = resp.get("owner", False)
         self.owner_id = Snowflake(resp["owner_id"])
         self.permissions = resp.get("permissions")
         self.region = resp["region"]
@@ -94,3 +94,6 @@ class Guild(DiscordObjectBase):
     @property
     def get_role(self):
         return self.cache.get_storage("role").get
+
+    def get_owner(self):
+        return self.get_member(self.owner_id)

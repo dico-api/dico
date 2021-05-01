@@ -90,3 +90,31 @@ class FlagBase:
         ret = cls()
         ret.value = value
         return ret
+
+
+class TypeBase:
+    def __init__(self, value):
+        self.value = value
+        self.values = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
+
+        if self.value not in self.values:
+            raise AttributeError(f"invalid value: `{value}`")
+
+    def __str__(self):
+        return self.values[self.value]
+
+    def __int__(self):
+        return self.value
+
+    def __getattr__(self, item):
+        return self.is_type(item)
+
+    def is_type(self, name: str):
+        if name.upper() not in self.values:
+            raise AttributeError(f"invalid name: `{name}`")
+        return self.value == self.values[name.upper()]
+
+    @classmethod
+    def to_string(cls, value):
+        values = {x: getattr(cls, x) for x in dir(cls) if isinstance(getattr(cls, x), int)}
+        return values.get(value)
