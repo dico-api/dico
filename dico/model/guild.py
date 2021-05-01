@@ -1,6 +1,7 @@
 import datetime
 
 from .channel import Channel
+from .permission import Role
 from .snowflake import Snowflake
 from ..utils import cdn_url
 from ..base.model import DiscordObjectBase
@@ -26,7 +27,7 @@ class Guild(DiscordObjectBase):
         self.verification_level = resp["verification_level"]
         self.default_message_notifications = resp["default_message_notifications"]
         self.explicit_content_filter = resp["explicit_content_filter"]
-        self.roles = resp["roles"]
+        self.roles = [Role.create(client, x, guild_id=self.id) for x in resp["roles"]]
         self.emojis = resp["emojis"]
         self.features = resp["features"]
         self.mfa_level = resp["mfa_level"]
@@ -89,3 +90,7 @@ class Guild(DiscordObjectBase):
     @property
     def get_channel(self):
         return self.cache.get_storage("channel").get
+
+    @property
+    def get_role(self):
+        return self.cache.get_storage("role").get

@@ -4,6 +4,7 @@ from ..model.snowflake import Snowflake
 class EventBase:
     def __init__(self, client, resp: dict):
         self.raw = resp
+        self.client = client
 
     @classmethod
     def create(cls, client, resp: dict):

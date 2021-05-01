@@ -25,13 +25,19 @@ class EventHandler:
     def dispatch_from_raw(self, name, resp):
         model_dict = {
             "READY": Ready,
-            "MESSAGE_CREATE": MessageCreate,
             "CHANNEL_CREATE": ChannelCreate,
             "CHANNEL_UPDATE": ChannelUpdate,
             "CHANNEL_DELETE": ChannelDelete,
+            "CHANNEL_PINS_UPDATE": ChannelPinsUpdate,
             "GUILD_CREATE": GuildCreate,
             "GUILD_UPDATE": GuildUpdate,
-            "GUILD_DELETE": GuildDelete
+            "GUILD_DELETE": GuildDelete,
+            "GUILD_ROLE_CREATE": GuildRoleCreate,
+            "GUILD_ROLE_UPDATE": GuildRoleUpdate,
+            "GUILD_ROLE_DELETE": GuildRoleDelete,
+            "MESSAGE_CREATE": MessageCreate,
+            "MESSAGE_UPDATE": MessageUpdate,
+            "MESSAGE_DELETE": MessageDelete,
         }
         if name in model_dict:
             ret = model_dict[name].create(self.client, resp)
