@@ -14,6 +14,14 @@ class DiscordError(HTTPError):
     """Discord has an error."""
 
 
+class Forbidden(HTTPError):
+    """We don't have permission for this request."""
+
+
+class NotFound(HTTPError):
+    """This request isn't something available."""
+
+
 class RateLimited(HTTPError):
     """We are rate-limited and couldn't successfully requesting in desired count."""
 

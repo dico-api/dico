@@ -7,10 +7,10 @@ from ..base.model import DiscordObjectBase
 
 
 class Channel(DiscordObjectBase):
-    def __init__(self, client, resp):
+    def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
         self.type = resp["type"]
-        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
         self.position = resp.get("position")
         self.permission_overwrites = resp.get("permission_overwrites", [])
         self.name = resp.get("name")

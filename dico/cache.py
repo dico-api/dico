@@ -9,7 +9,9 @@ class CacheContainer:
 
     def get(self, snowflake_id: typing.Union[str, int, Snowflake], *, ignore_expiration=True):
         for x in self.__cache_dict.values():
-            res = x.get(snowflake_id, ignore_expiration)
+            if isinstance(x, dict):
+                continue
+            res = x.get(snowflake_id, ignore_expiration=ignore_expiration)
             if res:
                 return res
 

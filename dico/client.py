@@ -1,4 +1,5 @@
 import io
+import sys
 import typing
 import asyncio
 import pathlib
@@ -41,7 +42,7 @@ class APIClient:
                        files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                        tts: bool = False,
                        allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                       message_reference: typing.Union[Message, MessageReference] = None) -> typing.Union[Message, typing.Coroutine[dict]]:
+                       message_reference: typing.Union[Message, MessageReference] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
         """
         Sends message create request to API.
 
@@ -202,7 +203,7 @@ class Client(APIClient):
         try:
             await self.ws.run()
         except KeyboardInterrupt:
-            pass
+            print("Detected KeyboardInterrupt, exiting...", file=sys.stderr)
         except Exception as ex:
             traceback.print_exc()
         finally:

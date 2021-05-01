@@ -39,7 +39,7 @@ class Guild(DiscordObjectBase):
         self.member_count = resp.get("member_count", 0)
         self.voice_states = resp.get("voice_states", [])
         self.members = resp.get("members", [])
-        self.channels = [Channel(client, x) for x in resp.get("channels", [])]
+        self.channels = [Channel(client, x, guild_id=self.id) for x in resp.get("channels", [])]
         self.presences = resp.get("presences", [])
         self.max_presences = resp.get("max_presences", 25000)
         self.max_members = resp.get("max_members")

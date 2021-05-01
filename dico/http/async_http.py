@@ -40,8 +40,12 @@ class AsyncHTTPRequest(HTTPRequestBase):
         retry = (retry if retry > 0 else 1) if retry is not None else self.default_retry
         for x in range(retry):
             code, resp = await self._request(route, meth, body, is_json, **kwargs)
-            if code == 200:
+            if 200 <= code < 300:
                 return resp
+            elif code == 403:
+                raise exception.Forbidden(route, code, resp)
+            elif code == 404:
+                raise exception.NotFound(route, code, resp)
             elif code == 429:
                 wait_sec = resp["retry_after"]
                 self.logger.warning(f"Rate limited, waiting for {wait_sec} second{'s' if wait_sec == 1 else ''}...")

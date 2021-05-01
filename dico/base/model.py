@@ -12,6 +12,7 @@ class EventBase:
 
 class DiscordObjectBase:
     def __init__(self, client, resp):
+        self.raw = resp
         self.id = Snowflake(resp["id"])
         self.client = client
 
