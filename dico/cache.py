@@ -41,6 +41,17 @@ class CacheContainer:
     def available_cache_types(self):
         return self.__cache_dict.keys()
 
+    @property
+    def size(self):
+        ret = 0
+        for k, v in self.__cache_dict.items():
+            if k == "guild_cache":
+                for b in v.values():
+                    ret += b.size
+                continue
+            ret += v.size
+        return ret
+
 
 class GuildCacheContainer(CacheContainer):
     def get_guild_container(self, *args, **kwargs):
@@ -59,3 +70,7 @@ class CacheStorage:
     def add(self, snowflake_id: typing.Union[str, int, Snowflake], obj, expire_at=None):
         snowflake_id = Snowflake.ensure_snowflake(snowflake_id)
         self.__cache_dict[snowflake_id] = {"value": obj, "expire_at": expire_at}
+
+    @property
+    def size(self):
+        return len(self.__cache_dict)

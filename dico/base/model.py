@@ -42,8 +42,8 @@ class DiscordObjectBase:
 
 class FlagBase:
     def __init__(self, *args, **kwargs):
-        self.value = 0
         self.values = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.value = 0
         self.__setattr__ = self.__setattr
         for x in args:
             if x.upper() not in self.values:
@@ -94,8 +94,8 @@ class FlagBase:
 
 class TypeBase:
     def __init__(self, value):
-        self.value = value
         self.values = {getattr(self, x): x for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.value = value
 
         if self.value not in self.values:
             raise AttributeError(f"invalid value: `{value}`")
