@@ -133,6 +133,12 @@ class Message(DiscordObjectBase):
         kwargs["allowed_mentions"] = allowed_mentions.to_dict(reply=True)
         return self.client.create_message(self.channel_id, content, **kwargs)
 
+    def edit(self, **kwargs):
+        return self.client.edit_message(self.channel_id, self.id, **kwargs)
+
+    def delete(self):
+        return self.client.delete_message(self.channel_id, self.id)
+
     @property
     def guild(self):
         if self.guild_id:
@@ -508,13 +514,27 @@ class EmbedField:
 class Attachment:
     def __init__(self, resp):
         self.id = Snowflake(resp["id"])
-        self.filename = resp["id"]
+        self.filename = resp["filename"]
         self.content_type = resp.get("content_type")
         self.size = resp["size"]
         self.url = resp["url"]
         self.proxy_url = resp["proxy_url"]
         self.height = resp.get("height")
         self.width = resp.get("width")
+
+    def to_dict(self):
+        ret = {"id": str(self.id),
+               "filename": self.filename,
+               "size": self.size,
+               "url": self.url,
+               "proxy_url": self.proxy_url}
+        if self.content_type:
+            ret["content_type"] = self.content_type
+        if self.height:
+            ret["height"] = self.height
+        if self.width:
+            ret["width"] = self.width
+        return ret
 
 
 class ChannelMention:

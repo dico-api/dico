@@ -41,7 +41,7 @@ class HTTPRequestBase(ABC):
         :param embed: Embed of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param message_reference: Message to reference.
-        :return:
+        :return: Message object dict.
         """
         pass
 
@@ -66,7 +66,40 @@ class HTTPRequestBase(ABC):
         :param embed: Embed of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param message_reference: Message to reference.
-        :return:
+        :return: Message object dict.
+        """
+        pass
+
+    @abstractmethod
+    def edit_message(self,
+                     channel_id,
+                     message_id,
+                     content: str,
+                     embed: dict,
+                     flags: int,
+                     allowed_mentions: dict,
+                     attachments: typing.List[dict]):
+        """
+        Edits sent message.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to edit.
+        :param content: Content of the message.
+        :param embed: Embed of the message.
+        :param flags:
+        :param allowed_mentions: Allowed mentions of the message.
+        :param attachments: Attachments to keep.
+        :return: Message object dict.
+        """
+        pass
+
+    @abstractmethod
+    def delete_message(self, channel_id, message_id):
+        """
+        Deletes sent message.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to edit.
         """
         pass
 

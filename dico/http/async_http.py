@@ -66,7 +66,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 body = json.dumps(body)
             kw["data"] = body
         async with self.session.request(meth, self.BASE_URL+route, headers=headers, **kw) as resp:
-            return resp.status, await resp.json()  # if resp.headers.get("Content-Type") == "applications/json" else {"text": await resp.text()}
+            return resp.status, await resp.json() if resp.status != 204 else None  # if resp.headers.get("Content-Type") == "applications/json" else {"text": await resp.text()}
 
     def create_message(self,
                        channel_id,
@@ -77,7 +77,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                        allowed_mentions: dict,
                        message_reference: dict):
         if not (content or embed):
-            raise
+            raise ValueError("either content or embed must be passed.")
         body = {}
         if content:
             body["content"] = content
@@ -103,7 +103,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                   allowed_mentions: dict,
                                   message_reference: dict):
         if not (content or embed or files):
-            raise
+            raise ValueError("either content or embed or files must be passed.")
         payload_json = {}
         form = aiohttp.FormData()
         if content:
@@ -125,6 +125,30 @@ class AsyncHTTPRequest(HTTPRequestBase):
             f = sel.read()
             form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/channels/{channel_id}/messages", "POST", form)
+
+    def edit_message(self,
+                     channel_id,
+                     message_id,
+                     content: str,
+                     embed: dict,
+                     flags: int,
+                     allowed_mentions: dict,
+                     attachments: typing.List[dict]):
+        body = {}
+        if content:
+            body["content"] = content
+        if embed:
+            body["embed"] = embed
+        if flags:
+            body["flags"] = flags
+        if allowed_mentions:
+            body["allowed_mentions"] = allowed_mentions
+        if attachments:
+            body["message_reference"] = attachments
+        return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", body, is_json=True)
+
+    def delete_message(self, channel_id, message_id):
+        return self.request(f"/channels/{channel_id}/messages/{message_id}", "DELETE")
 
     @classmethod
     def create(cls,
