@@ -10,7 +10,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake
+from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed
 
 
 class APIClient:
@@ -34,10 +34,10 @@ class APIClient:
         self.default_allowed_mentions = default_allowed_mentions
 
     def create_message(self,
-                       channel: typing.Union[int, str, Channel],
+                       channel: typing.Union[int, str, Snowflake, Channel],
                        content: str = None,
                        *,
-                       embed = None,
+                       embed: Embed = None,
                        file: typing.Union[io.FileIO, pathlib.Path, str] = None,
                        files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                        tts: bool = False,
@@ -81,7 +81,7 @@ class APIClient:
                 _all_men = _all_men.to_dict()
         params = {"channel_id": int(channel),
                   "content": content,
-                  "embed": embed,
+                  "embed": embed.to_dict() if embed else embed,
                   "nonce": None,  # What does this do tho?
                   "message_reference": message_reference.to_dict() if message_reference else None,
                   "tts": tts,

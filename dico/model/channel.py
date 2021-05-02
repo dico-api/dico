@@ -3,6 +3,7 @@ import typing
 import datetime
 
 from .guild import Member
+from .permission import PermissionFlags
 from .snowflake import Snowflake
 from .user import User
 from ..base.model import DiscordObjectBase, TypeBase, FlagBase
@@ -29,10 +30,9 @@ class Channel(DiscordObjectBase):
         self.application_id = Snowflake.optional(resp.get("application_id"))
         self.parent_id = Snowflake.optional(resp.get("parent_id"))
         self.__last_pin_timestamp = resp.get("last_pin_timestamp")
+        self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
         self.rtc_region = resp.get("rtc_region")
         self.video_quality_mode = resp.get("video_quality_mode")
-
-        self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
 
     @property
     def create_message(self):
@@ -98,15 +98,17 @@ class Message(DiscordObjectBase):
         self.guild_id = Snowflake.optional(resp.get("guild_id") or guild_id)
         self.author = User.create(client, resp["author"])
         self.__member = resp.get("member")
+        self.member = Member(self.client, self.__member, user=self.author) if self.__member else self.__member
         self.content = resp["content"]
         self.timestamp = datetime.datetime.fromisoformat(resp["timestamp"])
         self.__edited_timestamp = resp["edited_timestamp"]
+        self.edited_timestamp = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
         self.tts = resp["tts"]
         self.mention_everyone = resp["mention_everyone"]
         self.mentions = resp["mentions"]
         self.mention_channels = resp.get("mention_channels", [])
         self.attachments = resp["attachments"] or []
-        self.embeds = resp["embeds"] or []
+        self.embeds = [Embed(x) for x in resp["embeds"] or []]
         self.reactions = resp.get("reactions", [])
         self.nonce = resp.get("nonce")
         self.pinned = resp["pinned"]
@@ -116,22 +118,13 @@ class Message(DiscordObjectBase):
         self.application = resp.get("application")
         self.message_reference = MessageReference(resp.get("message_reference", {}))
         self.__flags = resp.get("flags")
+        self.flags = MessageFlags(self.__flags) if self.__flags else self.__flags
         self.stickers = [MessageSticker(x) for x in resp.get("stickers", [])]
         self.__referenced_message = resp.get("referenced_message")
+        self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id) if self.__referenced_message else self.__referenced_message
         self.interaction = resp.get("interaction")
 
-        self.edited_timestamp = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
-
-        if self.__member:
-            self.member = Member(self.client, self.__member, user=self.author)
-
-        if self.__referenced_message:
-            self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id)
-
-        if self.__flags:
-            self.flags = MessageFlags(self.__flags)
-
-    def reply(self, content, **kwargs):
+    def reply(self, content=None, **kwargs):
         kwargs["message_reference"] = self
         mention = kwargs.pop("mention") if "mention" in kwargs.keys() else True
         allowed_mentions = kwargs.get("allowed_mentions", self.client.default_allowed_mentions or AllowedMentions(replied_user=mention)).copy()
@@ -244,6 +237,271 @@ class MessageReference:
     @classmethod
     def from_id(cls, **kwargs):
         return cls(kwargs)
+
+
+class FollowedChannel:
+    def __init__(self, resp):
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.webhook_id = Snowflake(resp["webhook_id"])
+
+
+class Reaction:
+    def __init__(self, resp):
+        self.count = resp["count"]
+        self.me = resp["me"]
+        self.emoji = resp["emoji"]
+
+
+class Overwrite:
+    def __init__(self, resp):
+        self.id = Snowflake(resp["id"])
+        self.type = resp["type"]
+        self.allow = PermissionFlags.from_value(int(resp["allow"]))
+        self.deny = PermissionFlags.from_value(int(resp["deny"]))
+
+
+class ThreadMetadata:
+    def __init__(self, resp):
+        self.archived = resp["archived"]
+        self.archiver_id = Snowflake.optional(resp.get("archiver_id"))
+        self.auto_archive_duration = resp["auto_archive_duration"]
+        self.archive_timestamp = datetime.datetime.fromisoformat(resp["archive_timestamp"])
+        self.locked = resp.get("locked", False)
+
+
+class ThreadMember:
+    def __init__(self, resp):
+        self.id = Snowflake(resp["id"])
+        self.user_id = Snowflake(resp["user_id"])
+        self.join_timestamp = datetime.datetime.fromisoformat(resp["join_timestamp"])
+        self.flags = resp["flags"]
+
+
+class Embed:
+    def __init__(self, resp):
+        self.title = resp.get("title")
+        self.type = resp.get("type", "rich")
+        self.description = resp.get("description")
+        self.url = resp.get("url")
+        self.__timestamp = resp.get("timestamp")
+        self.timestamp = datetime.datetime.fromisoformat(self.__timestamp) if self.__timestamp else self.__timestamp
+        self.color = resp.get("color")
+        self.footer = EmbedFooter.optional(resp.get("footer"))
+        self.image = EmbedImage.optional(resp.get("image"))
+        self.thumbnail = EmbedThumbnail.optional(resp.get("thumbnail"))
+        self.video = EmbedVideo.optional(resp.get("video"))
+        self.provider = EmbedProvider.optional(resp.get("provider"))
+        self.author = EmbedAuthor.optional(resp.get("author"))
+        self.fields = [EmbedField(x) for x in resp.get("fields", [])]
+
+    @classmethod
+    def create(cls, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None):
+        return cls({"title": title, "description": description, "url": url, "timestamp": str(timestamp) if timestamp else timestamp, "color": color})
+
+    def set_footer(self, text: str, icon_url: str = None, proxy_icon_url: str = None):
+        self.footer = EmbedFooter({"text": text, "icon_url": icon_url, "proxy_icon_url": proxy_icon_url})
+
+    def set_image(self, url: str = None, proxy_url: str = None, height: int = None, width: int = None):
+        self.image = EmbedImage({"url": url, "proxy_url": proxy_url, "height": height, "width": width})
+
+    def set_thumbnail(self, url: str = None, proxy_url: str = None, height: int = None, width: int = None):
+        self.thumbnail = EmbedThumbnail({"url": url, "proxy_url": proxy_url, "height": height, "width": width})
+
+    def set_video(self, url: str = None, proxy_url: str = None, height: int = None, width: int = None):
+        self.video = EmbedVideo({"url": url, "proxy_url": proxy_url, "height": height, "width": width})
+
+    def set_provider(self, name: str = None, url: str = None):
+        self.provider = EmbedProvider({"name": name, "url": url})
+
+    def set_author(self, name: str = None, url: str = None, icon_url: str = None, proxy_icon_url: str = None):
+        self.author = EmbedAuthor({"name": name, "url": url, "icon_url": icon_url, "proxy_icon_url": proxy_icon_url})
+
+    def add_field(self, name: str, value: str, inline: bool = True):
+        self.fields.append(EmbedField({"name": name, "value": value, "inline": inline}))
+
+    @property
+    def remove_field(self):
+        return self.fields.pop
+
+    def to_dict(self):
+        ret = {}
+        if self.title:
+            ret["title"] = self.title
+        if self.type:
+            ret["type"] = self.type
+        if self.description:
+            ret["description"] = self.description
+        if self.timestamp:
+            ret["timestamp"] = str(self.timestamp)
+        if self.color:
+            ret["color"] = self.color
+        if self.image:
+            ret["image"] = self.image.to_dict()
+        if self.thumbnail:
+            ret["thumbnail"] = self.thumbnail.to_dict()
+        if self.video:
+            ret["video"] = self.video.to_dict()
+        if self.provider:
+            ret["provider"] = self.provider.to_dict()
+        if self.author:
+            ret["author"] = self.author.to_dict()
+        if self.fields:
+            ret["fields"] = [x.to_dict() for x in self.fields]
+        return ret
+
+
+class EmbedThumbnail:
+    def __init__(self, resp):
+        self.url = resp.get("url")
+        self.proxy_url = resp.get("proxy_url")
+        self.height = resp.get("height")
+        self.width = resp.get("width")
+
+    def to_dict(self):
+        ret = {}
+        if self.url:
+            ret["url"] = self.url
+        if self.proxy_url:
+            ret["proxy_url"] = self.proxy_url
+        if self.height:
+            ret["height"] = self.height
+        if self.width:
+            ret["width"] = self.width
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class EmbedVideo:
+    def __init__(self, resp):
+        self.url = resp.get("url")
+        self.proxy_url = resp.get("proxy_url")
+        self.height = resp.get("height")
+        self.width = resp.get("width")
+
+    def to_dict(self):
+        ret = {}
+        if self.url:
+            ret["url"] = self.url
+        if self.proxy_url:
+            ret["proxy_url"] = self.proxy_url
+        if self.height:
+            ret["height"] = self.height
+        if self.width:
+            ret["width"] = self.width
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class EmbedImage:
+    def __init__(self, resp):
+        self.url = resp.get("url")
+        self.proxy_url = resp.get("proxy_url")
+        self.height = resp.get("height")
+        self.width = resp.get("width")
+
+    def to_dict(self):
+        ret = {}
+        if self.url:
+            ret["url"] = self.url
+        if self.proxy_url:
+            ret["proxy_url"] = self.proxy_url
+        if self.height:
+            ret["height"] = self.height
+        if self.width:
+            ret["width"] = self.width
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class EmbedProvider:
+    def __init__(self, resp):
+        self.name = resp.get("name")
+        self.url = resp.get("url")
+
+    def to_dict(self):
+        ret = {}
+        if self.name:
+            ret["name"] = self.name
+        if self.url:
+            ret["url"] = self.url
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class EmbedAuthor:
+    def __init__(self, resp):
+        self.name = resp.get("name")
+        self.url = resp.get("url")
+        self.icon_url = resp.get("icon_url")
+        self.proxy_icon_url = resp.get("proxy_icon_url")
+
+    def to_dict(self):
+        ret = {}
+        if self.name:
+            ret["name"] = self.name
+        if self.url:
+            ret["url"] = self.url
+        if self.icon_url:
+            ret["icon_url"] = self.icon_url
+        if self.proxy_icon_url:
+            ret["proxy_icon_url"] = self.proxy_icon_url
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class EmbedFooter:
+    def __init__(self, resp):
+        self.text = resp["text"]
+        self.icon_url = resp.get("icon_url")
+        self.proxy_icon_url = resp.get("proxy_icon_url")
+
+    def to_dict(self):
+        ret = {"text": self.text}
+        if self.icon_url:
+            ret["icon_url"] = self.icon_url
+        if self.proxy_icon_url:
+            ret["proxy_icon_url"] = self.proxy_icon_url
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class EmbedField:
+    def __init__(self, resp):
+        self.name = resp["name"]
+        self.value = resp["value"]
+        self.inline = resp.get("inline", True)
+
+    def to_dict(self):
+        return {"name": self.name, "value": self.value, "inline": self.inline}
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
 
 
 class AllowedMentions:

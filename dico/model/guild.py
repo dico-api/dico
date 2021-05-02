@@ -37,6 +37,7 @@ class Guild(DiscordObjectBase):
         self.system_channel_flags = resp["system_channel_flags"]
         self.rules_channel_id = Snowflake.optional(resp["rules_channel_id"])
         self.__joined_at = resp["joined_at"]
+        self.joined_at = datetime.datetime.fromisoformat(self.__joined_at) if self.__joined_at else self.__joined_at
         self.large = resp.get("large", False)
         self.unavailable = resp.get("unavailable", False)
         self.member_count = resp.get("member_count", 0)
@@ -58,8 +59,6 @@ class Guild(DiscordObjectBase):
         self.approximate_presence_count = resp.get("approximate_presence_count")
         self.welcome_screen = resp.get("welcome_screen")
         self.nsfw = resp["nsfw"]
-
-        self.joined_at = datetime.datetime.fromisoformat(self.__joined_at) if self.__joined_at else self.__joined_at
 
         self.cache = client.cache.get_guild_container(self.id)
 
@@ -104,20 +103,16 @@ class Member:
     def __init__(self, client, resp, *, user: User = None):
         self.user = user
         self.__user = resp.get("user")
+        self.user = User.create(client, resp) if self.__user and not self.user else self.user if self.user else self.__user
         self.nick = resp.get("nick")
         self.roles = [client.get(x) for x in resp["roles"]]
         self.joined_at = datetime.datetime.fromisoformat(resp["joined_at"])
         self.__premium_since = resp.get("premium_since")
+        self.premium_since = datetime.datetime.fromisoformat(self.__premium_since) if self.__premium_since else self.__premium_since
         self.deaf = resp["deaf"]
         self.mute = resp["mute"]
         self.pending = resp.get("pending", False)
         self.__permissions = resp.get("permissions")
-
-        if self.__user and not self.user:
-            self.user = User.create(client, resp)
-
-        if self.__premium_since:
-            self.premium_since = datetime.datetime.fromisoformat(self.__premium_since)
 
     def __str__(self):
         return self.nick or (self.user.username if self.user else None)
