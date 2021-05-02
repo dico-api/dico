@@ -3,7 +3,7 @@ import typing
 import datetime
 
 from .guild import Member
-from .permission import PermissionFlags
+from .permission import PermissionFlags, Role
 from .snowflake import Snowflake
 from .user import User
 from ..base.model import DiscordObjectBase, TypeBase, FlagBase
@@ -106,10 +106,11 @@ class Message(DiscordObjectBase):
         self.tts = resp["tts"]
         self.mention_everyone = resp["mention_everyone"]
         self.mentions = resp["mentions"]
-        self.mention_channels = resp.get("mention_channels", [])
-        self.attachments = resp["attachments"] or []
+        self.mention_roles = [Role(self.client, x) for x in resp["mention_roles"]]
+        self.mention_channels = [ChannelMention(x) for x in resp.get("mention_channels", [])]
+        self.attachments = [Attachment(x) for x in resp["attachments"] or []]
         self.embeds = [Embed(x) for x in resp["embeds"] or []]
-        self.reactions = resp.get("reactions", [])
+        self.reactions = [Reaction(x) for x in resp.get("reactions", [])]
         self.nonce = resp.get("nonce")
         self.pinned = resp["pinned"]
         self.webhook_id = Snowflake.optional(resp.get("webhook_id"))
@@ -502,6 +503,26 @@ class EmbedField:
     def optional(cls, resp):
         if resp:
             return cls(resp)
+
+
+class Attachment:
+    def __init__(self, resp):
+        self.id = Snowflake(resp["id"])
+        self.filename = resp["id"]
+        self.content_type = resp.get("content_type")
+        self.size = resp["size"]
+        self.url = resp["url"]
+        self.proxy_url = resp["proxy_url"]
+        self.height = resp.get("height")
+        self.width = resp.get("width")
+
+
+class ChannelMention:
+    def __init__(self, resp):
+        self.id = Snowflake(resp["id"])
+        self.guild_id = Snowflake(resp["guild_id"])
+        self.type = ChannelTypes(resp["type"])
+        self.name = resp["name"]
 
 
 class AllowedMentions:
