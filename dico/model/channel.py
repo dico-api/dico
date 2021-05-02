@@ -1,7 +1,9 @@
 import copy
 import typing
+import pathlib
 import datetime
 
+from .emoji import Emoji
 from .guild import Member
 from .permission import PermissionFlags, Role
 from .snowflake import Snowflake
@@ -32,7 +34,8 @@ class Channel(DiscordObjectBase):
         self.__last_pin_timestamp = resp.get("last_pin_timestamp")
         self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
         self.rtc_region = resp.get("rtc_region")
-        self.video_quality_mode = resp.get("video_quality_mode")
+        self.__video_quality_mode = resp.get("video_quality_mode")
+        self.video_quality_mode = VideoQualityModes(self.__video_quality_mode) if self.__video_quality_mode else self.__video_quality_mode
 
     @property
     def create_message(self):
@@ -85,7 +88,7 @@ class ChannelTypes(TypeBase):
     GUILD_STAGE_VOICE = 13
 
 
-class VideoQualityModes:
+class VideoQualityModes(TypeBase):
     AUTO = 1
     FULL = 2
 
@@ -108,9 +111,9 @@ class Message(DiscordObjectBase):
         self.mentions = resp["mentions"]
         self.mention_roles = [Role(self.client, x) for x in resp["mention_roles"]]
         self.mention_channels = [ChannelMention(x) for x in resp.get("mention_channels", [])]
-        self.attachments = [Attachment(x) for x in resp["attachments"] or []]
+        self.attachments = [Attachment(self.client, x) for x in resp["attachments"] or []]
         self.embeds = [Embed(x) for x in resp["embeds"] or []]
-        self.reactions = [Reaction(x) for x in resp.get("reactions", [])]
+        self.reactions = [Reaction(self.client, x) for x in resp.get("reactions", [])]
         self.nonce = resp.get("nonce")
         self.pinned = resp["pinned"]
         self.webhook_id = Snowflake.optional(resp.get("webhook_id"))
@@ -253,10 +256,10 @@ class FollowedChannel:
 
 
 class Reaction:
-    def __init__(self, resp):
+    def __init__(self, client, resp):
         self.count = resp["count"]
         self.me = resp["me"]
-        self.emoji = resp["emoji"]
+        self.emoji = Emoji(client, resp["emoji"])
 
 
 class Overwrite:
@@ -512,7 +515,8 @@ class EmbedField:
 
 
 class Attachment:
-    def __init__(self, resp):
+    def __init__(self, client, resp):
+        self.client = client
         self.id = Snowflake(resp["id"])
         self.filename = resp["filename"]
         self.content_type = resp.get("content_type")
@@ -521,6 +525,15 @@ class Attachment:
         self.proxy_url = resp["proxy_url"]
         self.height = resp.get("height")
         self.width = resp.get("width")
+
+    async def download(self, target: pathlib.Path = ""):
+        async with self.client.http.session.get(self.url) as resp:
+            if resp.status == 200:
+                content = await resp.read()
+            else:
+                raise
+        with open(str(target)+"/" if target and not str(target).endswith("/") else ""+self.filename, "wb") as f:
+            f.write(content)
 
     def to_dict(self):
         ret = {"id": str(self.id),

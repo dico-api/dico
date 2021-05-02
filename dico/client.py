@@ -250,27 +250,6 @@ class Client(APIClient):
             await self.http.close()
 
     async def create_message(self, *args, **kwargs) -> Message:
-        """
-        Sends message create request to API.
-
-        .. note::
-            - FileIO object passed to ``file`` or ``files`` parameter will be automatically closed when requesting,
-              therefore it is recommended to pass file path.
-
-        .. warning::
-            - You must pass at least one of ``content`` or ``embed`` or ``file`` or ``files`` parameter.
-            - You can't use ``file`` and ``files`` at the same time.
-
-        :param channel: Channel to create message. Accepts both :class:`.model.channel.Channel` and channel ID.
-        :param content: Content of the message.
-        :param embed: Embed of the message.
-        :param file: File of the message.
-        :param files: Files of the message.
-        :param tts: Whether to speak message.
-        :param allowed_mentions: :class:`.model.channel.AllowedMentions` to use for this request.
-        :param message_reference: Message to reply.
-        :return: :class:`.model.channel.Message`
-        """
         return Message.create(self, await super().create_message(*args, **kwargs))
 
     async def edit_message(self, *args, **kwargs) -> Message:
