@@ -3,6 +3,7 @@ from .channel import Channel, Message
 from .guild import Guild
 from .permission import Role
 from .snowflake import Snowflake
+from .user import User
 from ..base.model import EventBase
 
 
@@ -10,8 +11,7 @@ class Ready(EventBase):
     def __init__(self, client, resp: dict):
         super().__init__(client, resp)
         self.v = resp["v"]
-        self.user = resp["user"]
-        self.private_channels = resp["private_channels"]
+        self.user = User.create(client, resp["user"])
         self.guilds = resp["guilds"]
         self.session_id = resp["session_id"]
         self.shard = resp.get("shard", [])

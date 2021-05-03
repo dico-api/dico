@@ -10,7 +10,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment
+from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application
 
 
 class APIClient:
@@ -153,6 +153,7 @@ class Client(APIClient):
     :ivar intents: :class:`.model.gateway.Intents` of the client.
     :ivar ws: Websocket client of the client.
     :ivar events: :class:`.handler.EventHandler` of the client.
+    :ivar application: :class.model.gateway.Application: of the client.
     """
 
     def __init__(self,
@@ -168,6 +169,7 @@ class Client(APIClient):
         self.intents = intents
         self.ws: typing.Union[None, WebSocketClient] = None
         self.events = EventHandler(self)
+        self.application: typing.Union[None, Application] = None
 
         # Custom events dispatch
         # self.events.add("MESSAGE_CREATE", lambda x: self.events.dispatch("MESSAGE", x.message))
