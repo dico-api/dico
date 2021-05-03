@@ -172,7 +172,7 @@ class Client(APIClient):
         # Custom events dispatch
         # self.events.add("MESSAGE_CREATE", lambda x: self.events.dispatch("MESSAGE", x.message))
 
-    def on_(self, name: str = None):
+    def on_(self, name: str = None, meth=None):
         """
         Adds new event listener.
 
@@ -180,24 +180,31 @@ class Client(APIClient):
 
         .. code-block:: python
 
-            # These 3 are equivalent.
+            # These 4 are equivalent.
 
             @client.on_("message_create")
-            async def on_message_create(message_create):
+            async def on_message_create(message):
                 ...
 
             @client.on_("MESSAGE_CREATE")
-            async def on_message_create_two(message_create):
+            async def on_message_create_two(message):
                 ...
 
             @client.on_()
-            async def message_create(message_create):
+            async def message_create(message):
                 ...
 
+            async def message_create_another(message):
+                ...
+
+            client.on_("MESSAGE_CREATE", message_create_another)
+
         :param name: Name of the event. Case-insensitive. Default name of the function.
+        :param meth: Method or Coroutine, if you don't want to use as decorator.
         """
-        def wrap(func):
-            self.events.add(name.upper(), func)
+        def wrap(func=None):
+            func = func or meth
+            self.events.add(name.upper() if name else func.__name__.upper().lstrip("ON_"), func)
             return func
         return wrap
 

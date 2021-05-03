@@ -1,10 +1,11 @@
 import datetime
 
+from .emoji import Emoji
 from .permission import Role, PermissionFlags
 from .snowflake import Snowflake
 from .user import User
 from ..utils import cdn_url
-from ..base.model import DiscordObjectBase
+from ..base.model import DiscordObjectBase, TypeBase, FlagBase
 
 
 class Guild(DiscordObjectBase):
@@ -25,16 +26,16 @@ class Guild(DiscordObjectBase):
         self.afk_timeout = resp["afk_timeout"]
         self.widget_enabled = resp.get("widget_enabled")
         self.widget_channel_id = Snowflake.optional(resp.get("widget_channel_id"))
-        self.verification_level = resp["verification_level"]
-        self.default_message_notifications = resp["default_message_notifications"]
-        self.explicit_content_filter = resp["explicit_content_filter"]
+        self.verification_level = VerificationLevel(resp["verification_level"])
+        self.default_message_notifications = DefaultMessageNotificationLevel(resp["default_message_notifications"])
+        self.explicit_content_filter = ExplicitContentFilterLevel(resp["explicit_content_filter"])
         self.roles = [Role.create(client, x, guild_id=self.id) for x in resp["roles"]]
-        self.emojis = resp["emojis"]
+        self.emojis = [Emoji(self.client, x) for x in resp["emojis"]]
         self.features = resp["features"]
-        self.mfa_level = resp["mfa_level"]
+        self.mfa_level = MFALevel(resp["mfa_level"])
         self.application_id = Snowflake.optional(resp["application_id"])
         self.system_channel_id = Snowflake.optional(resp["system_channel_id"])
-        self.system_channel_flags = resp["system_channel_flags"]
+        self.system_channel_flags = SystemChannelFlags.from_value(resp["system_channel_flags"])
         self.rules_channel_id = Snowflake.optional(resp["rules_channel_id"])
         self.__joined_at = resp["joined_at"]
         self.joined_at = datetime.datetime.fromisoformat(self.__joined_at) if self.__joined_at else self.__joined_at
@@ -50,7 +51,7 @@ class Guild(DiscordObjectBase):
         self.vanity_url_code = resp["vanity_url_code"]
         self.description = resp["description"]
         self.banner = resp["banner"]
-        self.premium_tier = resp["premium_tier"]
+        self.premium_tier = PremiumTier(resp["premium_tier"])
         self.premium_subscription_count = resp.get("premium_subscription_count", 0)
         self.preferred_locale = resp["preferred_locale"]
         self.public_updates_channel_id = Snowflake.optional(resp["public_updates_channel_id"])
@@ -97,6 +98,63 @@ class Guild(DiscordObjectBase):
 
     def get_owner(self):
         return self.get_user(self.owner_id)
+
+
+class DefaultMessageNotificationLevel(TypeBase):
+    ALL_MESSAGES = 0
+    ONLY_MENTIONS = 1
+
+
+class ExplicitContentFilterLevel(TypeBase):
+    DISABLED = 0
+    MEMBERS_WITHOUT_ROLES = 1
+    ALL_MEMBERS = 2
+
+
+class MFALevel(TypeBase):
+    NONE = 0
+    ELEVATED = 1
+
+
+class VerificationLevel(TypeBase):
+    NONE = 0
+    LOW = 1
+    MEDIUM = 2
+    HIGH = 3
+    VERY_HIGH = 4
+
+
+class PremiumTier(TypeBase):
+    NONE = 0
+    TIER_1 = 1
+    TIER_2 = 2
+    TIER_3 = 3
+
+
+class SystemChannelFlags(FlagBase):
+    SUPPRESS_JOIN_NOTIFICATIONS = 1 << 0
+    SUPPRESS_PREMIUM_SUBSCRIPTIONS = 1 << 1
+    SUPPRESS_GUILD_REMINDER_NOTIFICATIONS = 1 << 2
+
+
+class GuildPreview:
+    def __init__(self, client, resp):
+        self.id = Snowflake(resp["id"])
+        self.name = resp["name"]
+        self.icon = resp["icon"]
+        self.splash = resp["splash"]
+        self.discovery_splash = resp["discovery_splash"]
+        self.emojis = [Emoji(client, x) for x in resp["emojis"]]
+        self.features = resp["features"]
+        self.approximate_member_count = resp["approximate_member_count"]
+        self.approximate_presence_count = resp["approximate_presence_count"]
+        self.description = resp["description"]
+
+
+class GuildWidget:
+    def __init__(self, resp):
+        self.enabled = resp["enabled"]
+        self.channel_id = Snowflake.optional(resp["channel_id"])
 
 
 class Member:

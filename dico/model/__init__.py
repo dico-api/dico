@@ -1,4 +1,5 @@
 from .channel import *
+from .emoji import *
 from .event import *
 from .gateway import *
 from .guild import *
