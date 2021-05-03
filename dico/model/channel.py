@@ -527,7 +527,7 @@ class Attachment:
         self.width = resp.get("width")
 
     async def download(self, target: pathlib.Path = ""):
-        async with self.client.http.session.get(self.url) as resp:
+        async with self.client.http.session.get(self.url) as resp:  # TODO: create request function to http part
             if resp.status == 200:
                 content = await resp.read()
             else:

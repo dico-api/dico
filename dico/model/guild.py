@@ -173,8 +173,8 @@ class Member:
         self.joined_at = datetime.datetime.fromisoformat(resp["joined_at"])
         self.__premium_since = resp.get("premium_since")
         self.premium_since = datetime.datetime.fromisoformat(self.__premium_since) if self.__premium_since else self.__premium_since
-        self.deaf = resp["deaf"]
-        self.mute = resp["mute"]
+        self.deaf = resp.get("deaf", False)
+        self.mute = resp.get("mute", False)
         self.pending = resp.get("pending", False)
         self.__permissions = resp.get("permissions")
         self.guild_id = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)

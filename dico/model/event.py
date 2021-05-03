@@ -123,9 +123,16 @@ class GuildMemberRemove(EventBase):
         self.guild_id = Snowflake(resp["guild_id"])
         self.user = User.create(self.client, resp["user"])
 
+    def __del__(self):
+        self.guild.cache.remove(self.user.id, "member")
+
     @property
     def guild(self):
         return self.client.cache.get_guild(self.guild_id)
+
+    @property
+    def member(self):
+        return self.guild.get_member(self.user.id)
 
 
 class GuildMemberUpdate(Member):
@@ -188,6 +195,51 @@ class GuildRoleDelete(EventBase):
         return self.guild.get_role(self.role_id)
 
 
+class InviteCreate(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.code = resp["code"]
+        self.created_at = datetime.datetime.fromtimestamp(resp["created_at"])
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+        self.__inviter = resp.get("inviter")
+        self.inviter = User.create(client, self.__inviter) if self.__inviter else self.__inviter
+        self.max_age = resp["max_age"]
+        self.max_uses = resp["max_uses"]
+        self.target_type = resp.get("target_type")
+        self.__target_user = resp.get("target_user")
+        self.target_user = User.create(client, self.__target_user) if self.__target_user else self.__target_user
+        self.target_application = resp.get("target_application")
+        self.temporary = resp["temporary"]
+        self.uses = resp["uses"]
+
+    @property
+    def channel(self):
+        return self.client.get_channel(self.channel_id)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+
+class InviteDelete(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.code = resp["code"]
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+
+    @property
+    def channel(self):
+        return self.client.get_channel(self.channel_id)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+
 MessageCreate = Message
 
 
@@ -221,6 +273,130 @@ class MessageDelete(EventBase):
     @property
     def channel(self):
         return self.client.get_channel(self.channel_id)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+
+class MessageDeleteBulk(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.ids = [Snowflake(x) for x in resp["ids"]]
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+
+    def __del__(self):
+        [self.client.cache.remove(x.id, "message") for x in self.available_messages]
+
+    @property
+    def channel(self):
+        return self.client.get_channel(self.channel_id)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+    @property
+    def available_messages(self):
+        tries = [self.client.get(x) for x in self.ids]
+        return [x for x in tries if x]
+
+
+class MessageReactionAdd(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.user_id = Snowflake(resp["user_id"])
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.message_id = Snowflake(resp["message_id"])
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+        self.__member = resp.get("member")
+        self.member = Member.create(client, self.__member, guild_id=self.guild_id)
+        self.emoji = Emoji(client, resp["emoji"])
+
+    @property
+    def user(self):
+        return self.client.get_user(self.user_id)
+
+    @property
+    def channel(self):
+        return self.client.get_channel(self.channel_id)
+
+    @property
+    def message(self):
+        return self.client.get(self.message_id)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+
+class MessageReactionRemove(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.user_id = Snowflake(resp["user_id"])
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.message_id = Snowflake(resp["message_id"])
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+        self.emoji = Emoji(client, resp["emoji"])
+
+    @property
+    def user(self):
+        return self.client.get_user(self.user_id)
+
+    @property
+    def channel(self):
+        return self.client.get_channel(self.channel_id)
+
+    @property
+    def message(self):
+        return self.client.get(self.message_id)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+
+class MessageReactionRemoveAll(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.message_id = Snowflake(resp["message_id"])
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+
+    @property
+    def channel(self):
+        return self.client.get_channel(self.channel_id)
+
+    @property
+    def message(self):
+        return self.client.get(self.message_id)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+
+class MessageReactionRemoveEmoji(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.message_id = Snowflake(resp["message_id"])
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+        self.emoji = Emoji(client, resp["emoji"])
+
+    @property
+    def channel(self):
+        return self.client.get_channel(self.channel_id)
+
+    @property
+    def message(self):
+        return self.client.get(self.message_id)
 
     @property
     def guild(self):

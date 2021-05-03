@@ -42,9 +42,16 @@ class EventHandler:
             "GUILD_ROLE_CREATE": GuildRoleCreate,
             "GUILD_ROLE_UPDATE": GuildRoleUpdate,
             "GUILD_ROLE_DELETE": GuildRoleDelete,
+            "INVITE_CREATE": InviteCreate,
+            "INVITE_DELETE": InviteDelete,
             "MESSAGE_CREATE": MessageCreate,
             "MESSAGE_UPDATE": MessageUpdate,
             "MESSAGE_DELETE": MessageDelete,
+            "MESSAGE_DELETE_BULK": MessageDeleteBulk,
+            "MESSAGE_REACTION_ADD": MessageReactionAdd,
+            "MESSAGE_REACTION_REMOVE": MessageReactionRemove,
+            "MESSAGE_REACTION_REMOVE_ALL": MessageReactionRemoveAll,
+            "MESSAGE_REACTION_REMOVE_EMOJI": MessageReactionRemoveEmoji
         }
         if name in model_dict:
             ret = model_dict[name].create(self.client, resp)
