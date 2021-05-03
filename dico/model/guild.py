@@ -43,7 +43,7 @@ class Guild(DiscordObjectBase):
         self.unavailable = resp.get("unavailable", False)
         self.member_count = resp.get("member_count", 0)
         self.voice_states = resp.get("voice_states", [])
-        self.members = resp.get("members", [])
+        self.members = [Member.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
         self.channels = [Channel.create(client, x, guild_id=self.id) for x in resp.get("channels", [])]
         self.presences = resp.get("presences", [])
         self.max_presences = resp.get("max_presences", 25000)
@@ -86,7 +86,11 @@ class Guild(DiscordObjectBase):
 
     @property
     def get_user(self):
-        return self.cache.get_storage("user").get
+        return self.client.cache.get_storage("user").get
+
+    @property
+    def get_member(self):
+        return self.cache.get_storage("member").get
 
     @property
     def get_channel(self):
@@ -97,7 +101,7 @@ class Guild(DiscordObjectBase):
         return self.cache.get_storage("role").get
 
     def get_owner(self):
-        return self.get_user(self.owner_id)
+        return self.get_member(self.owner_id) or self.get_user(self.owner_id)
 
 
 class DefaultMessageNotificationLevel(TypeBase):
@@ -158,10 +162,12 @@ class GuildWidget:
 
 
 class Member:
-    def __init__(self, client, resp, *, user: User = None):
+    def __init__(self, client, resp, *, user: User = None, guild_id=None):
+        self.raw = resp
+        self.client = client
         self.user = user
         self.__user = resp.get("user")
-        self.user = User.create(client, resp) if self.__user and not self.user else self.user if self.user else self.__user
+        self.user = User.create(client, self.__user) if self.__user and not self.user else self.user if self.user else self.__user
         self.nick = resp.get("nick")
         self.roles = [client.get(x) for x in resp["roles"]]
         self.joined_at = datetime.datetime.fromisoformat(resp["joined_at"])
@@ -171,7 +177,7 @@ class Member:
         self.mute = resp["mute"]
         self.pending = resp.get("pending", False)
         self.__permissions = resp.get("permissions")
-        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
 
     def __str__(self):
         return self.nick or (self.user.username if self.user else None)
@@ -193,3 +199,21 @@ class Member:
             pass
         else:
             return PermissionFlags.from_value(0)
+
+    @classmethod
+    def create(cls, client, resp, *, user=None, guild_id=None, cache: bool = True):
+        if cache and (guild_id or resp.get("guild_id")) and (user or resp.get("user")):
+            _guild_id = guild_id or resp.get("guild_id")
+            _user_id = user.id if isinstance(user, User) else resp["user"]["id"]
+            maybe_exist = client.cache.get_guild_container(_guild_id).get_storage("member").get(_user_id)
+            if maybe_exist:
+                orig = maybe_exist.raw
+                for k, v in resp.items():
+                    if orig.get(k) != v:
+                        orig[k] = v
+                maybe_exist.__init__(client, orig, user=user, guild_id=guild_id)
+                return maybe_exist
+        ret = cls(client, resp, user=user, guild_id=guild_id)
+        if cache and ret.guild_id and ret.user:
+            client.cache.get_guild_container(ret.guild_id).add(ret.user.id, "member", ret)
+        return ret

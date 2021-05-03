@@ -128,6 +128,19 @@ class GuildMemberRemove(EventBase):
         return self.client.cache.get_guild(self.guild_id)
 
 
+class GuildMemberUpdate(Member):
+    def __del__(self):
+        super().create(self.client, self.raw, user=self.user, guild_id=self.guild_id, cache=True)
+
+    @classmethod
+    def create(cls, client, resp, *, user=None, guild_id=None, cache: bool = False):
+        return super().create(client, resp, user=user, guild_id=guild_id, cache=False)
+
+    @property
+    def original(self):
+        return self.client.cache.get_guild_container(self.guild_id).get_storage("member").get(self.user.id)
+
+
 class GuildRoleCreate(EventBase):
     def __init__(self, client, resp: dict):
         super().__init__(client, resp)
@@ -180,7 +193,7 @@ MessageCreate = Message
 
 class MessageUpdate(Message):
     def __del__(self):
-        Message.create(self.client, self.raw)
+        Message.create(self.client, self.raw, guild_id=self.guild_id)
 
     @classmethod
     def create(cls, client, resp, **kwargs):
