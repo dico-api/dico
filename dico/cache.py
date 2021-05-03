@@ -5,7 +5,7 @@ from .model.snowflake import Snowflake
 class CacheContainer:
     def __init__(self, default_expiration_time=None):
         self.default_expiration_time = default_expiration_time
-        self.__cache_dict = {"guild_cache": {}}
+        self.__cache_dict: typing.Dict[str, typing.Union[dict, CacheStorage]] = {"guild_cache": {}}
 
     def get(self, snowflake_id: typing.Union[str, int, Snowflake], *, ignore_expiration=True):
         for x in self.__cache_dict.values():
@@ -36,6 +36,13 @@ class CacheContainer:
         if obj_type not in self.__cache_dict:
             self.__cache_dict[obj_type] = CacheStorage()
         self.__cache_dict[obj_type].add(Snowflake.ensure_snowflake(snowflake_id), obj, expire_at)
+
+    def remove(self, snowflake_id: typing.Union[str, int, Snowflake], obj_type: str):
+        if obj_type in self.__cache_dict:
+            self.__cache_dict[obj_type].remove(snowflake_id)
+        if "guild_cache" in self.__cache_dict:
+            for x in self.__cache_dict["guild_cache"].values():
+                x.remove(snowflake_id, obj_type)
 
     @property
     def available_cache_types(self):
@@ -70,6 +77,11 @@ class CacheStorage:
     def add(self, snowflake_id: typing.Union[str, int, Snowflake], obj, expire_at=None):
         snowflake_id = Snowflake.ensure_snowflake(snowflake_id)
         self.__cache_dict[snowflake_id] = {"value": obj, "expire_at": expire_at}
+
+    def remove(self, snowflake_id: typing.Union[str, int, Snowflake]):
+        snowflake_id = Snowflake.ensure_snowflake(snowflake_id)
+        if snowflake_id in self.__cache_dict:
+            del self.__cache_dict[snowflake_id]
 
     @property
     def size(self):

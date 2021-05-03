@@ -171,6 +171,7 @@ class Member:
         self.mute = resp["mute"]
         self.pending = resp.get("pending", False)
         self.__permissions = resp.get("permissions")
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
 
     def __str__(self):
         return self.nick or (self.user.username if self.user else None)
