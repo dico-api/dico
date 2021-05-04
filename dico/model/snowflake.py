@@ -7,7 +7,7 @@ class Snowflake:
 
     @property
     def timestamp(self):
-        return datetime.datetime.fromtimestamp((self.__snowflake >> 22) + 1420070400000)
+        return datetime.datetime.fromtimestamp(((self.__snowflake >> 22) + 1420070400000)/1000)
 
     @property
     def increment(self):

@@ -30,6 +30,8 @@ class WebSocketClient:
         self._heartbeat_task = None
         self.session_id = None
         self.intents = intents
+        self.ping = 0.0
+        self._ping_start = 0.0
 
     def __del__(self):
         if not self._closed:
@@ -74,6 +76,7 @@ class WebSocketClient:
 
                 elif resp.op == gateway.Opcodes.HEARTBEAT_ACK:
                     self.last_heartbeat_ack = time.time()
+                    self.ping = self.last_heartbeat_ack - self._ping_start
 
                 elif resp.op == gateway.Opcodes.INVALID_SESSION:
                     self.logger.warning("Failed gateway resume, reconnecting to gateway without resuming.")
@@ -128,6 +131,7 @@ class WebSocketClient:
                 await self.reconnect()
                 break
             data = {"op": gateway.Opcodes.HEARTBEAT, "d": self.seq}
+            self._ping_start = time.time()
             await self.ws.send_json(data)
             self.last_heartbeat_send = time.time()
             await asyncio.sleep(self.heartbeat_interval/1000)

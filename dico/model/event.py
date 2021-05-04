@@ -417,3 +417,38 @@ class PresenceUpdate(EventBase):
     @property
     def guild(self):
         return self.client.cache.get_guild(self.guild_id)
+
+
+class TypingStart(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
+        self.user_id = Snowflake(resp["user_id"])
+        self.timestamp = datetime.datetime.fromtimestamp(resp["timestamp"])
+
+    @property
+    def channel(self):
+        return self.client.get_channel(self.channel_id)
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get_guild(self.guild_id)
+
+    @property
+    def user(self):
+        return self.client.get_user(self.user_id)
+
+
+class UserUpdate(User):
+    def __del__(self):
+        User.create(self.client, self.raw)
+
+    @classmethod
+    def create(cls, client, resp, **kwargs):
+        return cls(client, resp)
+
+    @property
+    def original(self):
+        return self.client.get(self.id)
