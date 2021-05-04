@@ -1,7 +1,8 @@
 import typing
+import datetime
 from .snowflake import Snowflake
 from .user import User
-from ..base.model import FlagBase
+from ..base.model import FlagBase, TypeBase
 
 
 class GetGateway:
@@ -102,6 +103,200 @@ class ApplicationFlags(FlagBase):
     GATEWAY_GUILD_MEMBERS_LIMITED = 1 << 15
     VERIFICATION_PENDING_GUILD_LIMIT = 1 << 16
     EMBEDDED = 1 << 17
+
+
+class Activity:
+    def __init__(self, resp):
+        self.name = resp["name"]
+        self.type = ActivityTypes(resp["type"])
+        self.url = resp.get("url")
+        self.__created_at = resp.get("created_at")
+        self.created_at = datetime.datetime.fromtimestamp(self.__created_at/1000) if self.__created_at else self.__created_at
+        self.timestamps = ActivityTimestamps.optional(resp.get("timestamps"))
+        self.application_id = Snowflake.optional(resp.get("application_id"))
+        self.details = resp.get("details")
+        self.state = resp.get("state")
+        self.emoji = ActivityEmoji.optional(resp.get("emoji"))
+        self.party = ActivityParty.optional(resp.get("party"))
+        self.assets = ActivityAssets.optional(resp.get("assets"))
+        self.secrets = ActivitySecrets.optional(resp.get("secrets"))
+        self.instance = resp.get("instance")
+        self.__flags = resp.get("flags")
+        self.flags = ActivityFlags.from_value(self.__flags) if self.__flags else self.__flags
+        self.buttons = resp.get("buttons")
+
+    def to_dict(self):
+        ret = {"name": self.name, "type": int(self.type)}
+        if self.url:
+            ret["url"] = self.url
+        if self.created_at:
+            ret["created_at"] = self.created_at.timestamp()
+        if self.timestamps:
+            ret["timestamps"] = self.timestamps.to_dict()
+        if self.application_id:
+            ret["application_id"] = str(self.application_id)
+        if self.details:
+            ret["details"] = self.details
+        if self.state:
+            ret["state"] = self.state
+        if self.emoji:
+            ret["emoji"] = self.emoji.to_dict()
+        if self.party:
+            ret["party"] = self.party.to_dict()
+        if self.assets:
+            ret["assets"] = self.assets.to_dict()
+        if self.secrets:
+            ret["secrets"] = self.secrets.to_dict()
+        if self.instance:
+            ret["instance"] = self.instance
+        if self.flags:
+            ret["flags"] = int(self.flags)
+        if self.buttons:
+            ret["buttons"] = self.buttons.to_dict()
+        return ret
+
+    @classmethod
+    def create(cls, *, name, activity_type, url=None):
+        return cls({"name": name, "type": activity_type, "url": url})
+
+
+class ActivityTypes(TypeBase):
+    GAME = 0
+    STREAMING = 1
+    LISTENING = 2
+    WATCHING = 3
+    CUSTOM = 4
+    COMPETING = 5
+
+
+class ActivityTimestamps:
+    def __init__(self, resp):
+        self.__start = resp.get("start")
+        self.start = datetime.datetime.fromtimestamp(self.__start/1000) if self.__start else self.__start
+        self.__end = resp.get("end")
+        self.end = datetime.datetime.fromtimestamp(self.__end/1000) if self.__end else self.__end
+
+    def to_dict(self):
+        ret = {}
+        if self.start:
+            ret["start"] = self.start.timestamp()
+        if self.end:
+            ret["end"] = self.end.timestamp()
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class ActivityEmoji:
+    def __init__(self, resp):
+        self.name = resp["name"]
+        self.id = Snowflake.optional(resp.get("id"))
+        self.animated = resp.get("animated", False)
+
+    def to_dict(self):
+        ret = {"name": self.name}
+        if self.id:
+            ret["id"] = str(self.id)
+        if self.animated:
+            ret["animated"] = self.animated
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class ActivityParty:
+    def __init__(self, resp):
+        self.id = resp.get("id")
+        self.size = resp.get("size")
+
+    def to_dict(self):
+        ret = {}
+        if self.id:
+            ret["id"] = str(self.id)
+        if self.size:
+            ret["size"] = self.size
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class ActivityAssets:
+    def __init__(self, resp):
+        self.large_image = resp.get("large_image")
+        self.large_text = resp.get("large_text")
+        self.small_image = resp.get("small_image")
+        self.small_text = resp.get("small_text")
+
+    def to_dict(self):
+        ret = {}
+        if self.large_image:
+            ret["large_image"] = self.large_image
+        if self.large_text:
+            ret["large_text"] = self.large_text
+        if self.small_image:
+            ret["small_image"] = self.small_image
+        if self.small_text:
+            ret["small_text"] = self.small_text
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class ActivitySecrets:
+    def __init__(self, resp):
+        self.join = resp.get("join")
+        self.spectate = resp.get("spectate")
+        self.match = resp.get("match")
+
+    def to_dict(self):
+        ret = {}
+        if self.join:
+            ret["join"] = self.join
+        if self.spectate:
+            ret["spectate"] = self.spectate
+        if self.match:
+            ret["match"] = self.match
+        return ret
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
+
+
+class ActivityFlags(FlagBase):
+    INSTANCE = 1 << 0
+    JOIN = 1 << 1
+    SPECTATE = 1 << 2
+    JOIN_REQUEST = 1 << 3
+    SYNC = 1 << 4
+    PLAY = 1 << 5
+
+
+class ActivityButtons:
+    def __init__(self, resp):
+        self.label = resp["label"]
+        self.url = resp["url"]
+
+    def to_dict(self):
+        return {"label": self.label, "url": self.url}
+
+    @classmethod
+    def optional(cls, resp):
+        if resp:
+            return cls(resp)
 
 
 # https://discord.com/developers/docs/topics/opcodes-and-status-codes#gateway

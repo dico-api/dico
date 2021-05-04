@@ -51,7 +51,8 @@ class EventHandler:
             "MESSAGE_REACTION_ADD": MessageReactionAdd,
             "MESSAGE_REACTION_REMOVE": MessageReactionRemove,
             "MESSAGE_REACTION_REMOVE_ALL": MessageReactionRemoveAll,
-            "MESSAGE_REACTION_REMOVE_EMOJI": MessageReactionRemoveEmoji
+            "MESSAGE_REACTION_REMOVE_EMOJI": MessageReactionRemoveEmoji,
+            "PRESENCE_UPDATE": PresenceUpdate,
         }
         if name in model_dict:
             ret = model_dict[name].create(self.client, resp)

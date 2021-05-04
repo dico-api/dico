@@ -147,6 +147,18 @@ class WebSocketClient:
         }
         await self.ws.send_json(data)
 
+    async def update_presence(self, since, activities, status, afk):
+        data = {
+            "op": gateway.Opcodes.PRESENCE_UPDATE,
+            "d": {
+                "since": since,
+                "activities": activities,
+                "status": status,
+                "afk": afk
+            }
+        }
+        await self.ws.send_json(data)
+
     @classmethod
     async def connect(cls, http, intents, event_handler):
         resp = await http.request("/gateway/bot", "GET")

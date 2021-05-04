@@ -1,6 +1,7 @@
 import datetime
 from .channel import Channel, Message
 from .emoji import Emoji
+from .gateway import Activity
 from .guild import Guild, Member
 from .permission import Role
 from .snowflake import Snowflake
@@ -402,3 +403,17 @@ class MessageReactionRemoveEmoji(EventBase):
     def guild(self):
         if self.guild_id:
             return self.client.get_guild(self.guild_id)
+
+
+class PresenceUpdate(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.user = User.create(self.client, resp["user"])
+        self.guild_id = Snowflake(resp["guild_id"])
+        self.status = resp["status"]
+        self.activities = [Activity(x) for x in resp["activities"]]
+        self.client_status = resp["client_status"]
+
+    @property
+    def guild(self):
+        return self.client.cache.get_guild(self.guild_id)

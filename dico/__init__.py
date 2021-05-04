@@ -11,4 +11,4 @@ __version__ = "0.0.1"
 from .client import Client
 from .model.channel import *
 from .model.event import *
-from .model.gateway import Intents
+from .model.gateway import Intents, Activity, ActivityTypes

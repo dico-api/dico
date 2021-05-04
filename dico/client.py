@@ -10,7 +10,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application
+from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity
 
 
 class APIClient:
@@ -257,6 +257,10 @@ class Client(APIClient):
         finally:
             await self.ws.close()
             await self.http.close()
+
+    async def update_presence(self, *, since: int = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
+        activities = [x.to_dict() if not isinstance(x, dict) else x for x in activities]
+        return await self.ws.update_presence(since, activities, status, afk)
 
     async def create_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().create_message(*args, **kwargs))
