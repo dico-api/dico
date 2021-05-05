@@ -10,7 +10,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity
+from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity, Overwrite
 
 
 class APIClient:
@@ -32,6 +32,45 @@ class APIClient:
     def __init__(self, token, *, base: typing.Type[HTTPRequestBase], default_allowed_mentions: AllowedMentions = None, **http_options):
         self.http = base.create(token, **http_options)
         self.default_allowed_mentions = default_allowed_mentions
+
+    def request_channel(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        channel = self.http.request_channel(int(channel))
+        if isinstance(channel, dict):
+            channel = Channel.create(self, channel)
+        return channel
+
+    def modify_guild_channel(self,
+                             channel: typing.Union[int, str, Snowflake, Channel],
+                             *,
+                             name: str = None,
+                             channel_type: int = None,
+                             position: int = None,
+                             topic: str = None,
+                             nsfw: bool = None,
+                             rate_limit_per_user: int = None,
+                             bitrate: int = None,
+                             user_limit: int = None,
+                             permission_overwrites: typing.List[Overwrite] = None,
+                             parent: typing.Union[int, str, Snowflake, Channel] = None,
+                             rtc_region: str = None,
+                             video_quality_mode: int = None):
+        channel = int(channel)
+        if permission_overwrites:
+            permission_overwrites = [x.to_dict() for x in permission_overwrites]
+        if parent:
+            parent = int(parent)
+        channel = self.http.modify_guild_channel(channel, name, channel_type, position, topic, nsfw, rate_limit_per_user,
+                                                 bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode)
+        if isinstance(channel, dict):
+            channel = Channel.create(self, channel)
+        return channel
+
+    def modify_group_dm_channel(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, icon: bin = None):
+        channel = int(channel)
+        channel = self.http.modify_group_dm_channel(channel, name, icon)
+        if isinstance(channel, dict):
+            channel = Channel.create(self, channel)
+        return channel
 
     def create_message(self,
                        channel: typing.Union[int, str, Snowflake, Channel],
@@ -136,6 +175,10 @@ class APIClient:
                        message: typing.Union[int, str, Snowflake, Message]):
         return self.http.delete_message(int(channel), int(message))
 
+    @property
+    def has_cache(self):
+        return hasattr(self, "cache")
+
 
 class Client(APIClient):
     """
@@ -160,11 +203,13 @@ class Client(APIClient):
                  token: str, *,
                  intents: Intents = Intents.no_privileged(),
                  default_allowed_mentions: AllowedMentions = None,
-                 loop=None):
+                 loop=None,
+                 cache: bool = True):
         self.loop = loop or asyncio.get_event_loop()
         super().__init__(token, base=AsyncHTTPRequest, default_allowed_mentions=default_allowed_mentions, loop=loop)
         self.token = token
-        self.cache = CacheContainer()  # The reason only supporting caching with WS is to ensure up-to-date object.
+        self.__use_cache = cache
+        self.cache = CacheContainer() if self.__use_cache else None  # The reason only supporting caching with WS is to ensure up-to-date object.
         self.__ws_class = WebSocketClient
         self.intents = intents
         self.ws: typing.Union[None, WebSocketClient] = None
@@ -210,6 +255,10 @@ class Client(APIClient):
             return func
         return wrap
 
+    @property
+    def on(self):
+        return self.on_
+
     def dispatch(self, name, *args, **kwargs):
         """
         Dispatches new event.
@@ -223,22 +272,26 @@ class Client(APIClient):
     @property
     def get(self):
         """Alias of ``.cache.get``."""
-        return self.cache.get
+        if self.has_cache:
+            return self.cache.get
 
     @property
     def get_user(self):
         """Gets user from cache. Alias of ``.cache.get_storage("user").get``."""
-        return self.cache.get_storage("user").get
+        if self.has_cache:
+            return self.cache.get_storage("user").get
 
     @property
     def get_guild(self):
         """Gets guild from cache. Alias of ``.cache.get_storage("guild").get``."""
-        return self.cache.get_storage("guild").get
+        if self.has_cache:
+            return self.cache.get_storage("guild").get
 
     @property
     def get_channel(self):
         """Gets channel from cache. Alias of ``.cache.get_storage("channel").get``."""
-        return self.cache.get_storage("channel").get
+        if self.has_cache:
+            return self.cache.get_storage("channel").get
 
     async def start(self):
         """
@@ -262,11 +315,24 @@ class Client(APIClient):
         activities = [x.to_dict() if not isinstance(x, dict) else x for x in activities]
         return await self.ws.update_presence(since, activities, status, afk)
 
+    async def request_channel(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        return Channel.create(self, await super().request_channel(channel))
+
+    async def modify_guild_channel(self, *args, **kwargs):
+        return Channel.create(self, await super().modify_guild_channel(*args, **kwargs))
+
+    async def modify_group_dm_channel(self, *args, **kwargs):
+        return Channel.create(self, await super().modify_group_dm_channel(*args, **kwargs))
+
     async def create_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().create_message(*args, **kwargs))
 
     async def edit_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().edit_message(*args, **kwargs))
+
+    @property
+    def has_cache(self):
+        return self.__use_cache
 
     def run(self):
         """

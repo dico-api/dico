@@ -18,7 +18,7 @@ class Channel(DiscordObjectBase):
         self.type = ChannelTypes(resp["type"])
         self.guild_id = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
         self.position = resp.get("position")
-        self.permission_overwrites = resp.get("permission_overwrites", [])
+        self.permission_overwrites = [Overwrite(x) for x in resp.get("permission_overwrites", [])]
         self.name = resp.get("name")
         self.topic = resp.get("topic")
         self.nsfw = resp.get("nsfw")
@@ -44,12 +44,24 @@ class Channel(DiscordObjectBase):
         return self.client.create_message
 
     @property
+    def send(self):
+        return self.create_message
+
+    def edit(self, **kwargs):
+        if self.is_group_dm_channel():
+            return self.client.modify_group_dm_channel(self.id, **kwargs)
+        elif self.is_dm_channel() or self.is_store_channel():
+            raise AttributeError("This type of channel is not allowed to edit.")
+        else:
+            return self.client.modify_guild_channel(self.id, **kwargs)
+
+    @property
     def mention(self):
         return f"<#{self.id}>"
 
     @property
     def guild(self):
-        if self.guild_id:
+        if self.guild_id and self.client.has_cache:
             return self.client.cache.get_guild(self.guild_id)
 
     def is_guild_text_channel(self):
@@ -144,12 +156,12 @@ class Message(DiscordObjectBase):
 
     @property
     def guild(self):
-        if self.guild_id:
+        if self.guild_id and self.client.has_cache:
             return self.client.get_guild(self.guild_id)
 
     @property
     def channel(self):
-        if self.channel_id:
+        if self.channel_id and self.client.has_cache:
             if self.guild_id:
                 return self.guild.get_channel(self.channel_id) or self.client.get_channel(self.channel_id)
             else:
@@ -268,6 +280,9 @@ class Overwrite:
         self.type = resp["type"]
         self.allow = PermissionFlags.from_value(int(resp["allow"]))
         self.deny = PermissionFlags.from_value(int(resp["deny"]))
+
+    def to_dict(self):
+        return {"id": self.id, "type": self.type, "allow": int(self.allow), "deny": int(self.deny)}
 
 
 class ThreadMetadata:

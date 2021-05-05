@@ -6,9 +6,9 @@ class User(DiscordObjectBase):
     def __init__(self, client, resp):
         super().__init__(client, resp)
         self._cache_type = "user"
-        self.username = resp["username"]
-        self.discriminator = resp["discriminator"]
-        self.avatar = resp["avatar"]
+        self.username = resp.get("username")
+        self.discriminator = resp.get("discriminator")
+        self.avatar = resp.get("avatar")
         self.bot = resp.get("bot", False)
         self.system = resp.get("system", False)
         self.mfa_enabled = resp.get("mfa_enabled", False)

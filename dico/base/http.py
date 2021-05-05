@@ -23,6 +23,60 @@ class HTTPRequestBase(ABC):
         pass
 
     @abstractmethod
+    def request_channel(self, channel_id):
+        """
+        Sends get channel request.
+
+        :param channel_id: Channel ID to request.
+        """
+        pass
+
+    @abstractmethod
+    def modify_guild_channel(self,
+                             channel_id,
+                             name: str = None,
+                             channel_type: int = None,
+                             position: int = None,
+                             topic: str = None,
+                             nsfw: bool = None,
+                             rate_limit_per_user: int = None,
+                             bitrate: int = None,
+                             user_limit: int = None,
+                             permission_overwrites: typing.List[dict] = None,
+                             parent_id: str = None,
+                             rtc_region: str = None,
+                             video_quality_mode: int = None):
+        """
+        Sends modify channel request, for guild channel.
+
+        :param channel_id: Channel ID to request.
+        :param name: Name to change.
+        :param channel_type: Type of the channel.
+        :param position: Channel position.
+        :param topic: Channel topic to change.
+        :param nsfw: Whether the channel is NSFW.
+        :param rate_limit_per_user: Rate limit seconds of the channel.
+        :param bitrate: Bitrate of the channel.
+        :param user_limit: Limitation of the user count.
+        :param permission_overwrites: Specific permissions for user of role.
+        :param parent_id: Parent category ID.
+        :param rtc_region: Voice region ID.
+        :param video_quality_mode: Video quality of the channel.
+        """
+        pass
+
+    @abstractmethod
+    def modify_group_dm_channel(self, channel_id, name: str = None, icon: bin = None):
+        """
+        Sends modify channel request, for guild channel.
+
+        :param channel_id: Channel ID to request.
+        :param name: Name to change.
+        :param icon: base64 encoded icon.
+        """
+        pass
+
+    @abstractmethod
     def create_message(self,
                        channel_id,
                        content: str,
@@ -32,7 +86,7 @@ class HTTPRequestBase(ABC):
                        allowed_mentions: dict,
                        message_reference: dict):
         """
-        Sends message create HTTP request.
+        Sends create message request.
 
         :param channel_id: ID of the channel.
         :param content: Content of the message.
@@ -56,7 +110,7 @@ class HTTPRequestBase(ABC):
                                   allowed_mentions: dict,
                                   message_reference: dict):
         """
-        Sends message create HTTP request.
+        Sends create message request with files.
 
         :param channel_id: ID of the channel.
         :param content: Content of the message.
@@ -80,7 +134,7 @@ class HTTPRequestBase(ABC):
                      allowed_mentions: dict,
                      attachments: typing.List[dict]):
         """
-        Edits sent message.
+        Sends edit message request.
 
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to edit.
@@ -96,7 +150,7 @@ class HTTPRequestBase(ABC):
     @abstractmethod
     def delete_message(self, channel_id, message_id):
         """
-        Deletes sent message.
+        Sends delete message request.
 
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to edit.

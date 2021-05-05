@@ -24,7 +24,7 @@ class DiscordObjectBase:
 
     @classmethod
     def create(cls, client, resp, **kwargs):
-        maybe_exist = client.cache.get(resp["id"])
+        maybe_exist = client.has_cache and client.cache.get(resp["id"])
         if maybe_exist:
             orig = maybe_exist.raw
             for k, v in resp.items():
@@ -34,9 +34,10 @@ class DiscordObjectBase:
             return maybe_exist
         else:
             ret = cls(client, resp, **kwargs)
-            client.cache.add(ret.id, ret._cache_type, ret)
-            if hasattr(ret, "guild_id") and ret.guild_id:
-                client.cache.get_guild_container(ret.guild_id).add(ret.id, ret._cache_type, ret)
+            if client.has_cache:
+                client.cache.add(ret.id, ret._cache_type, ret)
+                if hasattr(ret, "guild_id") and ret.guild_id:
+                    client.cache.get_guild_container(ret.guild_id).add(ret.id, ret._cache_type, ret)
             return ret
 
 

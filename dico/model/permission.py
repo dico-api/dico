@@ -55,6 +55,11 @@ class Role(DiscordObjectBase):
         self.mentionable = resp["mentionable"]
         self.tags = RoleTags.optional(resp.get("tags"))
 
+    @property
+    def guild(self):
+        if self.client.has_cache:
+            return self.client.get_guild(self.guild_id)
+
 
 class RoleTags:
     def __init__(self, resp):

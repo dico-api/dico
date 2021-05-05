@@ -66,7 +66,60 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 body = json.dumps(body)
             kw["data"] = body
         async with self.session.request(meth, self.BASE_URL+route, headers=headers, **kw) as resp:
+            self.logger.debug(f"{route}: {meth} request - {resp.status}")
             return resp.status, await resp.json() if resp.status != 204 else None  # if resp.headers.get("Content-Type") == "applications/json" else {"text": await resp.text()}
+
+    def request_channel(self, channel_id):
+        return self.request(f"/channels/{channel_id}", "GET")
+
+    def modify_guild_channel(self,
+                             channel_id,
+                             name: str = None,
+                             channel_type: int = None,
+                             position: int = None,
+                             topic: str = None,
+                             nsfw: bool = None,
+                             rate_limit_per_user: int = None,
+                             bitrate: int = None,
+                             user_limit: int = None,
+                             permission_overwrites: typing.List[dict] = None,
+                             parent_id: str = None,
+                             rtc_region: str = None,
+                             video_quality_mode: int = None):
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if channel_type is not None:
+            body["channel_type"] = channel_type
+        if position is not None:
+            body["position"] = position
+        if topic is not None:
+            body["topic"] = topic
+        if nsfw is not None:
+            body["nsfw"] = nsfw
+        if rate_limit_per_user is not None:
+            body["rate_limit_per_user"] = rate_limit_per_user
+        if bitrate is not None:
+            body["bitrate"] = bitrate
+        if user_limit is not None:
+            body["user_limit"] = user_limit
+        if permission_overwrites is not None:
+            body["permission_overwrites"] = permission_overwrites
+        if parent_id is not None:
+            body["parent_id"] = parent_id
+        if rtc_region is not None:
+            body["rtc_region"] = rtc_region
+        if video_quality_mode is not None:
+            body["video_quality_mode"] = video_quality_mode
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
+
+    def modify_group_dm_channel(self, channel_id, name: str = None, icon: bin = None):
+        body = {}
+        if name:
+            body["name"] = name
+        if icon:
+            body["icon"] = icon
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
 
     def create_message(self,
                        channel_id,
@@ -112,7 +165,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["embed"] = embed
         if nonce:
             payload_json["nonce"] = nonce
-        if tts:
+        if tts is not None:
             payload_json["tts"] = tts
         if allowed_mentions:
             payload_json["allowed_mentions"] = allowed_mentions
@@ -135,15 +188,15 @@ class AsyncHTTPRequest(HTTPRequestBase):
                      allowed_mentions: dict,
                      attachments: typing.List[dict]):
         body = {}
-        if content:
+        if content is not None:
             body["content"] = content
-        if embed:
+        if embed is not None:
             body["embed"] = embed
-        if flags:
+        if flags is not None:
             body["flags"] = flags
-        if allowed_mentions:
+        if allowed_mentions is not None:
             body["allowed_mentions"] = allowed_mentions
-        if attachments:
+        if attachments is not None:
             body["message_reference"] = attachments
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", body, is_json=True)
 

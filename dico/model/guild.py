@@ -61,7 +61,7 @@ class Guild(DiscordObjectBase):
         self.welcome_screen = resp.get("welcome_screen")
         self.nsfw = resp["nsfw"]
 
-        self.cache = client.cache.get_guild_container(self.id)
+        self.cache = client.cache.get_guild_container(self.id) if client.has_cache else None
 
     def icon_url(self, *, extension="webp", size=1024):
         if self.icon:
@@ -86,22 +86,27 @@ class Guild(DiscordObjectBase):
 
     @property
     def get_user(self):
-        return self.client.cache.get_storage("user").get
+        if self.cache:
+            return self.client.cache.get_storage("user").get
 
     @property
     def get_member(self):
-        return self.cache.get_storage("member").get
+        if self.cache:
+            return self.cache.get_storage("member").get
 
     @property
     def get_channel(self):
-        return self.cache.get_storage("channel").get
+        if self.cache:
+            return self.cache.get_storage("channel").get
 
     @property
     def get_role(self):
-        return self.cache.get_storage("role").get
+        if self.cache:
+            return self.cache.get_storage("role").get
 
     def get_owner(self):
-        return self.get_member(self.owner_id) or self.get_user(self.owner_id)
+        if self.cache:
+            return self.get_member(self.owner_id) or self.get_user(self.owner_id)
 
 
 class DefaultMessageNotificationLevel(TypeBase):
@@ -169,7 +174,7 @@ class Member:
         self.__user = resp.get("user")
         self.user = User.create(client, self.__user) if self.__user and not self.user else self.user if self.user else self.__user
         self.nick = resp.get("nick")
-        self.roles = [client.get(x) for x in resp["roles"]]
+        self.roles = [client.get(x) for x in resp["roles"]] if client.has_cache else [Snowflake(x) for x in resp["roles"]]
         self.joined_at = datetime.datetime.fromisoformat(resp["joined_at"])
         self.__premium_since = resp.get("premium_since")
         self.premium_since = datetime.datetime.fromisoformat(self.__premium_since) if self.__premium_since else self.__premium_since
@@ -196,13 +201,13 @@ class Member:
         if self.__permissions:
             return PermissionFlags.from_value(int(self.__permissions))
         elif self.roles:
-            pass
+            raise NotImplementedError
         else:
             return PermissionFlags.from_value(0)
 
     @classmethod
     def create(cls, client, resp, *, user=None, guild_id=None, cache: bool = True):
-        if cache and (guild_id or resp.get("guild_id")) and (user or resp.get("user")):
+        if cache and client.has_cache and (guild_id or resp.get("guild_id")) and (user or resp.get("user")):
             _guild_id = guild_id or resp.get("guild_id")
             _user_id = user.id if isinstance(user, User) else resp["user"]["id"]
             maybe_exist = client.cache.get_guild_container(_guild_id).get_storage("member").get(_user_id)
@@ -214,6 +219,6 @@ class Member:
                 maybe_exist.__init__(client, orig, user=user, guild_id=guild_id)
                 return maybe_exist
         ret = cls(client, resp, user=user, guild_id=guild_id)
-        if cache and ret.guild_id and ret.user:
+        if cache and client.has_cache and ret.guild_id and ret.user:
             client.cache.get_guild_container(ret.guild_id).add(ret.user.id, "member", ret)
         return ret
