@@ -1,5 +1,6 @@
 import sys
 import typing
+import inspect
 import traceback
 
 
@@ -29,3 +30,12 @@ def cdn_url(route, *, image_hash, extension="webp", size=1024, **snowflake_ids):
     if snowflake_ids:
         route = route.format(**snowflake_ids)
     return f"https://cdn.discordapp.com/{route}/{image_hash}.{extension}?size={size}"
+
+
+def ensure_coro(func):
+    async def wrap(*args, **kwargs):
+        if inspect.iscoroutinefunction(func):
+            return await func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
+    return wrap

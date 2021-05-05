@@ -36,6 +36,10 @@ class Channel(DiscordObjectBase):
         self.rtc_region = resp.get("rtc_region")
         self.__video_quality_mode = resp.get("video_quality_mode")
         self.video_quality_mode = VideoQualityModes(self.__video_quality_mode) if self.__video_quality_mode else self.__video_quality_mode
+        self.message_count = resp.get("message_count")
+        self.member_count = resp.get("member_count")
+        self.thread_metadata = ThreadMetadata.optional(self.client, resp.get("thread_metadata"))
+        self.member = ThreadMember.optional(self.client, resp.get("member"))
 
     @property
     def create_message(self):
@@ -52,6 +56,8 @@ class Channel(DiscordObjectBase):
             return self.client.modify_group_dm_channel(self.id, **kwargs)
         elif self.is_dm_channel() or self.is_store_channel():
             raise AttributeError("This type of channel is not allowed to edit.")
+        elif self.is_thread_channel():
+            raise NotImplementedError
         else:
             return self.client.modify_guild_channel(self.id, **kwargs)
 
@@ -88,6 +94,9 @@ class Channel(DiscordObjectBase):
     def is_stage_channel(self):
         return self.type.guild_stage_voice
 
+    def is_thread_channel(self):
+        return self.type.guild_news_thread or self.type.guild_public_thread or self.type.guild_private_thread
+
 
 class ChannelTypes(TypeBase):
     GUILD_TEXT = 0
@@ -97,6 +106,9 @@ class ChannelTypes(TypeBase):
     GUILD_CATEGORY = 4
     GUILD_NEWS = 5
     GUILD_STORE = 6
+    GUILD_NEWS_THREAD = 10
+    GUILD_PUBLIC_THREAD = 11
+    GUILD_PRIVATE_THREAD = 12
     GUILD_STAGE_VOICE = 13
 
 
@@ -286,20 +298,42 @@ class Overwrite:
 
 
 class ThreadMetadata:
-    def __init__(self, resp):
+    def __init__(self, client, resp):
+        self.client = client
         self.archived = resp["archived"]
         self.archiver_id = Snowflake.optional(resp.get("archiver_id"))
         self.auto_archive_duration = resp["auto_archive_duration"]
         self.archive_timestamp = datetime.datetime.fromisoformat(resp["archive_timestamp"])
         self.locked = resp.get("locked", False)
 
+    @property
+    def archiver(self):
+        if self.client.has_cache:
+            return self.client.get(self.archiver_id)
+
+    @classmethod
+    def optional(cls, client, resp):
+        if resp:
+            return cls(client, resp)
+
 
 class ThreadMember:
-    def __init__(self, resp):
+    def __init__(self, client, resp):
+        self.client = client
         self.id = Snowflake(resp["id"])
         self.user_id = Snowflake(resp["user_id"])
         self.join_timestamp = datetime.datetime.fromisoformat(resp["join_timestamp"])
         self.flags = resp["flags"]
+
+    @property
+    def user(self):
+        if self.client.has_cache:
+            return self.client.get(self.user_id)
+
+    @classmethod
+    def optional(cls, client, resp):
+        if resp:
+            return cls(client, resp)
 
 
 class Embed:

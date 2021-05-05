@@ -255,6 +255,9 @@ class Client(APIClient):
             return func
         return wrap
 
+    async def wait(self, event_name: str, timeout: float = None, check: typing.Callable = None):
+        raise NotImplementedError
+
     @property
     def on(self):
         return self.on_

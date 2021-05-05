@@ -1,4 +1,4 @@
-import inspect
+from .utils import ensure_coro
 from .model.event import *
 
 
@@ -11,18 +11,12 @@ class EventHandler:
         if event not in self.events:
             self.events[event] = []
 
-        async def ensure_coro(*args, **kwargs):
-            if inspect.iscoroutinefunction(func):
-                return await func(*args, **kwargs)
-            else:
-                return func(*args, **kwargs)
-
-        self.events[event].append(ensure_coro)
+        self.events[event].append(ensure_coro(func))
 
     def get(self, event) -> list:
         return self.events.get(event, [])
 
-    def dispatch_from_raw(self, name, resp):
+    def process_response(self, name, resp):
         model_dict = {
             "READY": Ready,
             "CHANNEL_CREATE": ChannelCreate,
@@ -60,4 +54,8 @@ class EventHandler:
             ret = model_dict[name].create(self.client, resp)
         else:
             ret = resp
+        return ret
+
+    def dispatch_from_raw(self, name, resp):
+        ret = self.process_response(name, resp)
         self.client.dispatch(name, ret)
