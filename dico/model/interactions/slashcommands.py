@@ -1,7 +1,15 @@
+from ..channel import Channel
+from ..guild import Member
+from ..permission import Role
+from ..snowflake import Snowflake
+from ..user import User
+from ...base.model import TypeBase
+
+
 class ApplicationCommand:
     def __init__(self, resp: dict, command_creation: bool = False):
-        self.id = resp["id"]
-        self.application_id = resp["application_id"]
+        self.id = Snowflake(resp["id"])
+        self.application_id = Snowflake(resp["application_id"])
         self.name = resp["name"]
         self.description = resp["description"]
         self.options = [ApplicationCommandOption(x) for x in resp.get("options", [])]
@@ -21,8 +29,8 @@ class ApplicationCommand:
 
 class ApplicationCommandOption:
     def __init__(self, resp: dict):
-        self.type = resp["type"]
-        self.application_id = resp["application_id"]
+        self.type = ApplicationCommandOptionType(resp["type"])
+        self.application_id = Snowflake(resp["application_id"])
         self.name = resp["name"]
         self.description = resp["description"]
         self.required = resp.get("required", False)
@@ -34,12 +42,12 @@ class ApplicationCommandOption:
                "required": self.required, "choices": [x.to_dict() for x in self.choices], "options": [x.to_dict() for x in self.options]}
         if not ret["options"]:
             del ret["options"]
-        elif not ret["choices"]:
+        if not ret["choices"]:
             del ret["choices"]
         return ret
 
 
-class ApplicationCommandOptionType:
+class ApplicationCommandOptionType(TypeBase):
     SUB_COMMAND = 1
     SUB_COMMAND_GROUP = 2
     STRING = 3
@@ -64,31 +72,69 @@ class ApplicationCommandOptionChoice:
 
 
 class GuildApplicationCommandPermissions:
-    pass
+    def __init__(self, resp: dict):
+        self.id = Snowflake(resp["id"])
+        self.application_id = Snowflake(resp["application_id"])
+        self.guild_id = Snowflake(resp["guild_id"])
+        self.permissions = [ApplicationCommandPermissions(x) for x in resp["permissions"]]
 
 
-class ApplicationCommandPermissionType:
-    pass
+class ApplicationCommandPermissions:
+    def __init__(self, resp: dict):
+        self.id = Snowflake(resp["id"])
+        self.type = ApplicationCommandPermissionType(resp["type"])
+        self.permission = resp["permission"]
+
+
+class ApplicationCommandPermissionType(TypeBase):
+    ROLE = 1
+    USER = 2
 
 
 class Interaction:
-    pass
+    def __init__(self, client, resp):
+        self.client = client
+        self.id = Snowflake(resp["id"])
+        self.application_id = Snowflake(resp["application_id"])
+        self.type = InteractionType(resp["type"])
+        self.data = ApplicationCommandInteractionData(resp.get("data"))
+        self.guild_id = Snowflake(resp.get("guild_id"))
+        self.channel_id = Snowflake(resp.get("channel_id"))
+        self.__member = resp.get("member")
+        self.member = Member.create(client, resp, guild_id=self.guild_id) if self.__member else None
+        self.__user = resp.get("user")
+        self.user = User.create(client, self.__user) if self.__user else None
+        self.token = resp["token"]
+        self.version = resp["version"]
 
 
-class InteractionType:
-    pass
+class InteractionType(TypeBase):
+    PING = 1
+    APPLICATION_COMMAND = 2
 
 
 class ApplicationCommandInteractionData:
-    pass
+    def __init__(self, client, resp: dict):
+        self.id = Snowflake(resp["id"])
+        self.name = resp["name"]
+        self.resolved = ApplicationCommandInteractionDataResolved(client, resp.get("resolved"))
+        self.options = resp.get("options")
 
 
 class ApplicationCommandInteractionDataResolved:
-    pass
+    def __init__(self, client, resp: dict):
+        self.users = [User.create(client, x) for x in resp.get("users", {}).values()]
+        self.members = [Member.create(client, x) for x in resp.get("members", {}).values()]
+        self.roles = [Role.create(client, x) for x in resp.get("roles", {}).values()]
+        self.channels = [Channel.create(client, x) for x in resp.get("channels", {}).values()]
 
 
 class ApplicationCommandInteractionDataOption:
-    pass
+    def __init__(self, resp):
+        self.name = resp["name"]
+        self.type = ApplicationCommandOptionType(resp["type"])
+        self.value = resp.get("value")
+        self.options = [ApplicationCommandInteractionDataOption(x) for x in resp.get("options", [])]
 
 
 class InteractionResponseType:
