@@ -10,6 +10,8 @@ Welcome to dico's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   api.rst
+
 
 
 Indices and tables
