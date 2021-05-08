@@ -59,13 +59,12 @@ class AsyncHTTPRequest(HTTPRequestBase):
 
     async def _request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, **kwargs) -> typing.Tuple[int, dict]:
         headers = {"Authorization": f"Bot {self.token}"}
-        kw = {}
         if meth not in ["GET"] and body:
             if is_json:
                 headers["Content-Type"] = "application/json"
                 body = json.dumps(body)
-            kw["data"] = body
-        async with self.session.request(meth, self.BASE_URL+route, headers=headers, **kw) as resp:
+            kwargs["data"] = body
+        async with self.session.request(meth, self.BASE_URL+route, headers=headers, **kwargs) as resp:
             self.logger.debug(f"{route}: {meth} request - {resp.status}")
             return resp.status, await resp.json() if resp.status != 204 else None  # if resp.headers.get("Content-Type") == "applications/json" else {"text": await resp.text()}
 
@@ -74,18 +73,18 @@ class AsyncHTTPRequest(HTTPRequestBase):
 
     def modify_guild_channel(self,
                              channel_id,
-                             name: str = None,
-                             channel_type: int = None,
-                             position: int = None,
-                             topic: str = None,
-                             nsfw: bool = None,
-                             rate_limit_per_user: int = None,
-                             bitrate: int = None,
-                             user_limit: int = None,
-                             permission_overwrites: typing.List[dict] = None,
-                             parent_id: str = None,
-                             rtc_region: str = None,
-                             video_quality_mode: int = None):
+                             name: str,
+                             channel_type: int,
+                             position: int,
+                             topic: str,
+                             nsfw: bool,
+                             rate_limit_per_user: int,
+                             bitrate: int,
+                             user_limit: int,
+                             permission_overwrites: typing.List[dict],
+                             parent_id: str,
+                             rtc_region: str,
+                             video_quality_mode: int):
         body = {}
         if name is not None:
             body["name"] = name
@@ -113,13 +112,53 @@ class AsyncHTTPRequest(HTTPRequestBase):
             body["video_quality_mode"] = video_quality_mode
         return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
 
-    def modify_group_dm_channel(self, channel_id, name: str = None, icon: bin = None):
+    def modify_group_dm_channel(self, channel_id, name: str, icon: bin):
         body = {}
-        if name:
+        if name is not None:
             body["name"] = name
-        if icon:
+        if icon is not None:
             body["icon"] = icon
         return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
+
+    def modify_thread_channel(self,
+                              channel_id,
+                              name: str,
+                              archived: bool,
+                              auto_archive_duration: int,
+                              locked: bool,
+                              rate_limit_per_user: int):
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if archived is not None:
+            body["archived"] = archived
+        if auto_archive_duration is not None:
+            body["auto_archive_duration"] = auto_archive_duration
+        if locked is not None:
+            body["locked"] = locked
+        if rate_limit_per_user is not None:
+            body["rate_limit_per_user"] = rate_limit_per_user
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
+
+    def delete_channel(self, channel_id):
+        return self.request(f"/channels/{channel_id}", "DELETE")
+
+    def request_channel_messages(self, channel_id, around, before, after, limit: int):
+        if around and before and after:
+            raise ValueError("Only around or before or after must be passed.")
+        query = {}
+        if around:
+            query["around"] = around
+        if before:
+            query["before"] = before
+        if after:
+            query["after"] = after
+        if limit:
+            query["limit"] = limit
+        return self.request(f"/channels/{channel_id}/messages", "GET", param=query)
+
+    def request_channel_message(self, channel_id, message_id):
+        return self.request(f"/channels/{channel_id}/messages/{message_id}", "GET")
 
     def create_message(self,
                        channel_id,
@@ -138,7 +177,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
             body["embed"] = embed
         if nonce:
             body["nonce"] = nonce
-        if tts:
+        if tts is not None:
             body["tts"] = tts
         if allowed_mentions:
             body["allowed_mentions"] = allowed_mentions

@@ -54,23 +54,54 @@ class APIClient:
                              parent: typing.Union[int, str, Snowflake, Channel] = None,
                              rtc_region: str = None,
                              video_quality_mode: int = None):
-        channel = int(channel)
         if permission_overwrites:
             permission_overwrites = [x.to_dict() for x in permission_overwrites]
         if parent:
             parent = int(parent)
-        channel = self.http.modify_guild_channel(channel, name, channel_type, position, topic, nsfw, rate_limit_per_user,
+        channel = self.http.modify_guild_channel(int(channel), name, channel_type, position, topic, nsfw, rate_limit_per_user,
                                                  bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return channel
 
     def modify_group_dm_channel(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, icon: bin = None):
-        channel = int(channel)
-        channel = self.http.modify_group_dm_channel(channel, name, icon)
+        channel = self.http.modify_group_dm_channel(int(channel), name, icon)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return channel
+
+    def modify_thread_channel(self,
+                              channel: typing.Union[int, str, Snowflake, Channel], *,
+                              name: str = None,
+                              archived: bool = None,
+                              auto_archive_duration: int = None,
+                              locked: bool = None,
+                              rate_limit_per_user: int = None):
+        channel = self.http.modify_thread_channel(int(channel), name, archived, auto_archive_duration, locked, rate_limit_per_user)
+        if isinstance(channel, dict):
+            channel = Channel.create(self, channel)
+        return channel
+
+    def delete_channel(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        return self.http.delete_channel(int(channel))
+
+    def request_channel_messages(self,
+                                 channel: typing.Union[int, str, Snowflake, Channel], *,
+                                 around: typing.Union[int, str, Snowflake, Message] = None,
+                                 before: typing.Union[int, str, Snowflake, Message] = None,
+                                 after: typing.Union[int, str, Snowflake, Message] = None,
+                                 limit: int = 50):
+        messages = self.http.request_channel_messages(int(channel), str(int(around)), str(int(before)), str(int(after)), limit)
+        # This looks unnecessary, but this is to ensure they are all numbers.
+        if isinstance(messages, list):
+            messages = [Message.create(self, x) for x in messages]
+        return messages
+
+    def request_channel_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
+        message = self.http.request_channel_message(int(channel), int(message))
+        if isinstance(message, dict):
+            message = Message.create(self, channel)
+        return message
 
     def create_message(self,
                        channel: typing.Union[int, str, Snowflake, Channel],
@@ -318,14 +349,23 @@ class Client(APIClient):
         activities = [x.to_dict() if not isinstance(x, dict) else x for x in activities]
         return await self.ws.update_presence(since, activities, status, afk)
 
-    async def request_channel(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    async def request_channel(self, channel: typing.Union[int, str, Snowflake, Channel]) -> Channel:
         return Channel.create(self, await super().request_channel(channel))
 
-    async def modify_guild_channel(self, *args, **kwargs):
+    async def modify_guild_channel(self, *args, **kwargs) -> Channel:
         return Channel.create(self, await super().modify_guild_channel(*args, **kwargs))
 
-    async def modify_group_dm_channel(self, *args, **kwargs):
+    async def modify_group_dm_channel(self, *args, **kwargs) -> Channel:
         return Channel.create(self, await super().modify_group_dm_channel(*args, **kwargs))
+
+    async def modify_thread_channel(self, *args, **kwargs) -> Channel:
+        return Channel.create(self, await super().modify_thread_channel(*args, **kwargs))
+
+    async def request_channel_messages(self, *args, **kwargs) -> typing.List[Message]:
+        return [Message.create(self, x) for x in await super().request_channel_messages(*args, **kwargs)]
+
+    async def request_channel_message(self, *args, **kwargs) -> Message:
+        return Message.create(self, await super().request_channel_message(*args, **kwargs))
 
     async def create_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().create_message(*args, **kwargs))

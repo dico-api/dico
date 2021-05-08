@@ -4,6 +4,14 @@ from abc import ABC, abstractmethod
 
 
 class HTTPRequestBase(ABC):
+    """
+    This abstract class includes all API request methods.
+
+    .. note::
+        Although every GET route's name in the API Documents starts with ``Get ...``, but
+        they are all changed to `request_...` to prevent confusion with cache get methods.
+    """
+
     BASE_URL = "https://discord.com/api/v8"
 
     @abstractmethod
@@ -34,18 +42,18 @@ class HTTPRequestBase(ABC):
     @abstractmethod
     def modify_guild_channel(self,
                              channel_id,
-                             name: str = None,
-                             channel_type: int = None,
-                             position: int = None,
-                             topic: str = None,
-                             nsfw: bool = None,
-                             rate_limit_per_user: int = None,
-                             bitrate: int = None,
-                             user_limit: int = None,
-                             permission_overwrites: typing.List[dict] = None,
-                             parent_id: str = None,
-                             rtc_region: str = None,
-                             video_quality_mode: int = None):
+                             name: str,
+                             channel_type: int,
+                             position: int,
+                             topic: str,
+                             nsfw: bool,
+                             rate_limit_per_user: int,
+                             bitrate: int,
+                             user_limit: int,
+                             permission_overwrites: typing.List[dict],
+                             parent_id: str,
+                             rtc_region: str,
+                             video_quality_mode: int):
         """
         Sends modify channel request, for guild channel.
 
@@ -66,15 +74,72 @@ class HTTPRequestBase(ABC):
         pass
 
     @abstractmethod
-    def modify_group_dm_channel(self, channel_id, name: str = None, icon: bin = None):
+    def modify_group_dm_channel(self, channel_id, name: str, icon: bin):
         """
-        Sends modify channel request, for guild channel.
+        Sends modify channel request, for group DM.
 
         :param channel_id: Channel ID to request.
         :param name: Name to change.
         :param icon: base64 encoded icon.
         """
         pass
+
+    @abstractmethod
+    def modify_thread_channel(self,
+                              channel_id,
+                              name: str,
+                              archived: bool,
+                              auto_archive_duration: int,
+                              locked: bool,
+                              rate_limit_per_user: int):
+        """
+        Sends modify channel request, for thread channel.
+
+        :param channel_id: Channel ID to request.
+        :param name: Name to change.
+        :param archived: Whether to se the channel to archived.
+        :param auto_archive_duration: Duration to automatically archive the channel.
+        :param locked: Whether to lock the thread.
+        :param rate_limit_per_user: Rate limit seconds of the thread.
+        """
+        pass
+
+    @abstractmethod
+    def delete_channel(self, channel_id):
+        """
+        Sends channel delete/close request.
+
+        :param channel_id: Channel ID to request.
+        """
+        pass
+
+    @abstractmethod
+    def request_channel_messages(self, channel_id, around, before, after, limit: int):
+        """
+        Sends channel messages get request.
+
+        :param channel_id: Channel ID to request.
+        :param around: Channel ID to get messages around it.
+        :param before: Channel ID to get messages before it.
+        :param after:Channel ID to get messages after it.
+        :param limit: Maximum messages to get.
+        """
+        pass
+
+    @abstractmethod
+    def request_channel_message(self, channel_id, message_id):
+        """
+        Sends single channel message get request.
+
+        :param channel_id: Channel ID to request.
+        :param message_id: Message ID to request.
+        """
+        pass
+
+    @property
+    def close_channel(self):
+        """Alias of :meth:`.delete_channel`"""
+        return self.delete_channel
 
     @abstractmethod
     def create_message(self,
