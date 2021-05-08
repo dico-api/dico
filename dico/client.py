@@ -91,7 +91,7 @@ class APIClient:
                                  before: typing.Union[int, str, Snowflake, Message] = None,
                                  after: typing.Union[int, str, Snowflake, Message] = None,
                                  limit: int = 50):
-        messages = self.http.request_channel_messages(int(channel), str(int(around)), str(int(before)), str(int(after)), limit)
+        messages = self.http.request_channel_messages(int(channel), around and str(int(around)), before and str(int(before)), after and str(int(after)), limit)
         # This looks unnecessary, but this is to ensure they are all numbers.
         if isinstance(messages, list):
             messages = [Message.create(self, x) for x in messages]

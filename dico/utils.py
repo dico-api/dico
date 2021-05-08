@@ -39,3 +39,19 @@ def ensure_coro(func):
         else:
             return func(*args, **kwargs)
     return wrap
+
+
+def format_discord_error(resp: dict):
+    msgs = []
+
+    def get_error_message(k, v):
+        if "_errors" not in v:
+            for a, b in v.items():
+                get_error_message(a, b)
+        else:
+            [msgs.append(f"In {k}: {x['message']} ({x['code']})") for x in v["_errors"]]
+
+    for k, v in resp.get("errors", {}).items():
+        get_error_message(k, v)
+
+    return resp["message"] + ((" - " + ' | '.join(msgs)) if msgs else "")

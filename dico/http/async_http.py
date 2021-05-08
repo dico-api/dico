@@ -42,6 +42,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             code, resp = await self._request(route, meth, body, is_json, **kwargs)
             if 200 <= code < 300:
                 return resp
+            elif code == 400:
+                raise exception.BadRequest(route, code, resp)
             elif code == 403:
                 raise exception.Forbidden(route, code, resp)
             elif code == 404:
@@ -155,7 +157,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
             query["after"] = after
         if limit:
             query["limit"] = limit
-        return self.request(f"/channels/{channel_id}/messages", "GET", param=query)
+        return self.request(f"/channels/{channel_id}/messages", "GET", params=query)
 
     def request_channel_message(self, channel_id, message_id):
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "GET")

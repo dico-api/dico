@@ -1,3 +1,6 @@
+from .utils import format_discord_error
+
+
 class DicoException(Exception):
     """Base exception class for this library."""
 
@@ -8,10 +11,15 @@ class HTTPError(DicoException):
         self.route = route
         self.code = code
         self.resp = resp
+        super().__init__(format_discord_error(self.resp))
 
 
 class DiscordError(HTTPError):
     """Discord has an error."""
+
+
+class BadRequest(HTTPError):
+    """We sent incorrect request."""
 
 
 class Forbidden(HTTPError):
