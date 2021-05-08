@@ -1,2 +1,4 @@
 aiohttp
 requests
+sphinx
+sphinx-rtd-theme
