@@ -166,6 +166,12 @@ class Message(DiscordObjectBase):
     def delete(self):
         return self.client.delete_message(self.channel_id, self.id)
 
+    def create_reaction(self, emoji: typing.Union[Emoji, str]):
+        return self.client.create_reaction(self.channel_id, self.id, emoji)
+
+    def delete_reaction(self, emoji: typing.Union[Emoji, str], user: typing.Union[int, str, Snowflake, User] = "@me"):
+        return self.client.delete_reaction(self.channel_id, self.id, emoji, user)
+
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:

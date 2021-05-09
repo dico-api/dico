@@ -47,7 +47,7 @@ def format_discord_error(resp: dict):
     def get_error_message(k, v):
         if "_errors" not in v:
             for a, b in v.items():
-                get_error_message(a, b)
+                get_error_message(k+"."+a, b)
         else:
             [msgs.append(f"In {k}: {x['message']} ({x['code']})") for x in v["_errors"]]
 

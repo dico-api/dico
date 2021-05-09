@@ -244,6 +244,12 @@ class AsyncHTTPRequest(HTTPRequestBase):
     def delete_message(self, channel_id, message_id):
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "DELETE")
 
+    def create_reaction(self, channel_id, message_id, emoji: str):
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me", "PUT")
+
+    def delete_reaction(self, channel_id, message_id, emoji: str, user_id="@me"):
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}", "DELETE")
+
     @classmethod
     def create(cls,
                token: str,

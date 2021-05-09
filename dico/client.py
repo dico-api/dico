@@ -10,7 +10,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity, Overwrite
+from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity, Overwrite, Emoji, User
 
 
 class APIClient:
@@ -205,6 +205,27 @@ class APIClient:
                        channel: typing.Union[int, str, Snowflake, Channel],
                        message: typing.Union[int, str, Snowflake, Message]):
         return self.http.delete_message(int(channel), int(message))
+
+    def create_reaction(self,
+                        channel: typing.Union[int, str, Snowflake, Channel],
+                        message: typing.Union[int, str, Snowflake, Message],
+                        emoji: typing.Union[str, Emoji]):
+        if isinstance(emoji, Emoji):
+            emoji = emoji.name if not emoji.id else f"{emoji.name}:{emoji.id}"
+        elif emoji.startswith("<") and emoji.endswith(">"):
+            emoji = emoji.lstrip("<").rstrip(">")
+        return self.http.create_reaction(int(channel), int(message), emoji)
+
+    def delete_reaction(self,
+                        channel: typing.Union[int, str, Snowflake, Channel],
+                        message: typing.Union[int, str, Snowflake, Message],
+                        emoji: typing.Union[str, Emoji],
+                        user: typing.Union[int, str, Snowflake, User] = "@me"):
+        if isinstance(emoji, Emoji):
+            emoji = emoji.name if not emoji.id else f"{emoji.name}:{emoji.id}"
+        elif emoji.startswith("<") and emoji.endswith(">"):
+            emoji = emoji.lstrip("<").rstrip(">")
+        return self.http.delete_reaction(int(channel), int(message), emoji, int(user) if user != "@me" else user)
 
     @property
     def has_cache(self):

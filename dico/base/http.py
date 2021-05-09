@@ -222,6 +222,29 @@ class HTTPRequestBase(ABC):
         """
         pass
 
+    @abstractmethod
+    def create_reaction(self, channel_id, message_id, emoji: str):
+        """
+        Sends create emoji request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to react.
+        :param emoji: Emoji to add.
+        """
+        pass
+
+    @abstractmethod
+    def delete_reaction(self, channel_id, message_id, emoji: str, user_id="@me"):
+        """
+        Sends delete emoji request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to react.
+        :param emoji: Emoji to add.
+        :param user_id: User ID to remove reaction. Pass ``@me`` to remove own.
+        """
+        pass
+
     @classmethod
     @abstractmethod
     def create(cls, token, *args, **kwargs):

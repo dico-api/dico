@@ -28,3 +28,8 @@ client.run()
 
 ## Requirements
 - Python 3.7+
+
+## TODO
+- Implement sync http client
+- Documentation
+- Implement Audit Log, etc...
