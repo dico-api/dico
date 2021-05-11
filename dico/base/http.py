@@ -243,6 +243,63 @@ class HTTPRequestBase(ABC):
         """
         pass
 
+    def create_reaction(self, channel_id, message_id, emoji: str):
+        """
+        Sends create reaction request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to react.
+        :param emoji: Emoji to add.
+        """
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me", "PUT")
+
+    def delete_reaction(self, channel_id, message_id, emoji: str, user_id="@me"):
+        """
+        Sends delete reaction request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to request.
+        :param emoji: Emoji to delete.
+        :param user_id: User ID to delete reaction. Pass ``@me`` to remove own.
+        """
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}", "DELETE")
+
+    def request_reactons(self, channel_id, message_id, emoji: str, after, limit):
+        """
+        Sends get reaction request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to request.
+        :param emoji: Emoji to request.
+        :param after: User ID to request after this user.
+        :param limit: Maximum number to request.
+        """
+        params = {}
+        if after is not None:
+            params["after"] = after
+        if limit is not None:
+            params["limit"] = limit
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}", "GET", params=params)
+
+    def delete_all_reactions(self, channel_id, message_id):
+        """
+        Sends delete all reactions request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to request.
+        """
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions", "DELETE")
+
+    def delete_all_reactions_emoji(self, channel_id, message_id, emoji: str):
+        """
+        Sends delete all reactions emoji request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to request.
+        :param emoji: Emoji to delete.
+        """
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}", "DELETE")
+
     def edit_message(self,
                      channel_id,
                      message_id,
@@ -285,26 +342,15 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "DELETE")
 
-    def create_reaction(self, channel_id, message_id, emoji: str):
+    def bulk_delete_messages(self, channel_id, message_ids: typing.List[str]):
         """
-        Sends create emoji request.
+        Sends bulk delete message request.
 
         :param channel_id: ID of the channel.
-        :param message_id: ID of the message to react.
-        :param emoji: Emoji to add.
+        :param message_ids: List of the message IDs to delete.
         """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me", "PUT")
-
-    def delete_reaction(self, channel_id, message_id, emoji: str, user_id="@me"):
-        """
-        Sends delete emoji request.
-
-        :param channel_id: ID of the channel.
-        :param message_id: ID of the message to react.
-        :param emoji: Emoji to add.
-        :param user_id: User ID to remove reaction. Pass ``@me`` to remove own.
-        """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}", "DELETE")
+        body = {"messages": list(map(str, message_ids))}
+        return self.request(f"/channels/{channel_id}/messages/bulk-delete", "POST", body, is_json=True)
 
     @classmethod
     @abstractmethod

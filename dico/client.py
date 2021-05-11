@@ -11,6 +11,7 @@ from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
 from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity, Overwrite, Emoji, User
+from .utils import from_emoji
 
 
 class APIClient:
@@ -170,6 +171,39 @@ class APIClient:
             if files:
                 [x.close() for x in files if not x.closed]
 
+    def create_reaction(self,
+                        channel: typing.Union[int, str, Snowflake, Channel],
+                        message: typing.Union[int, str, Snowflake, Message],
+                        emoji: typing.Union[str, Emoji]):
+        return self.http.create_reaction(int(channel), int(message), from_emoji(emoji))
+
+    def delete_reaction(self,
+                        channel: typing.Union[int, str, Snowflake, Channel],
+                        message: typing.Union[int, str, Snowflake, Message],
+                        emoji: typing.Union[str, Emoji],
+                        user: typing.Union[int, str, Snowflake, User] = "@me"):
+        return self.http.delete_reaction(int(channel), int(message), from_emoji(emoji), int(user) if user != "@me" else user)
+
+    def request_reactions(self,
+                          channel: typing.Union[int, str, Snowflake, Channel],
+                          message: typing.Union[int, str, Snowflake, Message],
+                          emoji: typing.Union[str, Emoji],
+                          after: typing.Union[int, str, Snowflake, User] = None,
+                          limit: int = None):
+        users = self.http.request_reactions(int(channel), int(message), from_emoji(emoji), int(after), limit)
+        if isinstance(users, list):
+            return [User.create(self, x) for x in users]
+        return users
+
+    def delete_all_reactions(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
+        return self.http.delete_all_reactions(int(channel), int(message))
+
+    def delete_all_reactions_emoji(self,
+                                   channel: typing.Union[int, str, Snowflake, Channel],
+                                   message: typing.Union[int, str, Snowflake, Message],
+                                   emoji: typing.Union[str, Emoji]):
+        return self.http.delete_all_reactions_emoji(int(channel), int(message), from_emoji(emoji))
+
     def edit_message(self,
                      channel: typing.Union[int, str, Snowflake, Channel],
                      message: typing.Union[int, str, Snowflake, Message],
@@ -206,26 +240,8 @@ class APIClient:
                        message: typing.Union[int, str, Snowflake, Message]):
         return self.http.delete_message(int(channel), int(message))
 
-    def create_reaction(self,
-                        channel: typing.Union[int, str, Snowflake, Channel],
-                        message: typing.Union[int, str, Snowflake, Message],
-                        emoji: typing.Union[str, Emoji]):
-        if isinstance(emoji, Emoji):
-            emoji = emoji.name if not emoji.id else f"{emoji.name}:{emoji.id}"
-        elif emoji.startswith("<") and emoji.endswith(">"):
-            emoji = emoji.lstrip("<").rstrip(">")
-        return self.http.create_reaction(int(channel), int(message), emoji)
-
-    def delete_reaction(self,
-                        channel: typing.Union[int, str, Snowflake, Channel],
-                        message: typing.Union[int, str, Snowflake, Message],
-                        emoji: typing.Union[str, Emoji],
-                        user: typing.Union[int, str, Snowflake, User] = "@me"):
-        if isinstance(emoji, Emoji):
-            emoji = emoji.name if not emoji.id else f"{emoji.name}:{emoji.id}"
-        elif emoji.startswith("<") and emoji.endswith(">"):
-            emoji = emoji.lstrip("<").rstrip(">")
-        return self.http.delete_reaction(int(channel), int(message), emoji, int(user) if user != "@me" else user)
+    def bulk_delete_messages(self, channel: typing.Union[int, str, Snowflake, Channel], messages: typing.List[typing.Union[int, str, Snowflake, Message]]):
+        return self.http.bulk_delete_messages(int(channel), list(map(int, messages)))
 
     @property
     def has_cache(self):
@@ -390,6 +406,9 @@ class Client(APIClient):
 
     async def create_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().create_message(*args, **kwargs))
+
+    async def request_reactions(self, *args, **kwargs) -> typing.List[User]:
+        return [User.create(self, x) for x in await super().request_reactions(*args, **kwargs)]
 
     async def edit_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().edit_message(*args, **kwargs))

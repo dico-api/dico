@@ -61,6 +61,9 @@ class Channel(DiscordObjectBase):
         else:
             return self.client.modify_guild_channel(self.id, **kwargs)
 
+    def bulk_delete_messages(self, *messages):
+        return self.client.bulk_delete_messages(self, messages)
+
     @property
     def mention(self):
         return f"<#{self.id}>"

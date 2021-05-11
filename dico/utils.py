@@ -18,7 +18,7 @@ async def safe_call(coro, additional_message: typing.Optional[str] = None):
     except Exception as ex:
         tb = traceback.format_exc()
         if additional_message:
-            _p = additional_message+"\n"+tb
+            _p = additional_message + "\n" + tb
         else:
             _p = tb
         print(_p, file=sys.stderr)
@@ -47,7 +47,7 @@ def format_discord_error(resp: dict):
     def get_error_message(k, v):
         if "_errors" not in v:
             for a, b in v.items():
-                get_error_message(k+"."+a, b)
+                get_error_message(k + "." + a, b)
         else:
             [msgs.append(f"In {k}: {x['message']} ({x['code']})") for x in v["_errors"]]
 
@@ -55,3 +55,12 @@ def format_discord_error(resp: dict):
         get_error_message(k, v)
 
     return resp["message"] + ((" - " + ' | '.join(msgs)) if msgs else "")
+
+
+def from_emoji(emoji):
+    from .model.emoji import Emoji  # Prevent circular import.
+    if isinstance(emoji, Emoji):
+        emoji = emoji.name if not emoji.id else f"{emoji.name}:{emoji.id}"
+    elif emoji.startswith("<") and emoji.endswith(">"):
+        emoji = emoji.lstrip("<").rstrip(">")
+    return emoji
