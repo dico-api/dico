@@ -30,16 +30,14 @@ class HTTPRequestBase(ABC):
         """
         pass
 
-    @abstractmethod
     def request_channel(self, channel_id):
         """
         Sends get channel request.
 
         :param channel_id: Channel ID to request.
         """
-        pass
+        return self.request(f"/channels/{channel_id}", "GET")
 
-    @abstractmethod
     def modify_guild_channel(self,
                              channel_id,
                              name: str,
@@ -71,9 +69,33 @@ class HTTPRequestBase(ABC):
         :param rtc_region: Voice region ID.
         :param video_quality_mode: Video quality of the channel.
         """
-        pass
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if channel_type is not None:
+            body["channel_type"] = channel_type
+        if position is not None:
+            body["position"] = position
+        if topic is not None:
+            body["topic"] = topic
+        if nsfw is not None:
+            body["nsfw"] = nsfw
+        if rate_limit_per_user is not None:
+            body["rate_limit_per_user"] = rate_limit_per_user
+        if bitrate is not None:
+            body["bitrate"] = bitrate
+        if user_limit is not None:
+            body["user_limit"] = user_limit
+        if permission_overwrites is not None:
+            body["permission_overwrites"] = permission_overwrites
+        if parent_id is not None:
+            body["parent_id"] = parent_id
+        if rtc_region is not None:
+            body["rtc_region"] = rtc_region
+        if video_quality_mode is not None:
+            body["video_quality_mode"] = video_quality_mode
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
 
-    @abstractmethod
     def modify_group_dm_channel(self, channel_id, name: str, icon: bin):
         """
         Sends modify channel request, for group DM.
@@ -82,9 +104,13 @@ class HTTPRequestBase(ABC):
         :param name: Name to change.
         :param icon: base64 encoded icon.
         """
-        pass
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if icon is not None:
+            body["icon"] = icon
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
 
-    @abstractmethod
     def modify_thread_channel(self,
                               channel_id,
                               name: str,
@@ -102,18 +128,27 @@ class HTTPRequestBase(ABC):
         :param locked: Whether to lock the thread.
         :param rate_limit_per_user: Rate limit seconds of the thread.
         """
-        pass
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if archived is not None:
+            body["archived"] = archived
+        if auto_archive_duration is not None:
+            body["auto_archive_duration"] = auto_archive_duration
+        if locked is not None:
+            body["locked"] = locked
+        if rate_limit_per_user is not None:
+            body["rate_limit_per_user"] = rate_limit_per_user
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
 
-    @abstractmethod
     def delete_channel(self, channel_id):
         """
         Sends channel delete/close request.
 
         :param channel_id: Channel ID to request.
         """
-        pass
+        return self.request(f"/channels/{channel_id}", "DELETE")
 
-    @abstractmethod
     def request_channel_messages(self, channel_id, around, before, after, limit: int):
         """
         Sends channel messages get request.
@@ -124,9 +159,19 @@ class HTTPRequestBase(ABC):
         :param after:Channel ID to get messages after it.
         :param limit: Maximum messages to get.
         """
-        pass
+        if around and before and after:
+            raise ValueError("Only around or before or after must be passed.")
+        query = {}
+        if around:
+            query["around"] = around
+        if before:
+            query["before"] = before
+        if after:
+            query["after"] = after
+        if limit:
+            query["limit"] = limit
+        return self.request(f"/channels/{channel_id}/messages", "GET", params=query)
 
-    @abstractmethod
     def request_channel_message(self, channel_id, message_id):
         """
         Sends single channel message get request.
@@ -134,14 +179,8 @@ class HTTPRequestBase(ABC):
         :param channel_id: Channel ID to request.
         :param message_id: Message ID to request.
         """
-        pass
+        return self.request(f"/channels/{channel_id}/messages/{message_id}", "GET")
 
-    @property
-    def close_channel(self):
-        """Alias of :meth:`.delete_channel`"""
-        return self.delete_channel
-
-    @abstractmethod
     def create_message(self,
                        channel_id,
                        content: str,
@@ -162,7 +201,22 @@ class HTTPRequestBase(ABC):
         :param message_reference: Message to reference.
         :return: Message object dict.
         """
-        pass
+        if not (content or embed):
+            raise ValueError("either content or embed must be passed.")
+        body = {}
+        if content:
+            body["content"] = content
+        if embed:
+            body["embed"] = embed
+        if nonce:
+            body["nonce"] = nonce
+        if tts is not None:
+            body["tts"] = tts
+        if allowed_mentions:
+            body["allowed_mentions"] = allowed_mentions
+        if message_reference:
+            body["message_reference"] = message_reference
+        return self.request(f"/channels/{channel_id}/messages", "POST", body, is_json=True)
 
     @abstractmethod
     def create_message_with_files(self,
@@ -189,7 +243,6 @@ class HTTPRequestBase(ABC):
         """
         pass
 
-    @abstractmethod
     def edit_message(self,
                      channel_id,
                      message_id,
@@ -210,9 +263,19 @@ class HTTPRequestBase(ABC):
         :param attachments: Attachments to keep.
         :return: Message object dict.
         """
-        pass
+        body = {}
+        if content is not None:
+            body["content"] = content
+        if embed is not None:
+            body["embed"] = embed
+        if flags is not None:
+            body["flags"] = flags
+        if allowed_mentions is not None:
+            body["allowed_mentions"] = allowed_mentions
+        if attachments is not None:
+            body["message_reference"] = attachments
+        return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", body, is_json=True)
 
-    @abstractmethod
     def delete_message(self, channel_id, message_id):
         """
         Sends delete message request.
@@ -220,9 +283,8 @@ class HTTPRequestBase(ABC):
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to edit.
         """
-        pass
+        return self.request(f"/channels/{channel_id}/messages/{message_id}", "DELETE")
 
-    @abstractmethod
     def create_reaction(self, channel_id, message_id, emoji: str):
         """
         Sends create emoji request.
@@ -231,9 +293,8 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to react.
         :param emoji: Emoji to add.
         """
-        pass
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me", "PUT")
 
-    @abstractmethod
     def delete_reaction(self, channel_id, message_id, emoji: str, user_id="@me"):
         """
         Sends delete emoji request.
@@ -243,7 +304,7 @@ class HTTPRequestBase(ABC):
         :param emoji: Emoji to add.
         :param user_id: User ID to remove reaction. Pass ``@me`` to remove own.
         """
-        pass
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}", "DELETE")
 
     @classmethod
     @abstractmethod
