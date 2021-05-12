@@ -76,9 +76,9 @@ class FlagBase:
             raise AttributeError(f"invalid name: `{o_key}`")
         has_value = self.has(key)
         if value and not has_value:
-            self.value += self.values[key]
+            self.value |= self.values[key]
         elif not value and has_value:
-            self.value -= self.values[key]
+            self.value &= ~self.values[key]
 
     def add(self, value):
         return self.__setattr(value, True)

@@ -5,7 +5,7 @@ from ..guild import Member
 from ..permission import Role
 from ..snowflake import Snowflake
 from ..user import User
-from ...base.model import TypeBase
+from ...base.model import TypeBase, FlagBase
 
 
 class ApplicationCommand:
@@ -108,7 +108,7 @@ class Interaction:
         self.user = User.create(client, self.__user) if self.__user else None
         self.token = resp["token"]
         self.version = resp["version"]
-        
+
     def create_response(self, interaction_response):
         return self.client.create_interaction_response(self, interaction_response)
 
@@ -151,6 +151,11 @@ class InteractionCallbackType(TypeBase):
     PONG = 1
     CHANNEL_MESSAGE_WITH_SOURCE = 4
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
+
+
+class InteractionCallbackFlags(FlagBase):
+    # This actually still doesn't exist.
+    EPHEMERAL = 64
 
 
 class InteractionApplicationCommandCallbackData:
