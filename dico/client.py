@@ -283,6 +283,7 @@ class Client(APIClient):
         self.ws: typing.Union[None, WebSocketClient] = None
         self.events = EventHandler(self)
         self.application: typing.Union[None, Application] = None
+        self.__wait_futures = {}
 
         # Custom events dispatch
         # self.events.add("MESSAGE_CREATE", lambda x: self.events.dispatch("MESSAGE", x.message))
@@ -323,22 +324,34 @@ class Client(APIClient):
             return func
         return wrap
 
-    async def wait(self, event_name: str, timeout: float = None, check: typing.Callable = None):
-        raise NotImplementedError
-
     @property
     def on(self):
         return self.on_
 
-    def dispatch(self, name, *args, **kwargs):
+    async def wait(self, event_name: str, timeout: float = None, check: typing.Callable = None):
+        async def wrap():
+            while True:
+                future = asyncio.Future()
+                if event_name.upper() not in self.__wait_futures:
+                    self.__wait_futures[event_name.upper()] = []
+                self.__wait_futures[event_name.upper()].append(future)
+                res = await asyncio.wait_for(future, timeout=None, loop=self.loop)
+                ret = res if len(res) > 1 else res[0]
+                if check and check(*res):
+                    return ret
+                elif not check:
+                    return ret
+        return await asyncio.wait_for(wrap(), timeout=timeout, loop=self.loop)
+
+    def dispatch(self, name, *args):
         """
         Dispatches new event.
 
         :param name: Name of the event.
         :param args: Arguments of the event.
-        :param kwargs: Keyword arguments of the client.
         """
-        [self.loop.create_task(utils.safe_call(x(*args, **kwargs))) for x in self.events.get(name.upper())]
+        [self.loop.create_task(utils.safe_call(x(*args))) for x in self.events.get(name.upper())]
+        [self.__wait_futures[name.upper()].pop(x).set_result(args) for x in range(len(self.__wait_futures.get(name.upper(), [])))]
 
     @property
     def get(self):
