@@ -36,6 +36,7 @@ class EventHandler:
             "GUILD_ROLE_CREATE": GuildRoleCreate,
             "GUILD_ROLE_UPDATE": GuildRoleUpdate,
             "GUILD_ROLE_DELETE": GuildRoleDelete,
+            "INTERACTION_CREATE": InteractionCreate,
             "INVITE_CREATE": InviteCreate,
             "INVITE_DELETE": InviteDelete,
             "MESSAGE_CREATE": MessageCreate,

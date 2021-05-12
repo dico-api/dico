@@ -6,3 +6,4 @@ from .guild import *
 from .permission import *
 from .snowflake import *
 from .user import *
+from .interactions.slashcommands import *

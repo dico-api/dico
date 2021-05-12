@@ -6,6 +6,7 @@ from .guild import Guild, Member
 from .permission import Role
 from .snowflake import Snowflake
 from .user import User
+from .interactions.slashcommands import Interaction
 from ..base.model import EventBase
 
 
@@ -210,6 +211,9 @@ class GuildRoleDelete(EventBase):
     def role(self):
         if self.client.has_cache:
             return self.guild.get_role(self.role_id)
+
+
+InteractionCreate = Interaction
 
 
 class InviteCreate(EventBase):

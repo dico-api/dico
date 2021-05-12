@@ -10,7 +10,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity, Overwrite, Emoji, User
+from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity, Overwrite, Emoji, User, Interaction, InteractionResponse
 from .utils import from_emoji
 
 
@@ -246,6 +246,9 @@ class APIClient:
     def edit_channel_permissions(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite):
         ow_dict = overwrite.to_dict()
         return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"])
+
+    def create_interaction_response(self, interaction: Interaction, interaction_response: InteractionResponse):
+        return self.http.create_interaction_response(interaction.id, interaction.token, interaction_response.to_dict())
 
     @property
     def has_cache(self):

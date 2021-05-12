@@ -125,6 +125,7 @@ class VideoQualityModes(TypeBase):
 
 class Message(DiscordObjectBase):
     def __init__(self, client, resp, *, guild_id=None):
+        from .interactions.slashcommands import MessageInteraction  # Prevent circular import.
         super().__init__(client, resp)
         self._cache_type = "message"
         self.channel_id = Snowflake(resp["channel_id"])
@@ -156,7 +157,9 @@ class Message(DiscordObjectBase):
         self.stickers = [MessageSticker(x) for x in resp.get("stickers", [])]
         self.__referenced_message = resp.get("referenced_message")
         self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id) if self.__referenced_message else self.__referenced_message
-        self.interaction = resp.get("interaction")
+        self.interaction = MessageInteraction(self.client, resp.get("interaction"))
+        self.__thread = resp.get("thread")
+        self.thread = Channel.create(self.client, self.__thread, guild_id=self.guild_id) if self.__thread else self.__thread
 
     def reply(self, content=None, **kwargs):
         kwargs["message_reference"] = self

@@ -1,4 +1,6 @@
-from ..channel import Channel
+import typing
+
+from ..channel import Channel, Embed, AllowedMentions
 from ..guild import Member
 from ..permission import Role
 from ..snowflake import Snowflake
@@ -97,15 +99,22 @@ class Interaction:
         self.id = Snowflake(resp["id"])
         self.application_id = Snowflake(resp["application_id"])
         self.type = InteractionType(resp["type"])
-        self.data = ApplicationCommandInteractionData(resp.get("data"))
+        self.data = ApplicationCommandInteractionData(client, resp.get("data"))
         self.guild_id = Snowflake(resp.get("guild_id"))
         self.channel_id = Snowflake(resp.get("channel_id"))
         self.__member = resp.get("member")
-        self.member = Member.create(client, resp, guild_id=self.guild_id) if self.__member else None
+        self.member = Member.create(client, self.__member, guild_id=self.guild_id) if self.__member else None
         self.__user = resp.get("user")
         self.user = User.create(client, self.__user) if self.__user else None
         self.token = resp["token"]
         self.version = resp["version"]
+        
+    def create_response(self, interaction_response):
+        return self.client.create_interaction_response(self, interaction_response)
+
+    @classmethod
+    def create(cls, client, resp):
+        return cls(client, resp)
 
 
 class InteractionType(TypeBase):
@@ -117,7 +126,8 @@ class ApplicationCommandInteractionData:
     def __init__(self, client, resp: dict):
         self.id = Snowflake(resp["id"])
         self.name = resp["name"]
-        self.resolved = ApplicationCommandInteractionDataResolved(client, resp.get("resolved"))
+        self.__resolved = resp.get("resolved")
+        self.resolved = ApplicationCommandInteractionDataResolved(client, resp.get("resolved")) if self.__resolved else self.__resolved
         self.options = resp.get("options")
 
 
@@ -137,13 +147,52 @@ class ApplicationCommandInteractionDataOption:
         self.options = [ApplicationCommandInteractionDataOption(x) for x in resp.get("options", [])]
 
 
-class InteractionResponseType:
-    pass
+class InteractionCallbackType(TypeBase):
+    PONG = 1
+    CHANNEL_MESSAGE_WITH_SOURCE = 4
+    DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
 
 
 class InteractionApplicationCommandCallbackData:
-    pass
+    def __init__(self, *,
+                 tts: bool = None,
+                 content: str = None,
+                 embeds: typing.List[Embed] = None,
+                 allowed_mentions: AllowedMentions = None,
+                 flags: int = None):
+        self.tts = tts
+        self.content = content
+        self.embeds = embeds
+        self.allowed_mentions = allowed_mentions
+        self.flags = flags
+
+    def to_dict(self):
+        ret = {}
+        if self.tts is not None:
+            ret["tts"] = self.tts
+        if self.content is not None:
+            ret["content"] = self.content
+        if self.embeds is not None:
+            ret["embeds"] = [x.to_dict() for x in self.embeds]
+        if self.allowed_mentions is not None:
+            ret["allowed_mentions"] = self.allowed_mentions.to_dict()
+        if self.flags is not None:
+            ret["flags"] = int(self.flags)
+        return ret
+
+
+class InteractionResponse:
+    def __init__(self, callback_type: typing.Union[int, InteractionCallbackType], data: InteractionApplicationCommandCallbackData):
+        self.type = callback_type
+        self.data = data
+
+    def to_dict(self):
+        return {"type": int(self.type), "data": self.data.to_dict()}
 
 
 class MessageInteraction:
-    pass
+    def __init__(self, client, resp):
+        self.id = Snowflake(resp["id"])
+        self.type = InteractionType(resp["type"])
+        self.name = resp["name"]
+        self.user = User.create(client, resp["user"])

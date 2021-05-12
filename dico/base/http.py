@@ -30,6 +30,8 @@ class HTTPRequestBase(ABC):
         """
         pass
 
+    # Channel Requests
+
     def request_channel(self, channel_id):
         """
         Sends get channel request.
@@ -364,6 +366,11 @@ class HTTPRequestBase(ABC):
         """
         body = {"allow": allow, "deny": deny, "type": overwrite_type}
         return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "PUT", body, is_json=True)
+
+    # Interaction Requests
+
+    def create_interaction_response(self, interaction_id, interaction_token, interaction_response: dict):
+        return self.request(f"/interactions/{interaction_id}/{interaction_token}/callback", "POST", interaction_response, is_json=True)
 
     @classmethod
     @abstractmethod

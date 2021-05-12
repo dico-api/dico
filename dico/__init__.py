@@ -12,3 +12,4 @@ from .client import Client
 from .model.channel import *
 from .model.event import *
 from .model.gateway import Intents, Activity, ActivityTypes
+from .model.interactions.slashcommands import *
