@@ -243,6 +243,10 @@ class APIClient:
     def bulk_delete_messages(self, channel: typing.Union[int, str, Snowflake, Channel], messages: typing.List[typing.Union[int, str, Snowflake, Message]]):
         return self.http.bulk_delete_messages(int(channel), list(map(int, messages)))
 
+    def edit_channel_permissions(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite):
+        ow_dict = overwrite.to_dict()
+        return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"])
+
     @property
     def has_cache(self):
         return hasattr(self, "cache")

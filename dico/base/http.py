@@ -352,6 +352,19 @@ class HTTPRequestBase(ABC):
         body = {"messages": list(map(str, message_ids))}
         return self.request(f"/channels/{channel_id}/messages/bulk-delete", "POST", body, is_json=True)
 
+    def edit_channel_permissions(self, channel_id, overwrite_id, allow, deny, overwrite_type):
+        """
+        Sends edit channel permissions request.
+
+        :param channel_id: ID of the channel.
+        :param overwrite_id: Role or Member ID to edit permissions.
+        :param allow: What permissions to allow.
+        :param deny: What permissions to deny.
+        :param overwrite_type: Type of the overwrite target. Set to 0 for Role, and 1 for Member.
+        """
+        body = {"allow": allow, "deny": deny, "type": overwrite_type}
+        return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "PUT", body, is_json=True)
+
     @classmethod
     @abstractmethod
     def create(cls, token, *args, **kwargs):

@@ -64,6 +64,9 @@ class Channel(DiscordObjectBase):
     def bulk_delete_messages(self, *messages):
         return self.client.bulk_delete_messages(self, messages)
 
+    def edit_permissions(self, overwrite):
+        return self.client.edit_channel_permissions(self, overwrite)
+
     @property
     def mention(self):
         return f"<#{self.id}>"
@@ -303,7 +306,16 @@ class Overwrite:
         self.deny = PermissionFlags.from_value(int(resp["deny"]))
 
     def to_dict(self):
-        return {"id": self.id, "type": self.type, "allow": int(self.allow), "deny": int(self.deny)}
+        return {"id": str(self.id), "type": self.type, "allow": str(int(self.allow)), "deny": str(int(self.deny))}
+
+    def edit(self, **kwargs):
+        for k, v in kwargs.items():
+            self.allow.__setattr__(k, v)
+            self.deny.__setattr__(k, not v)
+
+    @classmethod
+    def create(cls, **kwargs):
+        return cls(kwargs)
 
 
 class ThreadMetadata:
