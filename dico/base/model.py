@@ -49,12 +49,12 @@ class FlagBase:
         for x in args:
             if x.upper() not in self.values:
                 raise AttributeError(f"invalid name: `{x}`")
-            self.value += self.values[x.upper()]
+            self.value |= self.values[x.upper()]
         for k, v in kwargs.items():
             if k.upper() not in self.values:
                 raise AttributeError(f"invalid name: `{k}`")
             if v:
-                self.value += self.values[k.upper()]
+                self.value |= self.values[k.upper()]
 
     def __int__(self):
         return self.value

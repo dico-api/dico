@@ -51,15 +51,19 @@ class Channel(DiscordObjectBase):
     def send(self):
         return self.create_message
 
-    def edit(self, **kwargs):
+    def modify(self, **kwargs):
         if self.is_group_dm_channel():
             return self.client.modify_group_dm_channel(self.id, **kwargs)
         elif self.is_dm_channel() or self.is_store_channel():
-            raise AttributeError("This type of channel is not allowed to edit.")
+            raise AttributeError("This type of channel is not allowed to modify.")
         elif self.is_thread_channel():
             raise NotImplementedError
         else:
             return self.client.modify_guild_channel(self.id, **kwargs)
+
+    @property
+    def edit(self):
+        return self.modify
 
     def bulk_delete_messages(self, *messages):
         return self.client.bulk_delete_messages(self, messages)
@@ -74,7 +78,7 @@ class Channel(DiscordObjectBase):
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.cache.get_guild(self.guild_id)
+            return self.client.cache.get(self.guild_id, "guild")
 
     def is_guild_text_channel(self):
         return self.type.guild_text
@@ -157,7 +161,8 @@ class Message(DiscordObjectBase):
         self.stickers = [MessageSticker(x) for x in resp.get("stickers", [])]
         self.__referenced_message = resp.get("referenced_message")
         self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id) if self.__referenced_message else self.__referenced_message
-        self.interaction = MessageInteraction(self.client, resp.get("interaction"))
+        self.__interaction = resp.get("interaction")
+        self.interaction = MessageInteraction(self.client, self.__interaction) if self.__interaction else self.__interaction
         self.__thread = resp.get("thread")
         self.thread = Channel.create(self.client, self.__thread, guild_id=self.guild_id) if self.__thread else self.__thread
 
@@ -184,15 +189,15 @@ class Message(DiscordObjectBase):
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
     @property
     def channel(self):
         if self.channel_id and self.client.has_cache:
             if self.guild_id:
-                return self.guild.get_channel(self.channel_id) or self.client.get_channel(self.channel_id)
+                return self.guild.get(self.channel_id, "channel") or self.client.get(self.channel_id, "channel")
             else:
-                return self.client.get_channel(self.channel_id)
+                return self.client.get(self.channel_id, "channel")
 
 
 class MessageTypes(TypeBase):
@@ -352,7 +357,7 @@ class ThreadMember:
     @property
     def user(self):
         if self.client.has_cache:
-            return self.client.get(self.user_id)
+            return self.client.get(self.user_id, "user")
 
     @classmethod
     def optional(cls, client, resp):

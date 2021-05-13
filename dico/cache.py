@@ -7,7 +7,9 @@ class CacheContainer:
         self.default_expiration_time = default_expiration_time
         self.__cache_dict: typing.Dict[str, typing.Union[dict, CacheStorage]] = {"guild_cache": {}}
 
-    def get(self, snowflake_id: typing.Union[str, int, Snowflake], *, ignore_expiration=True):
+    def get(self, snowflake_id: typing.Union[str, int, Snowflake], storage_type: str = None, *, ignore_expiration=True):
+        if storage_type:
+            return self.get_storage(storage_type).get(snowflake_id, ignore_expiration=ignore_expiration)
         for x in self.__cache_dict.values():
             if isinstance(x, dict):
                 continue

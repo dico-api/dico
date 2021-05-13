@@ -82,31 +82,12 @@ class Guild(DiscordObjectBase):
     @property
     def get(self):
         """Alias of ``Guild.cache.get``."""
-        return self.cache.get
-
-    @property
-    def get_user(self):
         if self.cache:
-            return self.client.cache.get_storage("user").get
-
-    @property
-    def get_member(self):
-        if self.cache:
-            return self.cache.get_storage("member").get
-
-    @property
-    def get_channel(self):
-        if self.cache:
-            return self.cache.get_storage("channel").get
-
-    @property
-    def get_role(self):
-        if self.cache:
-            return self.cache.get_storage("role").get
+            return self.cache.get
 
     def get_owner(self):
         if self.cache:
-            return self.get_member(self.owner_id) or self.get_user(self.owner_id)
+            return self.get(self.owner_id, "member") or self.get(self.owner_id, "user")
 
 
 class DefaultMessageNotificationLevel(TypeBase):

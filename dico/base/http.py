@@ -42,18 +42,18 @@ class HTTPRequestBase(ABC):
 
     def modify_guild_channel(self,
                              channel_id,
-                             name: str,
-                             channel_type: int,
-                             position: int,
-                             topic: str,
-                             nsfw: bool,
-                             rate_limit_per_user: int,
-                             bitrate: int,
-                             user_limit: int,
-                             permission_overwrites: typing.List[dict],
-                             parent_id: str,
-                             rtc_region: str,
-                             video_quality_mode: int):
+                             name: str = None,
+                             channel_type: int = None,
+                             position: int = None,
+                             topic: str = None,
+                             nsfw: bool = None,
+                             rate_limit_per_user: int = None,
+                             bitrate: int = None,
+                             user_limit: int = None,
+                             permission_overwrites: typing.List[dict] = None,
+                             parent_id: str = None,
+                             rtc_region: str = None,
+                             video_quality_mode: int = None):
         """
         Sends modify channel request, for guild channel.
 
@@ -98,7 +98,7 @@ class HTTPRequestBase(ABC):
             body["video_quality_mode"] = video_quality_mode
         return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
 
-    def modify_group_dm_channel(self, channel_id, name: str, icon: bin):
+    def modify_group_dm_channel(self, channel_id, name: str = None, icon: bin = None):
         """
         Sends modify channel request, for group DM.
 
@@ -115,11 +115,11 @@ class HTTPRequestBase(ABC):
 
     def modify_thread_channel(self,
                               channel_id,
-                              name: str,
-                              archived: bool,
-                              auto_archive_duration: int,
-                              locked: bool,
-                              rate_limit_per_user: int):
+                              name: str = None,
+                              archived: bool = None,
+                              auto_archive_duration: int = None,
+                              locked: bool = None,
+                              rate_limit_per_user: int = None):
         """
         Sends modify channel request, for thread channel.
 
@@ -151,7 +151,7 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}", "DELETE")
 
-    def request_channel_messages(self, channel_id, around, before, after, limit: int):
+    def request_channel_messages(self, channel_id, around=None, before=None, after=None, limit: int=None):
         """
         Sends channel messages get request.
 
@@ -185,12 +185,12 @@ class HTTPRequestBase(ABC):
 
     def create_message(self,
                        channel_id,
-                       content: str,
-                       nonce: typing.Union[int, str],
-                       tts: bool,
-                       embed: dict,
-                       allowed_mentions: dict,
-                       message_reference: dict):
+                       content: str = None,
+                       nonce: typing.Union[int, str] = None,
+                       tts: bool = False,
+                       embed: dict = None,
+                       allowed_mentions: dict = None,
+                       message_reference: dict = None):
         """
         Sends create message request.
 
@@ -206,17 +206,17 @@ class HTTPRequestBase(ABC):
         if not (content or embed):
             raise ValueError("either content or embed must be passed.")
         body = {}
-        if content:
+        if content is not None:
             body["content"] = content
-        if embed:
+        if embed is not None:
             body["embed"] = embed
-        if nonce:
+        if nonce is not None:
             body["nonce"] = nonce
         if tts is not None:
             body["tts"] = tts
-        if allowed_mentions:
+        if allowed_mentions is not None:
             body["allowed_mentions"] = allowed_mentions
-        if message_reference:
+        if message_reference is not None:
             body["message_reference"] = message_reference
         return self.request(f"/channels/{channel_id}/messages", "POST", body, is_json=True)
 
@@ -266,7 +266,7 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}", "DELETE")
 
-    def request_reactons(self, channel_id, message_id, emoji: str, after, limit):
+    def request_reactons(self, channel_id, message_id, emoji: str, after=None, limit=None):
         """
         Sends get reaction request.
 
@@ -305,11 +305,11 @@ class HTTPRequestBase(ABC):
     def edit_message(self,
                      channel_id,
                      message_id,
-                     content: str,
-                     embed: dict,
-                     flags: int,
-                     allowed_mentions: dict,
-                     attachments: typing.List[dict]):
+                     content: str = None,
+                     embed: dict = None,
+                     flags: int = None,
+                     allowed_mentions: dict = None,
+                     attachments: typing.List[dict] = None):
         """
         Sends edit message request.
 
@@ -332,7 +332,7 @@ class HTTPRequestBase(ABC):
         if allowed_mentions is not None:
             body["allowed_mentions"] = allowed_mentions
         if attachments is not None:
-            body["message_reference"] = attachments
+            body["attachments"] = attachments
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", body, is_json=True)
 
     def delete_message(self, channel_id, message_id):
@@ -367,9 +367,82 @@ class HTTPRequestBase(ABC):
         body = {"allow": allow, "deny": deny, "type": overwrite_type}
         return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "PUT", body, is_json=True)
 
+    # Webhook Requests
+
+    def create_webhook(self, channel_id, name: str, avatar: str = None):
+        """
+        Sends create webhook request.
+
+        :param channel_id: ID of the channel.
+        :param name: Name of the webhook.
+        :param avatar: URL of the avatar image.
+        """
+        body = {"name": name}
+        if avatar is not None:
+            body["avatar"] = avatar
+        return self.request(f"/channels/{channel_id}/webhooks", "POST", body, is_json=True)
+
+    def request_channel_webhooks(self, channel_id):
+        """
+        Sends get channel webhooks request.
+
+        :param channel_id: ID of the channel.
+        """
+        return self.request(f"/channels/{channel_id}/webhooks", "GET")
+
+    def request_guild_webhooks(self, guild_id):
+        """
+        Sends get guild webhooks request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/webhooks", "GET")
+
+    def request_webhook(self, webhook_id):
+        """
+        Sends get webhook request.
+
+        :param webhook_id: ID of the webhook.
+        """
+        return self.request(f"/webhooks/{webhook_id}", "GET")
+
+    def request_webhook_with_token(self, webhook_id, webhook_token):
+        """
+        Sends get webhook request.
+
+        :param webhook_id: ID of the webhook.
+        :param webhook_token: Token of the webhook.
+        """
+        return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "GET")
+
+    def modify_webhook(self, webhook_id, name: str = None, avatar: str = None, channel_id: str = None):
+        """
+        Sends modify webhook request.
+
+        :param webhook_id: ID of the webhook.
+        :param name: Name of the webhook.
+        :param avatar: URL of the avatar image.
+        :param channel_id: ID of the channel.
+        """
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if avatar is not None:
+            body["avatar"] = avatar
+        if channel_id is not None:
+            body["channel_id"] = channel_id
+        return self.request(f"/webhooks/{webhook_id}", "POST", body, is_json=True)
+
     # Interaction Requests
 
     def create_interaction_response(self, interaction_id, interaction_token, interaction_response: dict):
+        """
+        Sends create interaction response request.
+
+        :param interaction_id: ID of the interaction.
+        :param interaction_token: Token of the interaction.
+        :param interaction_response: Interaction Response as dict.
+        """
         return self.request(f"/interactions/{interaction_id}/{interaction_token}/callback", "POST", interaction_response, is_json=True)
 
     @classmethod

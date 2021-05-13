@@ -10,7 +10,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity, Overwrite, Emoji, User, Interaction, InteractionResponse
+from .model import Intents, Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Application, Activity, Overwrite, Emoji, User, Interaction, InteractionResponse, Webhook, Guild
 from .utils import from_emoji
 
 
@@ -33,6 +33,8 @@ class APIClient:
     def __init__(self, token, *, base: typing.Type[HTTPRequestBase], default_allowed_mentions: AllowedMentions = None, **http_options):
         self.http = base.create(token, **http_options)
         self.default_allowed_mentions = default_allowed_mentions
+
+    # Channel
 
     def request_channel(self, channel: typing.Union[int, str, Snowflake, Channel]):
         channel = self.http.request_channel(int(channel))
@@ -247,6 +249,44 @@ class APIClient:
         ow_dict = overwrite.to_dict()
         return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"])
 
+    # Webhook
+
+    def create_webhook(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, avatar: str = None):
+        hook = self.http.create_webhook(int(channel), name, avatar)
+        if isinstance(hook, dict):
+            return Webhook(self, hook)
+        return hook
+
+    def request_channel_webhooks(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        hooks = self.http.request_channel_webhooks(int(channel))
+        if isinstance(hooks, list):
+            return [Webhook(self, x) for x in hooks]
+        return hooks
+
+    def request_guild_webhooks(self, guild: typing.Union[int, str, Snowflake, Guild]):
+        hooks = self.http.request_guild_webhooks(int(guild))
+        if isinstance(hooks, list):
+            return [Webhook(self, x) for x in hooks]
+        return hooks
+
+    def request_webhook(self, webhook: typing.Union[int, str, Snowflake, Webhook], token: str = None):  # Requesting webhook using webhook, seems legit.
+        hook = self.http.request_webhook(int(webhook)) if not token else self.http.request_webhook_with_token(int(webhook), token)
+        if isinstance(hook, dict):
+            return Webhook(self, hook)
+        return hook
+
+    def modify_webhook(self,
+                       webhook: typing.Union[int, str, Snowflake, Webhook], *,
+                       name: str = None,
+                       avatar: str = None,
+                       channel: typing.Union[int, str, Snowflake, Channel] = None):
+        hook = self.http.modify_webhook(int(webhook), name, avatar, str(int(channel)))
+        if isinstance(hook, dict):
+            return Webhook(self, hook)
+        return hook
+
+    # Interaction
+
     def create_interaction_response(self, interaction: Interaction, interaction_response: InteractionResponse):
         return self.http.create_interaction_response(interaction.id, interaction.token, interaction_response.to_dict())
 
@@ -366,24 +406,6 @@ class Client(APIClient):
         if self.has_cache:
             return self.cache.get
 
-    @property
-    def get_user(self):
-        """Gets user from cache. Alias of ``.cache.get_storage("user").get``."""
-        if self.has_cache:
-            return self.cache.get_storage("user").get
-
-    @property
-    def get_guild(self):
-        """Gets guild from cache. Alias of ``.cache.get_storage("guild").get``."""
-        if self.has_cache:
-            return self.cache.get_storage("guild").get
-
-    @property
-    def get_channel(self):
-        """Gets channel from cache. Alias of ``.cache.get_storage("channel").get``."""
-        if self.has_cache:
-            return self.cache.get_storage("channel").get
-
     async def start(self):
         """
         Starts websocket connection and clears every connections after stopping due to error or KeyboardInterrupt.
@@ -432,6 +454,21 @@ class Client(APIClient):
 
     async def edit_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().edit_message(*args, **kwargs))
+
+    async def create_webhook(self, *args, **kwargs):
+        return Webhook(self, await super().create_webhook(*args, **kwargs))
+
+    async def request_channel_webhooks(self, *args, **kwargs):
+        return [Webhook(self, x) for x in await super().request_channel_webhooks(*args, **kwargs)]
+
+    async def request_guild_webhooks(self, *args, **kwargs):
+        return [Webhook(self, x) for x in await super().request_guild_webhooks(*args, **kwargs)]
+
+    async def request_webhook(self, *args, **kwargs):
+        return Webhook(self, await super().request_webhook(*args, **kwargs))
+
+    async def modify_webhook(self, *args, **kwargs):
+        return Webhook(self, await super().modify_webhook(*args, **kwargs))
 
     @property
     def has_cache(self):

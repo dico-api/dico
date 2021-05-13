@@ -70,12 +70,12 @@ class ChannelPinsUpdate(EventBase):
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def guild(self):
         if self.guild_id:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 GuildCreate = Guild
@@ -92,7 +92,7 @@ class GuildBanAdd(EventBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.cache.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class GuildBanRemove(GuildBanAdd):
@@ -108,7 +108,7 @@ class GuildEmojisUpdate(EventBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.cache.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class GuildIntegrationsUpdate(EventBase):
@@ -119,7 +119,7 @@ class GuildIntegrationsUpdate(EventBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.cache.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 GuildMemberAdd = Member
@@ -138,12 +138,12 @@ class GuildMemberRemove(EventBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.cache.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
     @property
     def member(self):
         if self.client.has_cache:
-            return self.guild.get_member(self.user.id)
+            return self.guild.get(self.user.id, "member")
 
 
 class GuildMemberUpdate(Member):
@@ -169,7 +169,7 @@ class GuildRoleCreate(EventBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class GuildRoleUpdate(EventBase):
@@ -184,12 +184,12 @@ class GuildRoleUpdate(EventBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
     @property
     def original(self):
         if self.client.has_cache:
-            return self.client.get(self.role.id)
+            return self.guild.get(self.role.id, "role")
 
 
 class GuildRoleDelete(EventBase):
@@ -205,12 +205,12 @@ class GuildRoleDelete(EventBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
     @property
     def role(self):
         if self.client.has_cache:
-            return self.guild.get_role(self.role_id)
+            return self.guild.get(self.role_id, "role")
 
 
 InteractionCreate = Interaction
@@ -237,12 +237,12 @@ class InviteCreate(EventBase):
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class InviteDelete(EventBase):
@@ -255,12 +255,12 @@ class InviteDelete(EventBase):
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 MessageCreate = Message
@@ -277,7 +277,7 @@ class MessageUpdate(Message):
     @property
     def original(self):
         if self.client.has_cache:
-            return self.client.get(self.id)
+            return self.client.get(self.id, "message")
 
 
 class MessageDelete(EventBase):
@@ -294,17 +294,17 @@ class MessageDelete(EventBase):
     @property
     def message(self):
         if self.client.has_cache:
-            return self.client.get(self.id)
+            return self.client.get(self.id, "message")
 
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class MessageDeleteBulk(EventBase):
@@ -321,17 +321,17 @@ class MessageDeleteBulk(EventBase):
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
     @property
     def available_messages(self):
         if self.client.has_cache:
-            tries = [self.client.get(x) for x in self.ids]
+            tries = [self.client.get(x, "message") for x in self.ids]
             return [x for x in tries if x]
 
 
@@ -349,22 +349,22 @@ class MessageReactionAdd(EventBase):
     @property
     def user(self):
         if self.client.has_cache:
-            return self.client.get_user(self.user_id)
+            return self.client.get(self.user_id, "user")
 
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def message(self):
         if self.client.has_cache:
-            return self.client.get(self.message_id)
+            return self.client.get(self.message_id, "message")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class MessageReactionRemove(EventBase):
@@ -379,22 +379,22 @@ class MessageReactionRemove(EventBase):
     @property
     def user(self):
         if self.client.has_cache:
-            return self.client.get_user(self.user_id)
+            return self.client.get(self.user_id, "user")
 
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def message(self):
         if self.client.has_cache:
-            return self.client.get(self.message_id)
+            return self.client.get(self.message_id, "message")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class MessageReactionRemoveAll(EventBase):
@@ -407,17 +407,17 @@ class MessageReactionRemoveAll(EventBase):
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def message(self):
         if self.client.has_cache:
-            return self.client.get(self.message_id)
+            return self.client.get(self.message_id, "message")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class MessageReactionRemoveEmoji(EventBase):
@@ -431,17 +431,17 @@ class MessageReactionRemoveEmoji(EventBase):
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def message(self):
         if self.client.has_cache:
-            return self.client.get(self.message_id)
+            return self.client.get(self.message_id, "message")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class PresenceUpdate(EventBase):
@@ -456,7 +456,7 @@ class PresenceUpdate(EventBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.cache.get_guild(self.guild_id)
+            return self.client.cache.get(self.guild_id, "guild")
 
 
 class TypingStart(EventBase):
@@ -470,17 +470,17 @@ class TypingStart(EventBase):
     @property
     def channel(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.channel_id)
+            return self.client.get(self.channel_id, "channel")
 
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
     @property
     def user(self):
         if self.client.has_cache:
-            return self.client.get_user(self.user_id)
+            return self.client.get(self.user_id, "user")
 
 
 class UserUpdate(User):
@@ -494,4 +494,4 @@ class UserUpdate(User):
     @property
     def original(self):
         if self.client.has_cache:
-            return self.client.get(self.id)
+            return self.client.get(self.id, "guild")

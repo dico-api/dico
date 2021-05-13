@@ -58,7 +58,7 @@ class Role(DiscordObjectBase):
     @property
     def guild(self):
         if self.client.has_cache:
-            return self.client.get_guild(self.guild_id)
+            return self.client.get(self.guild_id, "guild")
 
 
 class RoleTags:
