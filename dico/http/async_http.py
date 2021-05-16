@@ -103,6 +103,47 @@ class AsyncHTTPRequest(HTTPRequestBase):
             form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/channels/{channel_id}/messages", "POST", form)
 
+    def execute_webhook_with_files(self,
+                                   webhook_id,
+                                   webhook_token,
+                                   wait: bool = False,
+                                   thread_id=None,
+                                   content: str = None,
+                                   username: str = None,
+                                   avatar_url: str = None,
+                                   tts: bool = False,
+                                   files: typing.List[io.FileIO] = None,
+                                   embeds: typing.List[dict] = None,
+                                   allowed_mentions: dict = None):
+        if not (content or embeds or files):
+            raise ValueError("either content or embeds or files must be passed.")
+        payload_json = {}
+        form = aiohttp.FormData()
+        if content is not None:
+            payload_json["content"] = content
+        if username is not None:
+            payload_json["username"] = username
+        if avatar_url is not None:
+            payload_json["avatar_url"] = avatar_url
+        if tts is not None:
+            payload_json["tts"] = tts
+        if embeds is not None:
+            payload_json["embeds"] = embeds
+        if allowed_mentions is not None:
+            payload_json["allowed_mentions"] = allowed_mentions
+        params = {}
+        if wait is not None:
+            params["wait"] = wait
+        if thread_id is not None:
+            params["thread_id"] = thread_id
+        form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
+        for x in range(len(files)):
+            name = f"file{x if len(files) > 1 else ''}"
+            sel = files[x]
+            f = sel.read()
+            form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
+        return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "POST", form, params=params)
+
     @classmethod
     def create(cls,
                token: str,

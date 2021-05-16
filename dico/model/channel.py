@@ -41,20 +41,19 @@ class Channel(DiscordObjectBase):
         self.thread_metadata = ThreadMetadata.optional(self.client, resp.get("thread_metadata"))
         self.member = ThreadMember.optional(self.client, resp.get("member"))
 
-    @property
-    def create_message(self):
-        if self.is_store_channel() or self.is_guild_voice_channel() or self.is_channel_category():
+    def create_message(self, *args, **kwargs):
+        if not self.is_messageable():
             raise TypeError("You can't send message in this type of channel.")
-        return self.client.create_message
+        return self.client.create_message(self, *args, **kwargs)
 
     @property
     def send(self):
         return self.create_message
 
     def modify(self, **kwargs):
-        if self.is_group_dm_channel():
+        if self.type.group_dm:
             return self.client.modify_group_dm_channel(self.id, **kwargs)
-        elif self.is_dm_channel() or self.is_store_channel():
+        elif self.type.dm or self.type.guild_store:
             raise AttributeError("This type of channel is not allowed to modify.")
         elif self.is_thread_channel():
             raise NotImplementedError
@@ -80,29 +79,8 @@ class Channel(DiscordObjectBase):
         if self.guild_id and self.client.has_cache:
             return self.client.cache.get(self.guild_id, "guild")
 
-    def is_guild_text_channel(self):
-        return self.type.guild_text
-
-    def is_guild_news_channel(self):
-        return self.type.guild_news
-
-    def is_guild_voice_channel(self):
-        return self.type.guild_voice
-
-    def is_dm_channel(self):
-        return self.type.dm
-
-    def is_group_dm_channel(self):
-        return self.type.group_dm
-
-    def is_channel_category(self):
-        return self.type.guild_category
-
-    def is_store_channel(self):
-        return self.type.guild_store
-
-    def is_stage_channel(self):
-        return self.type.guild_stage_voice
+    def is_messageable(self):
+        return self.type.guild_text or self.type.guild_news or self.type.dm or self.type.group_dm
 
     def is_thread_channel(self):
         return self.type.guild_news_thread or self.type.guild_public_thread or self.type.guild_private_thread
@@ -128,7 +106,7 @@ class VideoQualityModes(TypeBase):
 
 
 class Message(DiscordObjectBase):
-    def __init__(self, client, resp, *, guild_id=None):
+    def __init__(self, client, resp, *, guild_id=None, webhook_token=None):
         from .interactions.slashcommands import MessageInteraction  # Prevent circular import.
         super().__init__(client, resp)
         self._cache_type = "message"
@@ -152,6 +130,7 @@ class Message(DiscordObjectBase):
         self.nonce = resp.get("nonce")
         self.pinned = resp["pinned"]
         self.webhook_id = Snowflake.optional(resp.get("webhook_id"))
+        self.__webhook_token = webhook_token
         self.type = MessageTypes(resp["type"])
         self.activity = MessageActivity.optional(resp.get("activity"))
         self.application = resp.get("application")
@@ -175,9 +154,13 @@ class Message(DiscordObjectBase):
         return self.client.create_message(self.channel_id, content, **kwargs)
 
     def edit(self, **kwargs):
+        if self.__webhook_token:
+            raise NotImplementedError
         return self.client.edit_message(self.channel_id, self.id, **kwargs)
 
     def delete(self):
+        if self.__webhook_token:
+            raise NotImplementedError
         return self.client.delete_message(self.channel_id, self.id)
 
     def create_reaction(self, emoji: typing.Union[Emoji, str]):

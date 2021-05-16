@@ -224,7 +224,7 @@ class HTTPRequestBase(ABC):
     def create_message_with_files(self,
                                   channel_id,
                                   content: str,
-                                  files: typing.List[typing.Union[io.FileIO]],
+                                  files: typing.List[io.FileIO],
                                   nonce: typing.Union[int, str],
                                   tts: bool,
                                   embed: dict,
@@ -431,7 +431,119 @@ class HTTPRequestBase(ABC):
             body["avatar"] = avatar
         if channel_id is not None:
             body["channel_id"] = channel_id
-        return self.request(f"/webhooks/{webhook_id}", "POST", body, is_json=True)
+        return self.request(f"/webhooks/{webhook_id}", "PATCH", body, is_json=True)
+
+    def modify_webhook_with_token(self, webhook_id, webhook_token, name: str = None, avatar: str = None):
+        """
+        Sends modify webhook request.
+
+        :param webhook_id: ID of the webhook.
+        :param webhook_token: Token of the webhook.
+        :param name: Name of the webhook.
+        :param avatar: URL of the avatar image.
+        """
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if avatar is not None:
+            body["avatar"] = avatar
+        return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "PATCH", body, is_json=True)
+
+    def delete_webhook(self, webhook_id):
+        """
+        Sends delete webhook request.
+
+        :param webhook_id: ID of the webhook.
+        """
+        return self.request(f"/webhooks/{webhook_id}", "DELETE")
+
+    def delete_webhook_with_token(self, webhook_id, webhook_token):
+        """
+        Sends delete webhook request with token.
+
+        :param webhook_id: ID of the webhook.
+        :param webhook_token: Token of the webhook.
+        """
+        return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "DELETE")
+
+    def execute_webhook(self,
+                        webhook_id,
+                        webhook_token,
+                        wait: bool = None,
+                        thread_id=None,
+                        content: str = None,
+                        username: str = None,
+                        avatar_url: str = None,
+                        tts: bool = False,
+                        embeds: typing.List[dict] = None,
+                        allowed_mentions: dict = None):
+        """
+        Sends execute webhook request.
+
+        :param webhook_id: ID of the webhook.
+        :param webhook_token: Token of the webhook.
+        :param wait: Whether to wait response of the server.
+        :param thread_id: ID of the thread.
+        :param content: Content of the message.
+        :param username: Name of the webhook.
+        :param avatar_url: URL of the avatar image.
+        :param tts: Whether this message is TTS.
+        :param embeds: List of embeds of the message.
+        :param allowed_mentions: Allowed mentions of the message.
+        :return: Message object dict.
+        """
+        if not (content or embeds):
+            raise ValueError("either content or embeds must be passed.")
+        body = {}
+        if content is not None:
+            body["content"] = content
+        if username is not None:
+            body["username"] = username
+        if avatar_url is not None:
+            body["avatar_url"] = avatar_url
+        if tts is not None:
+            body["tts"] = tts
+        if embeds is not None:
+            body["embeds"] = embeds
+        if allowed_mentions is not None:
+            body["allowed_mentions"] = allowed_mentions
+        params = {}
+        if wait is not None:
+            params["wait"] = "true" if wait else "false"
+        if thread_id is not None:
+            params["thread_id"] = thread_id
+        return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "POST", body, is_json=True, params=params)
+
+    @abstractmethod
+    def execute_webhook_with_files(self,
+                                   webhook_id,
+                                   webhook_token,
+                                   wait: bool = False,
+                                   thread_id=None,
+                                   content: str = None,
+                                   username: str = None,
+                                   avatar_url: str = None,
+                                   tts: bool = False,
+                                   files: typing.List[io.FileIO] = None,
+                                   embeds: typing.List[dict] = None,
+                                   allowed_mentions: dict = None):
+        """
+        Sends execute webhook request with files.
+
+        :param webhook_id: ID of the webhook.
+        :param webhook_token: Token of the webhook.
+        :param wait: Whether to wait response of the server.
+        :param thread_id: ID of the thread.
+        :param content: Content of the message.
+        :param username: Name of the webhook.
+        :param avatar_url: URL of the avatar image.
+        :param tts: Whether this message is TTS.
+        :param files: Files of the message.
+        :param embeds: List of embeds of the message.
+        :param allowed_mentions: Allowed mentions of the message.
+        :return: Message object dict.
+        """
+        pass
 
     # Interaction Requests
 
