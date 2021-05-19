@@ -155,12 +155,13 @@ class Message(DiscordObjectBase):
 
     def edit(self, **kwargs):
         if self.__webhook_token:
-            raise NotImplementedError
+            kwargs["webhook_token"] = self.__webhook_token
+            return self.client.edit_webhook_message(self.webhook_id, self, **kwargs)
         return self.client.edit_message(self.channel_id, self.id, **kwargs)
 
     def delete(self):
         if self.__webhook_token:
-            raise NotImplementedError
+            return self.client.delete_webhook_message(self.webhook_id, self, webhook_token=self.__webhook_token)
         return self.client.delete_message(self.channel_id, self.id)
 
     def create_reaction(self, emoji: typing.Union[Emoji, str]):

@@ -148,9 +148,6 @@ class APIClient:
                     files[x] = open(sel, "rb")
         if isinstance(message_reference, Message):
             message_reference = MessageReference.from_message(message_reference)
-        _all_men = allowed_mentions or self.default_allowed_mentions
-        if _all_men and not isinstance(_all_men, dict):
-            _all_men = _all_men.to_dict()
         if embed and not isinstance(embed, dict):
             embed = embed.to_dict()
         if message_reference and not isinstance(message_reference, dict):
@@ -161,7 +158,7 @@ class APIClient:
                   "nonce": None,  # What does this do tho?
                   "message_reference": message_reference,
                   "tts": tts,
-                  "allowed_mentions": _all_men}
+                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions)}
         if files:
             params["files"] = files
         try:
@@ -214,9 +211,6 @@ class APIClient:
                      embed: typing.Union[Embed, dict] = None,
                      allowed_mentions: typing.Union[AllowedMentions, dict] = None,
                      attachments: typing.List[typing.Union[Attachment, dict]] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
-        _all_men = allowed_mentions or self.default_allowed_mentions
-        if _all_men and not isinstance(_all_men, dict):
-            _all_men = _all_men.to_dict()
         if embed and not isinstance(embed, dict):
             embed = embed.to_dict()
         _att = []
@@ -230,7 +224,7 @@ class APIClient:
                   "content": content,
                   "embed": embed,
                   "flags": None,
-                  "allowed_mentions": _all_men,
+                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
                   "attachments": _att}
         msg = self.http.edit_message(**params)
         if isinstance(msg, dict):
@@ -277,7 +271,8 @@ class APIClient:
 
     def modify_webhook(self,
                        webhook: typing.Union[int, str, Snowflake, Webhook],
-                       webhook_token: str = None, *,
+                       *,
+                       webhook_token: str = None,
                        name: str = None,
                        avatar: str = None,
                        channel: typing.Union[int, str, Snowflake, Channel] = None):
@@ -292,8 +287,8 @@ class APIClient:
 
     def execute_webhook(self,
                         webhook: typing.Union[int, str, Snowflake, Webhook],
-                        webhook_token: str = None,
                         *,
+                        webhook_token: str = None,
                         wait: bool = None,
                         thread: typing.Union[int, str, Snowflake, Channel] = None,
                         content: str = None,
@@ -324,9 +319,6 @@ class APIClient:
             embeds = [embed]
         if embeds:
             embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
-        _all_men = allowed_mentions or self.default_allowed_mentions
-        if _all_men and not isinstance(_all_men, dict):
-            _all_men = _all_men.to_dict()
         params = {"webhook_id": int(webhook),
                   "webhook_token": webhook_token if not isinstance(webhook, Webhook) else webhook.token,
                   "wait": wait,
@@ -336,22 +328,103 @@ class APIClient:
                   "avatar_url": avatar_url,
                   "tts": tts,
                   "embeds": embeds,
-                  "allowed_mentions": _all_men}
+                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions)}
         if files:
             params["files"] = files
         try:
             msg = self.http.execute_webhook(**params) if not files else self.http.execute_webhook_with_files(**params)
             if isinstance(msg, dict):
-                return Message.create(self, msg, webhook_token=webhook_token if not isinstance(webhook, Webhook) else webhook.token)
+                return Message.create(self, msg, webhook_token=webhook_token or webhook.token)
             return msg
         finally:
             if files:
                 [x.close() for x in files if not x.closed]
 
+    def request_webhook_message(self,
+                                webhook: typing.Union[int, str, Snowflake, Webhook],
+                                message: typing.Union[int, str, Snowflake, Message],
+                                *,
+                                webhook_token: str = None):
+        if not isinstance(webhook, Webhook) and not webhook_token:
+            raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
+        msg = self.http.request_webhook_message(int(webhook), webhook_token or webhook.token, int(message))
+        if isinstance(msg, dict):
+            return Message.create(self, msg, webhook_token=webhook_token or webhook.token)
+        return msg
+
+    def edit_webhook_message(self,
+                             webhook: typing.Union[int, str, Snowflake, Webhook],
+                             message: typing.Union[int, str, Snowflake, Message],
+                             *,
+                             webhook_token: str = None,
+                             content: str = None,
+                             embed: typing.Union[Embed, dict] = None,
+                             embeds: typing.List[typing.Union[Embed, dict]] = None,
+                             file: typing.Union[io.FileIO, pathlib.Path, str] = None,
+                             files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
+                             allowed_mentions: typing.Union[AllowedMentions, dict] = None,
+                             attachments: typing.List[typing.Union[Attachment, dict]] = None):
+        if not isinstance(webhook, Webhook) and not webhook_token:
+            raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
+        if file and files:
+            raise TypeError("you can't pass both file and files.")
+        if embed and embeds:
+            raise TypeError("you can't pass both embed and embeds.")
+        if file:
+            files = [file]
+        if files:
+            for x in range(len(files)):
+                sel = files[x]
+                if not isinstance(sel, io.FileIO):
+                    files[x] = open(sel, "rb")
+        if embed:
+            embeds = [embed]
+        if embeds:
+            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+        _att = []
+        if attachments:
+            for x in attachments:
+                if not isinstance(x, dict):
+                    x = x.to_dict()
+                _att.append(x)
+        params = {"webhook_id": int(webhook),
+                  "webhook_token": webhook_token or webhook.token,
+                  "message_id": int(message),
+                  "content": content,
+                  "embeds": embeds,
+                  "files": files,
+                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
+                  "attachments": _att}
+        try:
+            msg = self.http.edit_webhook_message(**params)
+            if isinstance(msg, dict):
+                return Message.create(self, msg, webhook_token=webhook_token or webhook.token)
+            return msg
+        finally:
+            if files:
+                [x.close() for x in files if not x.closed]
+
+    def delete_webhook_message(self,
+                               webhook: typing.Union[int, str, Snowflake, Webhook],
+                               message: typing.Union[int, str, Snowflake, Message],
+                               *,
+                               webhook_token: str = None):
+        if not isinstance(webhook, Webhook) and not webhook_token:
+            raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
+        return self.http.delete_webhook_message(int(webhook), webhook_token or webhook.token, int(message))
+
     # Interaction
 
     def create_interaction_response(self, interaction: Interaction, interaction_response: InteractionResponse):
         return self.http.create_interaction_response(interaction.id, interaction.token, interaction_response.to_dict())
+
+    # Misc
+
+    def get_allowed_mentions(self, allowed_mentions):
+        _all_men = allowed_mentions or self.default_allowed_mentions
+        if _all_men and not isinstance(_all_men, dict):
+            _all_men = _all_men.to_dict()
+        return _all_men
 
     @property
     def has_cache(self):
@@ -534,13 +607,26 @@ class Client(APIClient):
         return Webhook(self, await super().modify_webhook(*args, **kwargs))
 
     async def execute_webhook(self, *args, **kwargs):
-        is_manual = not isinstance(args[0], Webhook)
-        if is_manual and args[-1] == args[0]:
+        if not isinstance(args[0], Webhook) and not kwargs.get("webhook_token"):
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
-        webhook_token = args[1] if is_manual else args[0].token
+        webhook_token = kwargs.get("webhook_token") or args[0].token
         resp = await super().execute_webhook(*args, **kwargs)
         if not resp:
             return resp
+        return Message.create(self, resp, webhook_token=webhook_token)
+
+    async def request_webhook_message(self, *args, **kwargs):
+        if not isinstance(args[0], Webhook) and not kwargs.get("webhook_token"):
+            raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
+        webhook_token = kwargs.get("webhook_token") or args[0].token
+        resp = await super().request_webhook_message(*args, **kwargs)
+        return Message.create(self, resp, webhook_token=webhook_token)
+
+    async def edit_webhook_message(self, *args, **kwargs):
+        if not isinstance(args[0], Webhook) and not kwargs.get("webhook_token"):
+            raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
+        webhook_token = kwargs.get("webhook_token") or args[0].token
+        resp = await super().edit_webhook_message(*args, **kwargs)
         return Message.create(self, resp, webhook_token=webhook_token)
 
     @property

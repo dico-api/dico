@@ -545,6 +545,49 @@ class HTTPRequestBase(ABC):
         """
         pass
 
+    def request_webhook_message(self, webhook_id, webhook_token, message_id):
+        """
+        Sends get webhook message request.
+
+        :param webhook_id: ID of the webhook.
+        :param webhook_token: Token of the webhook.
+        :param message_id: ID of the message
+        """
+        return self.request(f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "GET")
+
+    @abstractmethod
+    def edit_webhook_message(self,
+                             webhook_id,
+                             webhook_token,
+                             message_id,
+                             content: str = None,
+                             embeds: typing.List[dict] = None,
+                             files: typing.List[io.FileIO] = None,
+                             allowed_mentions: dict = None,
+                             attachments: typing.List[dict] = None):
+        """
+        Sends edit webhook message request.
+        :param webhook_id: ID of the webhook.
+        :param webhook_token: Token of the webhook.
+        :param message_id: ID of the message to edit.
+        :param content: Content of the message.
+        :param embeds: List of embed of the message.
+        :param files: Files of the message.
+        :param allowed_mentions: Allowed mentions of the message.
+        :param attachments: Attachments to keep.
+        """
+        pass
+
+    def delete_webhook_message(self, webhook_id, webhook_token, message_id):
+        """
+        Sends delete webhook message request.
+
+        :param webhook_id: ID of the webhook.
+        :param webhook_token: Token of the webhook.
+        :param message_id: ID of the message to edit.
+        """
+        return self.request(f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "DELETE")
+
     # Interaction Requests
 
     def create_interaction_response(self, interaction_id, interaction_token, interaction_response: dict):

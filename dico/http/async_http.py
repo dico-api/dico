@@ -144,6 +144,34 @@ class AsyncHTTPRequest(HTTPRequestBase):
             form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "POST", form, params=params)
 
+    def edit_webhook_message(self,
+                             webhook_id,
+                             webhook_token,
+                             message_id,
+                             content: str = None,
+                             embeds: typing.List[dict] = None,
+                             files: typing.List[io.FileIO] = None,
+                             allowed_mentions: dict = None,
+                             attachments: typing.List[dict] = None):
+        payload_json = {}
+        form = aiohttp.FormData()
+        if content is not None:
+            payload_json["content"] = content
+        if embeds is not None:
+            payload_json["embeds"] = embeds
+        if allowed_mentions is not None:
+            payload_json["allowed_mentions"] = allowed_mentions
+        if attachments is not None:
+            payload_json["attachments"] = attachments
+        form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
+        if files:
+            for x in range(len(files)):
+                name = f"file{x if len(files) > 1 else ''}"
+                sel = files[x]
+                f = sel.read()
+                form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
+        return self.request(f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "PATCH", form)
+
     @classmethod
     def create(cls,
                token: str,

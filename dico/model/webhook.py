@@ -1,4 +1,5 @@
-from .channel import Channel
+import typing
+from .channel import Channel, Message
 from .guild import Guild
 from .snowflake import Snowflake
 from .user import User
@@ -50,6 +51,9 @@ class Webhook:
 
     def execute(self, **kwargs):
         return self.client.execute_webhook(self, **kwargs)
+
+    def request_message(self, message: typing.Union[str, int, Snowflake, Message]):
+        return self.client.request_webhook_message(self, message)
 
     @property
     def edit(self):
