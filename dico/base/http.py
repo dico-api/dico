@@ -247,6 +247,15 @@ class HTTPRequestBase(ABC):
         """
         pass
 
+    def crosspost_message(self, channel_id, message_id):
+        """
+        Sends crosspost message request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to crosspost.
+        """
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/crosspost", "POST")
+
     def create_reaction(self, channel_id, message_id, emoji: str):
         """
         Sends create reaction request.
@@ -268,9 +277,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}", "DELETE")
 
-    def request_reactons(self, channel_id, message_id, emoji: str, after=None, limit=None):
+    def request_reactions(self, channel_id, message_id, emoji: str, after=None, limit=None):
         """
-        Sends get reaction request.
+        Sends get reactions request.
 
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to request.

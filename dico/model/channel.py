@@ -174,6 +174,9 @@ class Message(DiscordObjectBase):
             return self.client.delete_interaction_response(interaction_token=self.__interaction_token, message="@original" if self.__original_response else self)
         return self.client.delete_message(self.channel_id, self.id)
 
+    def crosspost(self):
+        return self.client.crosspost_message(self.channel_id, self.id)
+
     def create_reaction(self, emoji: typing.Union[Emoji, str]):
         return self.client.create_reaction(self.channel_id, self.id, emoji)
 

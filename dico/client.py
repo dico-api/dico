@@ -171,6 +171,9 @@ class Client(APIClient):
     async def create_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().create_message(*args, **kwargs))
 
+    async def crosspost_message(self, *args, **kwargs):
+        return Message.create(self, await super().crosspost_message(*args, **kwargs))
+
     async def request_reactions(self, *args, **kwargs) -> typing.List[User]:
         return [User.create(self, x) for x in await super().request_reactions(*args, **kwargs)]
 

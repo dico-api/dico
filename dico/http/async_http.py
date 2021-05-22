@@ -180,7 +180,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             if resp.status == 200:
                 return await resp.read()
             else:
-                raise
+                self.logger.error(f"Download failed with {resp.status}: {url}")
+                raise exception.HTTPError(url, resp.status, await resp.read())
 
     @classmethod
     def create(cls,

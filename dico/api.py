@@ -171,6 +171,14 @@ class APIClient:
             if files:
                 [x.close() for x in files if not x.closed]
 
+    def crosspost_message(self,
+                          channel: typing.Union[int, str, Snowflake, Channel],
+                          message: typing.Union[int, str, Snowflake, Message]):
+        msg = self.http.crosspost_message(int(channel), int(message))
+        if isinstance(msg, dict):
+            return Message.create(self, msg)
+        return msg
+
     def create_reaction(self,
                         channel: typing.Union[int, str, Snowflake, Channel],
                         message: typing.Union[int, str, Snowflake, Message],
