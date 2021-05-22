@@ -1,4 +1,5 @@
 import copy
+import inspect
 import typing
 import pathlib
 import datetime
@@ -56,7 +57,7 @@ class Channel(DiscordObjectBase):
         elif self.type.dm or self.type.guild_store:
             raise AttributeError("This type of channel is not allowed to modify.")
         elif self.is_thread_channel():
-            raise NotImplementedError
+            return self.client.modify_thread_channel(self.id, **kwargs)
         else:
             return self.client.modify_guild_channel(self.id, **kwargs)
 
@@ -596,15 +597,24 @@ class Attachment:
         self.proxy_url = resp["proxy_url"]
         self.height = resp.get("height")
         self.width = resp.get("width")
+        self.content = None  # Filled after download is called
 
-    async def download(self, target: pathlib.Path = ""):
-        async with self.client.http.session.get(self.url) as resp:  # TODO: create request function to http part
-            if resp.status == 200:
-                content = await resp.read()
-            else:
-                raise
+    def download(self):
+        dw = self.client.http.download(self.url)
+        if inspect.isawaitable(dw):
+            return self.__async_download(dw)
+        self.content = dw
+        return self.content
+
+    async def __async_download(self, dw):
+        self.content = await dw
+        return self.content
+
+    def save(self, target: pathlib.Path = ""):
+        if self.content is None:
+            raise AttributeError("you must download first.")
         with open(str(target)+"/" if target and not str(target).endswith("/") else ""+self.filename, "wb") as f:
-            f.write(content)
+            f.write(self.content)
 
     def to_dict(self):
         ret = {"id": str(self.id),

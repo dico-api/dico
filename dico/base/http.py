@@ -597,7 +597,7 @@ class HTTPRequestBase(ABC):
 
     # Interaction Requests
 
-    def request_application_commands(self, application_id, guild_id):
+    def request_application_commands(self, application_id, guild_id=None):
         """
         Sends get global or guild application commands request.
 
@@ -683,7 +683,7 @@ class HTTPRequestBase(ABC):
 
     def delete_interaction_response(self, application_id, interaction_token, message_id="@original"):
         """
-        Sends
+        Sends delete interaction response request.
 
         :param application_id: ID of the application.
         :param interaction_token: Token of the interaction.
@@ -692,6 +692,15 @@ class HTTPRequestBase(ABC):
         return self.delete_webhook_message(application_id, interaction_token, message_id)
 
     # Misc
+
+    @abstractmethod
+    def download(self, url):
+        """
+        Downloads file from passed url.
+
+        :param url: URL to download.
+        """
+        pass
 
     @classmethod
     @abstractmethod

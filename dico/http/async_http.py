@@ -175,6 +175,13 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "PATCH", form)
 
+    async def download(self, url):
+        async with self.session.get(url) as resp:
+            if resp.status == 200:
+                return await resp.read()
+            else:
+                raise
+
     @classmethod
     def create(cls,
                token: str,
