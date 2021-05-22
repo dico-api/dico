@@ -109,8 +109,14 @@ class Interaction:
         self.token = resp["token"]
         self.version = resp["version"]
 
+    def __int__(self):
+        return int(self.id)
+
     def create_response(self, interaction_response):
         return self.client.create_interaction_response(self, interaction_response)
+
+    def create_followup_message(self, **kwargs):
+        return self.client.create_followup_message(self, **kwargs)
 
     @classmethod
     def create(cls, client, resp):

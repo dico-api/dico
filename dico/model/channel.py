@@ -106,7 +106,7 @@ class VideoQualityModes(TypeBase):
 
 
 class Message(DiscordObjectBase):
-    def __init__(self, client, resp, *, guild_id=None, webhook_token=None):
+    def __init__(self, client, resp, *, guild_id=None, webhook_token=None, interaction_token=None, original_response=False):
         from .interactions.slashcommands import MessageInteraction  # Prevent circular import.
         super().__init__(client, resp)
         self._cache_type = "message"
@@ -131,12 +131,14 @@ class Message(DiscordObjectBase):
         self.pinned = resp["pinned"]
         self.webhook_id = Snowflake.optional(resp.get("webhook_id"))
         self.__webhook_token = webhook_token
+        self.__interaction_token = interaction_token
+        self.__original_response = original_response
         self.type = MessageTypes(resp["type"])
         self.activity = MessageActivity.optional(resp.get("activity"))
         self.application = resp.get("application")
         self.message_reference = MessageReference(resp.get("message_reference", {}))
         self.__flags = resp.get("flags")
-        self.flags = MessageFlags(self.__flags) if self.__flags else self.__flags
+        self.flags = MessageFlags.from_value(self.__flags) if self.__flags else self.__flags
         self.stickers = [MessageSticker(x) for x in resp.get("stickers", [])]
         self.__referenced_message = resp.get("referenced_message")
         self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id) if self.__referenced_message else self.__referenced_message
@@ -157,11 +159,18 @@ class Message(DiscordObjectBase):
         if self.__webhook_token:
             kwargs["webhook_token"] = self.__webhook_token
             return self.client.edit_webhook_message(self.webhook_id, self, **kwargs)
+        elif self.__interaction_token:
+            kwargs["interaction_token"] = self.__interaction_token
+            if not self.__original_response:
+                kwargs["message"] = self
+            return self.client.edit_interaction_response(**kwargs)
         return self.client.edit_message(self.channel_id, self.id, **kwargs)
 
     def delete(self):
         if self.__webhook_token:
             return self.client.delete_webhook_message(self.webhook_id, self, webhook_token=self.__webhook_token)
+        elif self.__interaction_token:
+            return self.client.delete_interaction_response(interaction_token=self.__interaction_token, message="@original" if self.__original_response else self)
         return self.client.delete_message(self.channel_id, self.id)
 
     def create_reaction(self, emoji: typing.Union[Emoji, str]):

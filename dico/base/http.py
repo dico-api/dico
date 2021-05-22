@@ -8,8 +8,10 @@ class HTTPRequestBase(ABC):
     This abstract class includes all API request methods.
 
     .. note::
-        Although every GET route's name in the API Documents starts with ``Get ...``, but
-        they are all changed to `request_...` to prevent confusion with cache get methods.
+        - Although every GET route's name in the API Documents starts with ``Get ...``, but
+          they are all changed to `request_...` to prevent confusion with cache get methods.
+
+        - Part of interaction methods are merged to one, since those are listed as separate endpoint but only the difference is the ID.
     """
 
     BASE_URL = "https://discord.com/api/v8"
@@ -476,7 +478,8 @@ class HTTPRequestBase(ABC):
                         avatar_url: str = None,
                         tts: bool = False,
                         embeds: typing.List[dict] = None,
-                        allowed_mentions: dict = None):
+                        allowed_mentions: dict = None,
+                        flags: int = None):
         """
         Sends execute webhook request.
 
@@ -491,6 +494,7 @@ class HTTPRequestBase(ABC):
         :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :return: Message object dict.
+        :param flags: Flags of the message.
         """
         if not (content or embeds):
             raise ValueError("either content or embeds must be passed.")
@@ -507,6 +511,8 @@ class HTTPRequestBase(ABC):
             body["embeds"] = embeds
         if allowed_mentions is not None:
             body["allowed_mentions"] = allowed_mentions
+        if flags is not None:
+            body["flags"] = flags
         params = {}
         if wait is not None:
             params["wait"] = "true" if wait else "false"
@@ -518,7 +524,7 @@ class HTTPRequestBase(ABC):
     def execute_webhook_with_files(self,
                                    webhook_id,
                                    webhook_token,
-                                   wait: bool = False,
+                                   wait: bool = None,
                                    thread_id=None,
                                    content: str = None,
                                    username: str = None,
@@ -526,7 +532,8 @@ class HTTPRequestBase(ABC):
                                    tts: bool = False,
                                    files: typing.List[io.FileIO] = None,
                                    embeds: typing.List[dict] = None,
-                                   allowed_mentions: dict = None):
+                                   allowed_mentions: dict = None,
+                                   flags: int = None):
         """
         Sends execute webhook request with files.
 
@@ -541,7 +548,7 @@ class HTTPRequestBase(ABC):
         :param files: Files of the message.
         :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
-        :return: Message object dict.
+        :param flags: Flags of the message.
         """
         pass
 
@@ -590,6 +597,15 @@ class HTTPRequestBase(ABC):
 
     # Interaction Requests
 
+    def request_application_commands(self, application_id, guild_id):
+        """
+        Sends get global or guild application commands request.
+
+        :param application_id: ID of the application.
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "GET")
+
     def create_interaction_response(self, interaction_id, interaction_token, interaction_response: dict):
         """
         Sends create interaction response request.
@@ -599,6 +615,83 @@ class HTTPRequestBase(ABC):
         :param interaction_response: Interaction Response as dict.
         """
         return self.request(f"/interactions/{interaction_id}/{interaction_token}/callback", "POST", interaction_response, is_json=True)
+
+    def request_original_interaction_response(self, application_id, interaction_token):
+        """
+        Sends get original interaction response request.
+
+        :param application_id: ID of the application.
+        :param interaction_token: Token of the interaction.
+        """
+        return self.request_webhook_message(application_id, interaction_token, "@original")
+
+    def create_followup_message(self,
+                                application_id,
+                                interaction_token,
+                                content: str = None,
+                                username: str = None,
+                                avatar_url: str = None,
+                                tts: bool = False,
+                                files: typing.List[io.FileIO] = None,
+                                embeds: typing.List[dict] = None,
+                                allowed_mentions: dict = None,
+                                flags: int = None):
+        """
+        Sends create followup message request.
+
+        :param application_id: ID of the application.
+        :param interaction_token: Token of the interaction.
+        :param content: Content of the message.
+        :param username: Name of the webhook.
+        :param avatar_url: URL of the avatar image.
+        :param tts: Whether this message is TTS.
+        :param files: Files of the message.
+        :param embeds: List of embeds of the message.
+        :param allowed_mentions: Allowed mentions of the message.
+        :param flags: Flags of the message.
+        """
+        return self.execute_webhook_with_files(application_id, interaction_token, None, None, content, username, avatar_url, tts, files, embeds, allowed_mentions, flags) if files \
+            else self.execute_webhook(application_id, interaction_token, None, None, content, username, avatar_url, tts, embeds, allowed_mentions, flags)
+
+    def edit_interaction_response(self,
+                                  application_id,
+                                  interaction_token,
+                                  message_id="@original",
+                                  content: str = None,
+                                  embeds: typing.List[dict] = None,
+                                  files: typing.List[io.FileIO] = None,
+                                  allowed_mentions: dict = None,
+                                  attachments: typing.List[dict] = None):
+        """
+        Sends edit interaction response request.
+
+        :param application_id: ID of the application.
+        :param interaction_token: Token of the interaction.
+        :param message_id: ID of the message to edit.
+        :param content: Content of the message.
+        :param embeds: List of embed of the message.
+        :param files: Files of the message.
+        :param allowed_mentions: Allowed mentions of the message.
+        :param attachments: Attachments to keep.
+        """
+        return self.edit_webhook_message(application_id, interaction_token, message_id, content, embeds, files, allowed_mentions, attachments)
+
+    @property
+    def edit_followup_message(self):
+        """Sends edit followup message request. Actually an alias of :meth:`.edit_interaction_response`."""
+        return self.edit_interaction_response
+
+    def delete_interaction_response(self, application_id, interaction_token, message_id="@original"):
+        """
+        Sends
+
+        :param application_id: ID of the application.
+        :param interaction_token: Token of the interaction.
+        :param message_id: ID of the message to delete.
+        """
+        return self.delete_webhook_message(application_id, interaction_token, message_id)
+
+    # Misc
 
     @classmethod
     @abstractmethod

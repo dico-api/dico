@@ -73,7 +73,6 @@ class GatewayResponse:
 
 class Application:
     def __init__(self, client, resp):
-        print(resp)
         self.id = Snowflake(resp["id"])
         self.name = resp["name"]
         self.icon = resp["icon"]

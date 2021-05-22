@@ -106,7 +106,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
     def execute_webhook_with_files(self,
                                    webhook_id,
                                    webhook_token,
-                                   wait: bool = False,
+                                   wait: bool = None,
                                    thread_id=None,
                                    content: str = None,
                                    username: str = None,
@@ -114,7 +114,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                    tts: bool = False,
                                    files: typing.List[io.FileIO] = None,
                                    embeds: typing.List[dict] = None,
-                                   allowed_mentions: dict = None):
+                                   allowed_mentions: dict = None,
+                                   flags: int = None):
         if not (content or embeds or files):
             raise ValueError("either content or embeds or files must be passed.")
         payload_json = {}
@@ -131,6 +132,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["embeds"] = embeds
         if allowed_mentions is not None:
             payload_json["allowed_mentions"] = allowed_mentions
+        if flags is not None:
+            payload_json["flags"] = flags
         params = {}
         if wait is not None:
             params["wait"] = wait
