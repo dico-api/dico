@@ -62,6 +62,7 @@ class Intents(FlagBase):
 
 class GatewayResponse:
     def __init__(self, resp: dict):
+        self.raw = resp
         self.op = resp["op"]
         self.d = resp.get("d", {})
         self.s = resp.get("s")

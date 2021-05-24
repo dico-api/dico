@@ -91,7 +91,7 @@ class Client(APIClient):
             func = func or meth
             self.events.add(name.upper() if name else func.__name__.upper().lstrip("ON_"), func)
             return func
-        return wrap
+        return wrap if meth is None else wrap()
 
     @property
     def on(self):
