@@ -221,7 +221,7 @@ class InviteCreate(EventBase):
         super().__init__(client, resp)
         self.channel_id = Snowflake(resp["channel_id"])
         self.code = resp["code"]
-        self.created_at = datetime.datetime.fromtimestamp(resp["created_at"])
+        self.created_at = datetime.datetime.fromisoformat(resp["created_at"])
         self.guild_id = Snowflake.optional(resp.get("guild_id"))
         self.__inviter = resp.get("inviter")
         self.inviter = User.create(client, self.__inviter) if self.__inviter else self.__inviter

@@ -2,7 +2,7 @@ import io
 import typing
 import pathlib
 from .base.http import HTTPRequestBase
-from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand
+from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application
 from .utils import from_emoji
 
 
@@ -251,6 +251,29 @@ class APIClient:
     def edit_channel_permissions(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite):
         ow_dict = overwrite.to_dict()
         return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"])
+
+    def request_channel_invites(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        invites = self.http.request_channel_invites(int(channel))
+        if isinstance(invites, list):
+            return [Invite(self, x) for x in invites]
+        return invites
+
+    def create_channel_invite(self,
+                              channel: typing.Union[int, str, Snowflake, Channel],
+                              *,
+                              max_age: int = None,
+                              max_uses: int = None,
+                              temporary: bool = None,
+                              unique: bool = None,
+                              target_type: int = None,
+                              target_user: typing.Union[int, str, Snowflake, User] = None,
+                              target_application: typing.Union[int, str, Snowflake, Application] = None):
+        invite = self.http.create_channel_invite(int(channel), max_age, max_uses, temporary, unique, target_type,
+                                                 int(target_user) if target_user is not None else target_user,
+                                                 int(target_application) if target_application is not None else target_application)
+        if isinstance(invite, dict):
+            return Invite(self, invite)
+        return invite
 
     # Webhook
 

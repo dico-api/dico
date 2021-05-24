@@ -378,6 +378,52 @@ class HTTPRequestBase(ABC):
         body = {"allow": allow, "deny": deny, "type": overwrite_type}
         return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "PUT", body, is_json=True)
 
+    def request_channel_invites(self, channel_id):
+        """
+        Sends get channel invites request.
+
+        :param channel_id: ID of the channel.
+        """
+        return self.request(f"/channels/{channel_id}/invites", "GET")
+
+    def create_channel_invite(self,
+                              channel_id,
+                              max_age: int = None,
+                              max_uses: int = None,
+                              temporary: bool = None,
+                              unique: bool = None,
+                              target_type: int = None,
+                              target_user_id: str = None,
+                              target_application_id: str = None):
+        """
+        Sends create channel invite request.
+
+        :param channel_id: ID of the channel.
+        :param max_age: Maximum age in seconds.
+        :param max_uses: Maximum uses.
+        :param temporary: Whether the invite only grants temporary membership.
+        :param unique: Whether the invite is unique.
+        :param target_type: Type of the invite.
+        :param target_user_id: User ID to target to.
+        :param target_application_id: Application ID to target to.
+        """
+        body = {}
+        if max_age is not None:
+            body["max_ages"] = max_age
+        if max_uses is not None:
+            body["max_uses"] = max_uses
+        if temporary is not None:
+            body["temporary"] = temporary
+        if unique is not None:
+            body["unique"] = unique
+        if target_type is not None:
+            body["target_type"] = target_type
+        if target_user_id is not None:
+            body["target_user_id"] = target_user_id
+        if target_application_id is not None:
+            body["target_application_id"] = target_application_id
+        return self.request(f"/channels/{channel_id}/invites", "POST", body, is_json=True)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

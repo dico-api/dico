@@ -46,8 +46,13 @@ def format_discord_error(resp: dict):
 
     def get_error_message(k, v):
         if "_errors" not in v:
-            for a, b in v.items():
-                get_error_message(k + "." + a, b)
+            if isinstance(v, list):
+                [msgs.append(f"In {k}: {x['message']} ({x['code']})") for x in v]
+            else:
+                for a, b in v.items():
+                    get_error_message(k + "." + a, b)
+        elif isinstance(v, list):
+            pass
         else:
             [msgs.append(f"In {k}: {x['message']} ({x['code']})") for x in v["_errors"]]
 
@@ -64,3 +69,18 @@ def from_emoji(emoji):
     elif emoji.startswith("<") and emoji.endswith(">"):
         emoji = emoji.lstrip("<").rstrip(">")
     return emoji
+
+
+async def wrap_to_async(cls, client, resp, as_create: bool = True, **kwargs):
+    resp = await resp
+    if isinstance(resp, dict):
+        args = (client, resp) if client is not None else (resp,)
+        return cls.create(*args, **kwargs) if as_create else cls(*args, **kwargs)
+    elif isinstance(resp, list):
+        ret = []
+        for x in resp:
+            args = (client, x) if client is not None else (x,)
+            ret.append(cls.create(*args, **kwargs) if as_create else cls(*args, **kwargs))
+        return ret
+    else:
+        return resp

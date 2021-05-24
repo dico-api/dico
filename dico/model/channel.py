@@ -71,6 +71,12 @@ class Channel(DiscordObjectBase):
     def edit_permissions(self, overwrite):
         return self.client.edit_channel_permissions(self, overwrite)
 
+    def request_invites(self):
+        return self.client.request_channel_invites(self)
+
+    def create_invite(self, **kwargs):
+        return self.client.create_channel_invite(self, **kwargs)
+
     @property
     def mention(self):
         return f"<#{self.id}>"

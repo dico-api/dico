@@ -92,7 +92,8 @@ class Application:
         self.cover_image = resp["cover_image"]
         self.flags = ApplicationFlags.from_value(resp["flags"])
 
-        client.application = self
+    def __int__(self):
+        return int(self.id)
 
 
 class ApplicationFlags(FlagBase):

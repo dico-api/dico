@@ -8,7 +8,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, Channel, Message, AllowedMentions, Snowflake, Application, Activity, User, Webhook, ApplicationCommand, Interaction
+from .model import Intents, Channel, Message, AllowedMentions, Snowflake, Application, Activity, User, Webhook, ApplicationCommand, Interaction, Invite
 
 
 class Client(APIClient):
@@ -179,6 +179,12 @@ class Client(APIClient):
 
     async def edit_message(self, *args, **kwargs) -> Message:
         return Message.create(self, await super().edit_message(*args, **kwargs))
+
+    async def request_channel_invites(self, *args, **kwargs):
+        return [Invite(self, x) for x in await super().request_channel_invites(*args, **kwargs)]
+
+    async def create_channel_invite(self, *args, **kwargs):
+        return Invite(self, await super().create_channel_invite(*args, **kwargs))
 
     async def create_webhook(self, *args, **kwargs):
         return Webhook(self, await super().create_webhook(*args, **kwargs))

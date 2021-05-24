@@ -61,7 +61,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
 
     async def _request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, **kwargs) -> typing.Tuple[int, dict]:
         headers = {"Authorization": f"Bot {self.token}"}
-        if meth not in ["GET"] and body:
+        if meth not in ["GET"] and body is not None:
             if is_json:
                 headers["Content-Type"] = "application/json"
                 body = json.dumps(body)
