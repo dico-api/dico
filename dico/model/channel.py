@@ -65,7 +65,7 @@ class Channel(DiscordObjectBase):
     def edit(self):
         return self.modify
 
-    def bulk_delete_messages(self, *messages):
+    def bulk_delete_messages(self, *messages: typing.Union[int, str, Snowflake, "Message"]):
         return self.client.bulk_delete_messages(self, messages)
 
     def edit_permissions(self, overwrite):
@@ -76,6 +76,18 @@ class Channel(DiscordObjectBase):
 
     def create_invite(self, **kwargs):
         return self.client.create_channel_invite(self, **kwargs)
+
+    def delete_permissions(self, overwrite):
+        return self.client.delete_channel_permission(self, overwrite)
+
+    def follow(self, target_channel: typing.Union[int, str, Snowflake, "Channel"]):
+        return self.client.follow_news_channel(self, target_channel)
+
+    def trigger_typing_indicator(self):
+        return self.client.trigger_typing_indicator(self)
+
+    def request_pinned_messages(self):
+        return self.client.request_pinned_messages(self)
 
     @property
     def mention(self):
@@ -297,9 +309,15 @@ class MessageReference:
 
 
 class FollowedChannel:
-    def __init__(self, resp):
+    def __init__(self, client, resp):
+        self.client = client
         self.channel_id = Snowflake(resp["channel_id"])
         self.webhook_id = Snowflake(resp["webhook_id"])
+
+    @property
+    def channel(self):
+        if self.client.has_cache:
+            return self.client.get(self.channel_id)
 
 
 class Reaction:
@@ -325,8 +343,14 @@ class Overwrite:
             self.deny.__setattr__(k, not v)
 
     @classmethod
-    def create(cls, **kwargs):
-        return cls(kwargs)
+    def create(cls,
+               user: typing.Union[str, int, Snowflake, User] = None,
+               role: typing.Union[str, int, Snowflake, Role] = None,
+               allow: typing.Union[int, PermissionFlags] = 0,
+               deny: typing.Union[int, PermissionFlags] = 0):
+        if user is None and role is None:
+            raise TypeError("you must pass user or role.")
+        return cls(dict(id=int(user or role), type=0 if role else 1, allow=allow, deny=deny))
 
 
 class ThreadMetadata:
@@ -340,7 +364,7 @@ class ThreadMetadata:
 
     @property
     def archiver(self):
-        if self.client.has_cache:
+        if self.client.has_cache and self.archiver_id:
             return self.client.get(self.archiver_id)
 
     @classmethod

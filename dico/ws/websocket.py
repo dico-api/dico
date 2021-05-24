@@ -151,7 +151,36 @@ class WebSocketClient:
         }
         await self.ws.send_json(data)
 
-    async def update_presence(self, since, activities, status, afk):
+    async def request_guild_members(self, guild_id: str, *, query: str = None, limit: int = None, presences: bool = None, user_ids: typing.List[str] = None, nonce: bool = None):
+        d = {"guild_id": guild_id}
+        if query is not None:
+            d["query"] = query
+            d["limit"] = limit
+        if presences is not None:
+            d["presences"] = presences
+        if user_ids is not None:
+            d["user_ids"] = user_ids
+        if nonce is not None:
+            d["nonce"] = nonce
+        data = {
+            "op": gateway.Opcodes.REQUEST_GUILD_MEMBERS,
+            "d": d
+        }
+        await self.ws.send_json(data)
+
+    async def update_voice_state(self, guild_id: str, channel_id: str, self_mute: bool, self_deaf: bool):
+        data = {
+            "op": gateway.Opcodes.VOICE_STATE_UPDATE,
+            "d": {
+                "guild_id": guild_id,
+                "channel_id": channel_id,
+                "self_mute": self_mute,
+                "self_deaf": self_deaf
+            }
+        }
+        await self.ws.send_json(data)
+
+    async def update_presence(self, since: typing.Optional[int], activities: typing.List[dict], status: str, afk: bool):
         data = {
             "op": gateway.Opcodes.PRESENCE_UPDATE,
             "d": {

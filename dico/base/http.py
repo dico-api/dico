@@ -424,6 +424,40 @@ class HTTPRequestBase(ABC):
             body["target_application_id"] = target_application_id
         return self.request(f"/channels/{channel_id}/invites", "POST", body, is_json=True)
 
+    def delete_channel_permission(self, channel_id, overwrite_id):
+        """
+        Sends delete channel permissions request.
+
+        :param channel_id: ID of the channel.
+        :param overwrite_id: ID of the target user/role.
+        """
+        return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "DELETE")
+
+    def follow_news_channel(self, channel_id, webhook_channel_id):
+        """
+        Sends follow news channel request.
+
+        :param channel_id: ID of the channel to follow.
+        :param webhook_channel_id: Target channel ID.
+        """
+        return self.request(f"/channels/{channel_id}/followers", "POST", {"webhook_channel_id": webhook_channel_id}, is_json=True)
+
+    def trigger_typing_indicator(self, channel_id):
+        """
+        Sends trigger typing indicator request.
+
+        :param channel_id: ID of the channel.
+        """
+        return self.request(f"/channels/{channel_id}/typing", "POST")
+
+    def request_pinned_messages(self, channel_id):
+        """
+        Sends get pinned messages request.
+
+        :param channel_id: ID of the channel.
+        """
+        return self.request(f"/channels/{channel_id}/pins", "GET")
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

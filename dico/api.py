@@ -2,7 +2,8 @@ import io
 import typing
 import pathlib
 from .base.http import HTTPRequestBase
-from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application
+from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
+    Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel
 from .utils import from_emoji, wrap_to_async
 
 
@@ -274,6 +275,24 @@ class APIClient:
         if isinstance(invite, dict):
             return Invite(self, invite)
         return wrap_to_async(Invite, self, invite, as_create=False)
+
+    def delete_channel_permission(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite):
+        return self.http.delete_channel_permission(int(channel), int(overwrite.id))
+
+    def follow_news_channel(self, channel: typing.Union[int, str, Snowflake, Channel], target_channel: typing.Union[int, str, Snowflake, Channel]):
+        fc = self.http.follow_news_channel(int(channel), str(target_channel))
+        if isinstance(fc, dict):
+            return FollowedChannel(self, fc)
+        return wrap_to_async(FollowedChannel, self, fc, as_create=False)
+
+    def trigger_typing_indicator(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        return self.http.trigger_typing_indicator(int(channel))
+
+    def request_pinned_messages(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        msgs = self.http.request_pinned_messages(int(channel))
+        if isinstance(msgs, list):
+            return [Message.create(self, x) for x in msgs]
+        return wrap_to_async(Message, self, msgs)
 
     # Webhook
 
