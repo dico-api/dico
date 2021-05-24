@@ -3,7 +3,7 @@ import typing
 import pathlib
 from .base.http import HTTPRequestBase
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application
-from .utils import from_emoji
+from .utils import from_emoji, wrap_to_async
 
 
 class APIClient:
@@ -41,7 +41,7 @@ class APIClient:
         channel = self.http.request_channel(int(channel))
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
-        return channel
+        return wrap_to_async(Channel, self, channel)
 
     def modify_guild_channel(self,
                              channel: typing.Union[int, str, Snowflake, Channel],
@@ -66,13 +66,13 @@ class APIClient:
                                                  bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
-        return channel
+        return wrap_to_async(Channel, self, channel)
 
     def modify_group_dm_channel(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, icon: bin = None):
         channel = self.http.modify_group_dm_channel(int(channel), name, icon)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
-        return channel
+        return wrap_to_async(Channel, self, channel)
 
     def modify_thread_channel(self,
                               channel: typing.Union[int, str, Snowflake, Channel], *,
@@ -84,7 +84,7 @@ class APIClient:
         channel = self.http.modify_thread_channel(int(channel), name, archived, auto_archive_duration, locked, rate_limit_per_user)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
-        return channel
+        return wrap_to_async(Channel, self, channel)
 
     def delete_channel(self, channel: typing.Union[int, str, Snowflake, Channel]):
         return self.http.delete_channel(int(channel))
@@ -99,13 +99,13 @@ class APIClient:
         # This looks unnecessary, but this is to ensure they are all numbers.
         if isinstance(messages, list):
             messages = [Message.create(self, x) for x in messages]
-        return messages
+        return wrap_to_async(Message, self, messages)
 
     def request_channel_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
         message = self.http.request_channel_message(int(channel), int(message))
         if isinstance(message, dict):
             message = Message.create(self, channel)
-        return message
+        return wrap_to_async(Message, self, message)
 
     def create_message(self,
                        channel: typing.Union[int, str, Snowflake, Channel],
@@ -166,7 +166,7 @@ class APIClient:
             msg = self.http.create_message_with_files(**params) if files else self.http.create_message(**params)
             if isinstance(msg, dict):
                 msg = Message.create(self, msg)
-            return msg
+            return wrap_to_async(Message, self, msg)
         finally:
             if files:
                 [x.close() for x in files if not x.closed]
@@ -177,7 +177,7 @@ class APIClient:
         msg = self.http.crosspost_message(int(channel), int(message))
         if isinstance(msg, dict):
             return Message.create(self, msg)
-        return msg
+        return wrap_to_async(Message, self, msg)
 
     def create_reaction(self,
                         channel: typing.Union[int, str, Snowflake, Channel],
@@ -201,7 +201,7 @@ class APIClient:
         users = self.http.request_reactions(int(channel), int(message), from_emoji(emoji), int(after), limit)
         if isinstance(users, list):
             return [User.create(self, x) for x in users]
-        return users
+        return wrap_to_async(User, self, users)
 
     def delete_all_reactions(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
         return self.http.delete_all_reactions(int(channel), int(message))
@@ -238,7 +238,7 @@ class APIClient:
         msg = self.http.edit_message(**params)
         if isinstance(msg, dict):
             msg = Message.create(self, msg)
-        return msg
+        return wrap_to_async(Message, self, msg)
 
     def delete_message(self,
                        channel: typing.Union[int, str, Snowflake, Channel],
@@ -256,7 +256,7 @@ class APIClient:
         invites = self.http.request_channel_invites(int(channel))
         if isinstance(invites, list):
             return [Invite(self, x) for x in invites]
-        return invites
+        return wrap_to_async(Invite, self, invites, as_create=False)
 
     def create_channel_invite(self,
                               channel: typing.Union[int, str, Snowflake, Channel],
@@ -273,7 +273,7 @@ class APIClient:
                                                  int(target_application) if target_application is not None else target_application)
         if isinstance(invite, dict):
             return Invite(self, invite)
-        return invite
+        return wrap_to_async(Invite, self, invite, as_create=False)
 
     # Webhook
 
@@ -281,25 +281,25 @@ class APIClient:
         hook = self.http.create_webhook(int(channel), name, avatar)
         if isinstance(hook, dict):
             return Webhook(self, hook)
-        return hook
+        return wrap_to_async(Webhook, self, hook, as_create=False)
 
     def request_channel_webhooks(self, channel: typing.Union[int, str, Snowflake, Channel]):
         hooks = self.http.request_channel_webhooks(int(channel))
         if isinstance(hooks, list):
             return [Webhook(self, x) for x in hooks]
-        return hooks
+        return wrap_to_async(Webhook, self, hooks, as_create=False)
 
     def request_guild_webhooks(self, guild: typing.Union[int, str, Snowflake, Guild]):
         hooks = self.http.request_guild_webhooks(int(guild))
         if isinstance(hooks, list):
             return [Webhook(self, x) for x in hooks]
-        return hooks
+        return wrap_to_async(Webhook, self, hooks, as_create=False)
 
     def request_webhook(self, webhook: typing.Union[int, str, Snowflake, Webhook], webhook_token: str = None):  # Requesting webhook using webhook, seems legit.
         hook = self.http.request_webhook(int(webhook)) if not webhook_token else self.http.request_webhook_with_token(int(webhook), webhook_token)
         if isinstance(hook, dict):
             return Webhook(self, hook)
-        return hook
+        return wrap_to_async(Webhook, self, hook, as_create=False)
 
     def modify_webhook(self,
                        webhook: typing.Union[int, str, Snowflake, Webhook],
@@ -312,7 +312,7 @@ class APIClient:
             else self.http.modify_webhook_with_token(int(webhook), webhook_token, name, avatar)
         if isinstance(hook, dict):
             return Webhook(self, hook)
-        return hook
+        return wrap_to_async(Webhook, self, hook, as_create=False)
 
     def delete_webhook(self, webhook: typing.Union[int, str, Snowflake, Webhook], webhook_token: str = None):
         return self.http.delete_webhook(int(webhook)) if not webhook_token else self.http.delete_webhook_with_token(int(webhook), webhook_token)
@@ -367,7 +367,7 @@ class APIClient:
             msg = self.http.execute_webhook(**params) if not files else self.http.execute_webhook_with_files(**params)
             if isinstance(msg, dict):
                 return Message.create(self, msg, webhook_token=webhook_token or webhook.token)
-            return msg
+            return wrap_to_async(Message, self, msg, webhook_token=webhook_token or webhook.token)
         finally:
             if files:
                 [x.close() for x in files if not x.closed]
@@ -382,7 +382,7 @@ class APIClient:
         msg = self.http.request_webhook_message(int(webhook), webhook_token or webhook.token, int(message))
         if isinstance(msg, dict):
             return Message.create(self, msg, webhook_token=webhook_token or webhook.token)
-        return msg
+        return wrap_to_async(Message, self, msg, webhook_token=webhook_token or webhook.token)
 
     def edit_webhook_message(self,
                              webhook: typing.Union[int, str, Snowflake, Webhook],
@@ -431,7 +431,7 @@ class APIClient:
             msg = self.http.edit_webhook_message(**params)
             if isinstance(msg, dict):
                 return Message.create(self, msg, webhook_token=webhook_token or webhook.token)
-            return msg
+            return wrap_to_async(Message, self, msg, webhook_token=webhook_token or webhook.token)
         finally:
             if files:
                 [x.close() for x in files if not x.closed]
@@ -456,7 +456,7 @@ class APIClient:
         app_commands = self.http.request_application_commands(int(application_id or self.application_id), int(guild) if guild else guild)
         if isinstance(app_commands, list):
             return [ApplicationCommand(x) for x in app_commands]
-        return app_commands
+        return wrap_to_async(ApplicationCommand, None, app_commands, as_create=False)
 
     def create_interaction_response(self,
                                     interaction: typing.Union[int, str, Snowflake, Interaction],
@@ -479,7 +479,7 @@ class APIClient:
         msg = self.http.request_original_interaction_response(application_id or self.application_id, interaction_token or interaction.token)
         if isinstance(msg, dict):
             return Message.create(self, msg, interaction_token=interaction_token or interaction.token, original_response=True)
-        return msg
+        return wrap_to_async(Message, self, msg, interaction_token=interaction_token or interaction.token, original_response=True)
 
     def create_followup_message(self,
                                 interaction: typing.Union[int, str, Snowflake, Interaction] = None,
@@ -531,7 +531,7 @@ class APIClient:
             msg = self.http.create_followup_message(**params)
             if isinstance(msg, dict):
                 return Message.create(self, msg, interaction_token=interaction_token or interaction.token)
-            return msg
+            return wrap_to_async(Message, self, msg, interaction_token=interaction_token or interaction.token)
         finally:
             if files:
                 [x.close() for x in files if not x.closed]
@@ -586,7 +586,7 @@ class APIClient:
             msg = self.http.edit_interaction_response(**params)
             if isinstance(msg, dict):
                 return Message.create(self, msg, interaction_token=interaction_token or interaction.token, original_response=message is None or message == "@original")
-            return msg
+            return wrap_to_async(Message, self, msg, interaction_token=interaction_token or interaction.token, original_response=message is None or message == "@original")
         finally:
             if files:
                 [x.close() for x in files if not x.closed]
