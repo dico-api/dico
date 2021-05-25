@@ -462,6 +462,8 @@ class Embed:
             ret["author"] = self.author.to_dict()
         if self.fields:
             ret["fields"] = [x.to_dict() for x in self.fields]
+        if self.footer:
+            ret["footer"] = self.footer.to_dict()
         return ret
 
 

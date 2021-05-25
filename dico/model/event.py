@@ -273,7 +273,12 @@ class MessageUpdate(Message):
 
     @classmethod
     def create(cls, client, resp, **kwargs):
-        return cls(client, resp, **kwargs)
+        try:
+            return cls(client, resp, **kwargs)
+        except KeyError:
+            import sys
+            print("Warning: Failed Message object creation for Message Update event! This problem is known and will be fixed later.\n"
+                  "For more information, see: https://github.com/eunwoo1104/dico/issues/1", file=sys.stderr)
 
     @property
     def original(self):
