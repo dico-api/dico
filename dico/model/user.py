@@ -19,6 +19,8 @@ class User(DiscordObjectBase):
         self.premium_type = PremiumTypes(resp.get("premium_type", 0))
         self.public_flags = UserFlags.from_value(resp.get("public_flags", 0))
 
+        self.voice_state = self.raw.get("voice_state")  # Filled later.
+
     def __str__(self):
         return f"{self.username}#{self.discriminator}"
 
@@ -31,6 +33,13 @@ class User(DiscordObjectBase):
             return cdn_url("avatars/{user_id}", image_hash=self.avatar, extension=extension, size=size, user_id=self.id)
         else:
             return cdn_url("embed/avatars", image_hash=self.discriminator % 5, extension=extension)
+
+    def set_voice_state(self, voice_state):
+        self.voice_state = voice_state
+        self.raw["voice_state"] = voice_state
+
+    def get_voice_state(self):
+        return self.voice_state
 
 
 class UserFlags(FlagBase):

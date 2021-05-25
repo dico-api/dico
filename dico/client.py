@@ -52,10 +52,17 @@ class Client(APIClient):
 
         # Custom events dispatch
         self.events.add("READY", self.__ready)
+        self.events.add("VOICE_STATE_UPDATE", self.__voice_state_update)
         # self.events.add("MESSAGE_CREATE", lambda x: self.events.dispatch("MESSAGE", x.message))
 
     def __ready(self, ready):
         self.application_id = Snowflake(ready.application["id"])
+
+    def __voice_state_update(self, voice_state):
+        if self.has_cache:
+            user = self.get(voice_state.user_id)
+            if user:
+                user.set_voice_state(voice_state)
 
     def on_(self, name: str = None, meth=None):
         """

@@ -49,7 +49,8 @@ class EventHandler:
             "MESSAGE_REACTION_REMOVE_EMOJI": MessageReactionRemoveEmoji,
             "PRESENCE_UPDATE": PresenceUpdate,
             "TYPING_START": TypingStart,
-            "USER_UPDATE": UserUpdate
+            "USER_UPDATE": UserUpdate,
+            "VOICE_STATE_UPDATE": VoiceStateUpdate
         }
         if name in model_dict:
             ret = model_dict[name].create(self.client, resp)

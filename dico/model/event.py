@@ -6,6 +6,7 @@ from .guild import Guild, Member
 from .permission import Role
 from .snowflake import Snowflake
 from .user import User
+from .voice import VoiceState
 from .interactions.slashcommands import Interaction
 from ..base.model import EventBase
 
@@ -495,3 +496,6 @@ class UserUpdate(User):
     def original(self):
         if self.client.has_cache:
             return self.client.get(self.id, "guild")
+
+
+VoiceStateUpdate = VoiceState
