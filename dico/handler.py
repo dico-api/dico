@@ -60,4 +60,6 @@ class EventHandler:
 
     def dispatch_from_raw(self, name, resp):
         ret = self.process_response(name, resp)
+        if hasattr(ret, "_dont_dispatch") and ret._dont_dispatch:
+            return
         self.client.dispatch(name, ret)

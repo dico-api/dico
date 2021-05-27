@@ -5,6 +5,7 @@ class EventBase:
     def __init__(self, client, resp: dict):
         self.raw = resp
         self.client = client
+        self._dont_dispatch = False
 
     @classmethod
     def create(cls, client, resp: dict):

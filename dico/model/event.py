@@ -276,9 +276,16 @@ class MessageUpdate(Message):
         try:
             return cls(client, resp, **kwargs)
         except KeyError:
-            import sys
-            print("Warning: Failed Message object creation for Message Update event! This problem is known and will be fixed later.\n"
-                  "For more information, see: https://github.com/eunwoo1104/dico/issues/1", file=sys.stderr)
+            if client.has_cache:
+                msg = client.get(resp["id"])
+                if msg:
+                    orig = msg.raw
+                    for k, v in resp.items():
+                        if orig.get(k) != v:
+                            orig[k] = v
+                    ret = cls(client, orig, **kwargs)
+                    ret._dont_dispatch = True
+                    return ret
 
     @property
     def original(self):
