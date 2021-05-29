@@ -89,6 +89,29 @@ class Channel(DiscordObjectBase):
     def request_pinned_messages(self):
         return self.client.request_pinned_messages(self)
 
+    def add_recipient(self, user: typing.Union[int, str, Snowflake, User], access_token: str, nick: str):
+        if not self.type.group_dm:
+            raise AttributeError("This type of channel is not allowed to add recipient.")
+        return self.client.group_dm_add_recipient(self, user, access_token, nick)
+
+    def remove_recipient(self, user: typing.Union[int, str, Snowflake, User]):
+        if not self.type.group_dm:
+            raise AttributeError("This type of channel is not allowed to remove recipient.")
+        return self.client.group_dm_remove_recipient(self, user)
+
+    def start_thread(self, message: typing.Union[int, str, Snowflake, "Message"] = None, *, name: str, auto_archive_duration: int):
+        return self.client.start_thread(self, message, name=name, auto_archive_duration=auto_archive_duration)
+
+    def join_thread(self):
+        if not self.is_thread_channel():
+            raise AttributeError("This type of channel is not allowed to join thread.")
+        return self.client.join_thread(self)
+
+    def add_thread_member(self, user: typing.Union[int, str, Snowflake, User]):
+        if not self.is_thread_channel():
+            raise AttributeError("This type of channel is not allowed to add thread member.")
+        return self.client.add_thread_member(user)
+
     @property
     def mention(self):
         return f"<#{self.id}>"
@@ -126,7 +149,7 @@ class VideoQualityModes(TypeBase):
 
 class Message(DiscordObjectBase):
     def __init__(self, client, resp, *, guild_id=None, webhook_token=None, interaction_token=None, original_response=False):
-        from .interactions.slashcommands import MessageInteraction  # Prevent circular import.
+        from .interactions import MessageInteraction, Component  # Prevent circular import.
         super().__init__(client, resp)
         self._cache_type = "message"
         self.channel_id = Snowflake(resp["channel_id"])
@@ -165,6 +188,8 @@ class Message(DiscordObjectBase):
         self.interaction = MessageInteraction(self.client, self.__interaction) if self.__interaction else self.__interaction
         self.__thread = resp.get("thread")
         self.thread = Channel.create(self.client, self.__thread, guild_id=self.guild_id) if self.__thread else self.__thread
+        self.__components = resp.get("components")
+        self.components = [Component(client, x) for x in self.__components] if self.__components else self.__components
 
     def reply(self, content=None, **kwargs):
         kwargs["message_reference"] = self
@@ -200,6 +225,15 @@ class Message(DiscordObjectBase):
 
     def delete_reaction(self, emoji: typing.Union[Emoji, str], user: typing.Union[int, str, Snowflake, User] = "@me"):
         return self.client.delete_reaction(self.channel_id, self.id, emoji, user)
+
+    def pin(self):
+        return self.client.pin_message(self.channel_id, self.id)
+
+    def unpin(self):
+        return self.client.unpin_message(self.channel_id, self.id)
+
+    def start_thread(self, *, name: str, auto_archive_duration: int):
+        return self.client.start_thread(self.channel_id, name=name, auto_archive_duration=auto_archive_duration)
 
     @property
     def guild(self):

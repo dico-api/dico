@@ -7,7 +7,7 @@ from .permission import Role
 from .snowflake import Snowflake
 from .user import User
 from .voice import VoiceState
-from .interactions.slashcommands import Interaction
+from .interactions import Interaction
 from ..base.model import EventBase
 
 

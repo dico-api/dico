@@ -169,7 +169,7 @@ class WebSocketClient:
         }
         await self.ws.send_json(data)
 
-    async def update_voice_state(self, guild_id: str, channel_id: str, self_mute: bool, self_deaf: bool):
+    async def update_voice_state(self, guild_id: str, channel_id: typing.Optional[str], self_mute: bool, self_deaf: bool):
         data = {
             "op": gateway.Opcodes.VOICE_STATE_UPDATE,
             "d": {

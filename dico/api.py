@@ -294,6 +294,42 @@ class APIClient:
             return [Message.create(self, x) for x in msgs]
         return wrap_to_async(Message, self, msgs)
 
+    def pin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
+        return self.http.pin_message(int(channel), int(message))
+
+    def unpin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
+        return self.http.unpin_message(int(channel), int(message))
+
+    def group_dm_add_recipient(self,
+                               channel: typing.Union[int, str, Snowflake, Channel],
+                               user: typing.Union[int, str, Snowflake, User],
+                               access_token: str,
+                               nick: str):
+        return self.http.group_dm_add_recipient(int(channel), int(user), access_token, nick)
+
+    def group_dm_remove_recipient(self,
+                                  channel: typing.Union[int, str, Snowflake, Channel],
+                                  user: typing.Union[int, str, Snowflake, User]):
+        return self.http.group_dm_remove_recipient(int(channel), int(user))
+
+    def start_thread(self,
+                     channel: typing.Union[int, str, Snowflake, Channel],
+                     message: typing.Union[int, str, Snowflake, Message] = None,
+                     *,
+                     name: str,
+                     auto_archive_duration: int):
+        channel = self.http.start_thread_with_message(int(channel), int(message), name, auto_archive_duration) if message else \
+            self.http.start_thread_without_message(int(channel), name, auto_archive_duration)
+        if isinstance(channel, dict):
+            channel = Channel.create(self, channel)
+        return wrap_to_async(Channel, self, channel)
+
+    def join_thread(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        return self.http.join_thread(int(channel))
+
+    def add_thread_member(self, channel: typing.Union[int, str, Snowflake, Channel], user: typing.Union[int, str, Snowflake, User]):
+        return self.http.add_thread_member(int(channel), int(user))
+
     # Webhook
 
     def create_webhook(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, avatar: str = None):

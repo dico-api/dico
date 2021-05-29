@@ -458,6 +458,85 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/pins", "GET")
 
+    def pin_message(self, channel_id, message_id):
+        """
+        Sends pin message request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to pin.
+        """
+        return self.request(f"/channels/{channel_id}/pins/{message_id}", "PUT")
+
+    def unpin_message(self, channel_id, message_id):
+        """
+        Sends unpin message request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to unpin.
+        """
+        return self.request(f"/channels/{channel_id}/pins/{message_id}", "DELETE")
+
+    def group_dm_add_recipient(self, channel_id, user_id, access_token: str, nick: str):
+        """
+        Sends group dm add recipient request.
+
+        :param channel_id: ID of the group dm channel.
+        :param user_id: ID of the user to add.
+        :param access_token: Access token.
+        :param nick: Nickname of the user.
+        """
+        body = {"access_token": access_token, "nick": nick}
+        return self.request(f"/channels/{channel_id}/recipients/{user_id}", "PUT", body, is_json=True)
+
+    def group_dm_remove_recipient(self, channel_id, user_id):
+        """
+        Sends group dm remove recipient request.
+
+        :param channel_id: ID of the group dm channel.
+        :param user_id: ID of the user to remove.
+        """
+        return self.request(f"/channels/{channel_id}/recipients/{user_id}", "DELETE")
+
+    def start_thread_with_message(self, channel_id, message_id, name: str, auto_archive_duration: int):
+        """
+        Sends start thread with message request.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to create thread.
+        :param name: Name of the thread channel.
+        :param auto_archive_duration: Duration in minute to automatically close after recent activity.
+        """
+        body = {"name": name, "auto_archive_duration": auto_archive_duration}
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/threads", "POST", body, is_json=True)
+
+    def start_thread_without_message(self, channel_id, name: str, auto_archive_duration: int):
+        """
+        Sends start thread without message request.
+
+        :param channel_id: ID of the channel to create thread.
+        :param name: Name of the thread channel.
+        :param auto_archive_duration: Duration in minute to automatically close after recent activity.
+        """
+        body = {"name": name, "auto_archive_duration": auto_archive_duration}
+        return self.request(f"/channels/{channel_id}/threads", "POST", body, is_json=True)
+
+    def join_thread(self, channel_id):
+        """
+        Sends join thread request.
+
+        :param channel_id: ID of the thread channel to join.
+        """
+        return self.request(f"/channels/{channel_id}/thread-members/@me", "PUT")
+
+    def add_thread_member(self, channel_id, user_id):
+        """
+        Sends add thread member request.
+
+        :param channel_id: ID of the thread channel.
+        :param user_id: ID of the user to add.
+        """
+        return self.request(f"/channels/{channel_id}/thread-members/{user_id}", "PUT")
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):
