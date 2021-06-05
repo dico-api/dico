@@ -6,15 +6,23 @@
 
 Yet another Discord API wrapper for Python, aimed to follow Discord API format as much as possible but also simple and easy to use.
 
+[Discord Server](https://discord.gg/QH4AXNySpB)
+
 ## Features
 soon™
+
+## Installation
+Run:
+```
+pip install -U dico-api
+```
 
 ## Quick Example
 ```py
 import dico
 
 
-client = dico.Client("YOUR_TOKEN_HERE", intents=dico.Intents.full())
+client = dico.Client("YOUR_BOT_TOKEN_HERE", intents=dico.Intents.full())
 
 
 @client.on_("MESSAGE_CREATE")

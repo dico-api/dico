@@ -1,9 +1,11 @@
 import io
 import typing
 import pathlib
+import datetime
 from .base.http import HTTPRequestBase
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
-    Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel
+    Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
+    ThreadMember, ListThreadsResponse
 from .utils import from_emoji, wrap_to_async
 
 
@@ -329,6 +331,54 @@ class APIClient:
 
     def add_thread_member(self, channel: typing.Union[int, str, Snowflake, Channel], user: typing.Union[int, str, Snowflake, User]):
         return self.http.add_thread_member(int(channel), int(user))
+
+    def leave_thread(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        return self.http.leave_thread(int(channel))
+
+    def remove_thread_member(self, channel: typing.Union[int, str, Snowflake, Channel], user: typing.Union[int, str, Snowflake, User]):
+        return self.http.remove_thread_member(int(channel), int(user))
+
+    def list_thread_members(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        members = self.http.list_thread_members(int(channel))
+        if isinstance(members, list):
+            return [ThreadMember(self, x) for x in members]
+        return wrap_to_async(ThreadMember, self, members, as_create=False)
+
+    def list_active_threads(self, channel: typing.Union[int, str, Snowflake, Channel]):
+        resp = self.http.list_active_threads(int(channel))
+        if isinstance(resp, dict):
+            return ListThreadsResponse(self, resp)
+        return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
+
+    def list_public_archived_threads(self,
+                                     channel: typing.Union[int, str, Snowflake, Channel],
+                                     *,
+                                     before: typing.Union[str, datetime.datetime] = None,
+                                     limit: int = None):
+        resp = self.http.list_public_archived_threads(int(channel), before, limit)
+        if isinstance(resp, dict):
+            return ListThreadsResponse(self, resp)
+        return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
+
+    def list_private_archived_threads(self,
+                                      channel: typing.Union[int, str, Snowflake, Channel],
+                                      *,
+                                      before: typing.Union[str, datetime.datetime] = None,
+                                      limit: int = None):
+        resp = self.http.list_private_archived_threads(int(channel), before, limit)
+        if isinstance(resp, dict):
+            return ListThreadsResponse(self, resp)
+        return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
+
+    def list_joined_private_archived_threads(self,
+                                             channel: typing.Union[int, str, Snowflake, Channel],
+                                             *,
+                                             before: typing.Union[str, datetime.datetime] = None,
+                                             limit: int = None):
+        resp = self.http.list_joined_private_archived_threads(int(channel), before, limit)
+        if isinstance(resp, dict):
+            return ListThreadsResponse(self, resp)
+        return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
 
     # Webhook
 

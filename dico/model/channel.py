@@ -112,6 +112,33 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to add thread member.")
         return self.client.add_thread_member(user)
 
+    def leave_thread(self):
+        if not self.is_thread_channel():
+            raise AttributeError("This type of channel is not allowed to leave thread.")
+        return self.client.leave_thread(self)
+
+    def remove_thread_member(self, user: typing.Union[int, str, Snowflake, User]):
+        if not self.is_thread_channel():
+            raise AttributeError("This type of channel is not allowed to remove thread member.")
+        return self.client.remove_thread_member(self, user)
+
+    def list_thread_members(self):
+        if not self.is_thread_channel():
+            raise AttributeError("This type of channel is not allowed to list thread members.")
+        return self.client.list_thread_members(self)
+
+    def list_active_threads(self):
+        return self.client.list_active_threads(self)
+
+    def list_public_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+        return self.client.list_public_archived_threads(self, before, limit)
+
+    def list_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+        return self.client.list_private_archived_threads(self, before, limit)
+
+    def list_joined_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+        return self.client.list_joined_private_archived_threads(self, before, limit)
+
     @property
     def mention(self):
         return f"<#{self.id}>"
@@ -735,3 +762,10 @@ class AllowedMentions:
 
     def copy(self):
         return copy.copy(self)
+
+
+class ListThreadsResponse:
+    def __init__(self, client, resp):
+        self.threads = [Channel.create(client, x) for x in resp["threads"]]
+        self.members = [ThreadMember(client, x) for x in resp["members"]]
+        self.has_more = resp["has_more"]

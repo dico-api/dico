@@ -1,5 +1,6 @@
 import io
 import typing
+import datetime
 from abc import ABC, abstractmethod
 
 
@@ -14,7 +15,7 @@ class HTTPRequestBase(ABC):
         - Part of interaction methods are merged to one, since those are listed as separate endpoint but only the difference is the ID.
     """
 
-    BASE_URL = "https://discord.com/api/v8"
+    BASE_URL = "https://discord.com/api/v9"
 
     @abstractmethod
     def request(self, route: str, meth: str, body: dict = None, is_json: bool = False, *, retry: int = 3, **kwargs):
@@ -536,6 +537,84 @@ class HTTPRequestBase(ABC):
         :param user_id: ID of the user to add.
         """
         return self.request(f"/channels/{channel_id}/thread-members/{user_id}", "PUT")
+
+    def leave_thread(self, channel_id):
+        """
+        Sends leave thread request.
+
+        :param channel_id: ID of the thread channel to leave.
+        """
+        return self.request(f"/channels/{channel_id}/thread-members/@me", "DELETE")
+
+    def remove_thread_member(self, channel_id, user_id):
+        """
+        Sends remove thread member request.
+
+        :param channel_id: ID of the thread channel.
+        :param user_id: ID of the user to remove.
+        """
+        return self.request(f"/channels/{channel_id}/thread-members/{user_id}", "DELETE")
+
+    def list_thread_members(self, channel_id):
+        """
+        Sends list thread members request.
+
+        :param channel_id: ID of the thread channel.
+        """
+        return self.request(f"/channels/{channel_id}/thread-members", "GET")
+
+    def list_active_threads(self, channel_id):
+        """
+        Sends list active threads request.
+
+        :param channel_id: ID of the channel.
+        """
+        return self.request(f"/channels/{channel_id}/threads/active", "GET")
+
+    def list_public_archived_threads(self, channel_id, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+        """
+        Sends list public archived threads request.
+
+        :param channel_id: ID of the channel.
+        :param before: ISO8601 timestamp to get threads before this.
+        :param limit: Limit to return.
+        """
+        params = {}
+        if before is not None:
+            params["before"] = str(before)
+        if limit is not None:
+            params["limit"] = limit
+        return self.request(f"/channels/{channel_id}/threads/archived/public", "GET", params=params)
+
+    def list_private_archived_threads(self, channel_id, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+        """
+        Sends list private archived threads request.
+
+        :param channel_id: ID of the channel.
+        :param before: ISO8601 timestamp to get threads before this.
+        :param limit: Limit to return.
+        """
+        params = {}
+        if before is not None:
+            params["before"] = str(before)
+        if limit is not None:
+            params["limit"] = limit
+        return self.request(f"/channels/{channel_id}/threads/archived/private", "GET", params=params)
+
+    def list_joined_private_archived_threads(self, channel_id, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+        """
+        Sends list joined private archived threads request.
+
+        :param channel_id: ID of the channel.
+        :param before: ISO8601 timestamp to get threads before this.
+        :param limit: Limit to return.
+        """
+        params = {}
+        if before is not None:
+            params["before"] = str(before)
+        if limit is not None:
+            params["limit"] = limit
+        return self.request(f"/channels/{channel_id}/users/@me/threads/archived/private", "GET", params=params)
 
     # Webhook Requests
 
