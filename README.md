@@ -12,7 +12,11 @@ Yet another Discord API wrapper for Python, aimed to follow Discord API format a
 soon™
 
 ## Installation
-Run:
+Development Version:
+```
+pip install -U git+https://github.com/eunwoo1104/dico
+```
+PyPi(**Not Recommended**):
 ```
 pip install -U dico-api
 ```
