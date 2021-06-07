@@ -161,6 +161,22 @@ class Client(APIClient):
     def has_cache(self):
         return self.__use_cache
 
+    def __setattr__(self, key, value):
+        if not key.lower().startswith("on_") or key.lower() in ["on", "on_"]:
+            return super().__setattr__(key, value)
+        event_name = key.lower().lstrip("on_")
+        return self.on_(event_name, value)
+
+    def __getattr__(self, item):
+        if not item.lower().startswith("on_") or item.lower() in ["on", "on_"]:
+            return super().__getattribute__(item)  # Should raise AttributeError or whatever.
+        event_name = item.lower().lstrip("on_")
+
+        def deco(func):
+            return self.on_(event_name, func)
+
+        return deco
+
     def run(self):
         """
         Runs client. Actually this is sync function wrapping :meth:`.start`.
