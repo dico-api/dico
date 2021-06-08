@@ -215,8 +215,7 @@ class Message(DiscordObjectBase):
         self.interaction = MessageInteraction(self.client, self.__interaction) if self.__interaction else self.__interaction
         self.__thread = resp.get("thread")
         self.thread = Channel.create(self.client, self.__thread, guild_id=self.guild_id) if self.__thread else self.__thread
-        self.__components = resp.get("components")
-        self.components = [Component(client, x) for x in self.__components] if self.__components else self.__components
+        self.components = [Component.auto_detect(client, x) for x in resp.get("components", [])]
 
     def reply(self, content=None, **kwargs):
         kwargs["message_reference"] = self

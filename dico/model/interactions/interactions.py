@@ -1,5 +1,6 @@
 import typing
 from .slashcommands import ApplicationCommandInteractionData
+from .components import TemporaryComponentResponse
 from ..channel import Embed, AllowedMentions
 from ..guild import Member
 from ..snowflake import Snowflake
@@ -13,7 +14,7 @@ class Interaction:
         self.id = Snowflake(resp["id"])
         self.application_id = Snowflake(resp["application_id"])
         self.type = InteractionType(resp["type"])
-        self.data = ApplicationCommandInteractionData(client, resp.get("data"))
+        self.data = ApplicationCommandInteractionData(client, resp.get("data")) if self.type.application_command else TemporaryComponentResponse(resp.get("data"))
         self.guild_id = Snowflake(resp.get("guild_id"))
         self.channel_id = Snowflake(resp.get("channel_id"))
         self.__member = resp.get("member")

@@ -120,6 +120,7 @@ class APIClient:
                        tts: bool = False,
                        allowed_mentions: typing.Union[AllowedMentions, dict] = None,
                        message_reference: typing.Union[Message, MessageReference, dict] = None,
+                       component: typing.Union[dict, Component] = None,
                        components: typing.List[typing.Union[dict, Component]] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
         """
         Sends message create request to API.
@@ -140,7 +141,8 @@ class APIClient:
         :param tts: Whether to speak message.
         :param allowed_mentions: :class:`.model.channel.AllowedMentions` to use for this request.
         :param message_reference: Message to reply.
-        :param components: Components of the message.
+        :param components: Component of the message.
+        :param components: List of  components of the message.
         :return: Union[:class:`.model.channel.Message`, Coroutine[dict]]
         """
         if files and file:
@@ -158,6 +160,10 @@ class APIClient:
             embed = embed.to_dict()
         if message_reference and not isinstance(message_reference, dict):
             message_reference = message_reference.to_dict()
+        if component and components:
+            raise TypeError("you can't pass both component and components.")
+        if component:
+            components = [component]
         if components:
             components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
         params = {"channel_id": int(channel),
@@ -230,6 +236,7 @@ class APIClient:
                      files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                      allowed_mentions: typing.Union[AllowedMentions, dict] = None,
                      attachments: typing.List[typing.Union[Attachment, dict]] = None,
+                     component: typing.Union[dict, Component] = None,
                      components: typing.List[typing.Union[dict, Component]] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
         if files and file:
             raise TypeError("you can't pass both file and files.")
@@ -248,6 +255,10 @@ class APIClient:
                 if not isinstance(x, dict):
                     x = x.to_dict()
                 _att.append(x)
+        if component and components:
+            raise TypeError("you can't pass both component and components.")
+        if component:
+            components = [component]
         if components:
             components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
         params = {"channel_id": int(channel),
