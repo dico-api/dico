@@ -5,7 +5,7 @@ import datetime
 from .base.http import HTTPRequestBase
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
-    ThreadMember, ListThreadsResponse
+    ThreadMember, ListThreadsResponse, Component
 from .utils import from_emoji, wrap_to_async
 
 
@@ -119,7 +119,8 @@ class APIClient:
                        files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                        tts: bool = False,
                        allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                       message_reference: typing.Union[Message, MessageReference, dict] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
+                       message_reference: typing.Union[Message, MessageReference, dict] = None,
+                       components: typing.List[typing.Union[dict, Component]] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
         """
         Sends message create request to API.
 
@@ -139,6 +140,7 @@ class APIClient:
         :param tts: Whether to speak message.
         :param allowed_mentions: :class:`.model.channel.AllowedMentions` to use for this request.
         :param message_reference: Message to reply.
+        :param components: Components of the message.
         :return: Union[:class:`.model.channel.Message`, Coroutine[dict]]
         """
         if files and file:
@@ -156,13 +158,16 @@ class APIClient:
             embed = embed.to_dict()
         if message_reference and not isinstance(message_reference, dict):
             message_reference = message_reference.to_dict()
+        if components:
+            components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
         params = {"channel_id": int(channel),
                   "content": content,
                   "embed": embed,
                   "nonce": None,  # What does this do tho?
                   "message_reference": message_reference,
                   "tts": tts,
-                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions)}
+                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
+                  "components": components}
         if files:
             params["files"] = files
         try:
@@ -221,8 +226,20 @@ class APIClient:
                      *,
                      content: str = None,
                      embed: typing.Union[Embed, dict] = None,
+                     file: typing.Union[io.FileIO, pathlib.Path, str] = None,
+                     files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                      allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                     attachments: typing.List[typing.Union[Attachment, dict]] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
+                     attachments: typing.List[typing.Union[Attachment, dict]] = None,
+                     components: typing.List[typing.Union[dict, Component]] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
+        if files and file:
+            raise TypeError("you can't pass both file and files.")
+        if file:
+            files = [file]
+        if files:
+            for x in range(len(files)):
+                sel = files[x]
+                if not isinstance(sel, io.FileIO):
+                    files[x] = open(sel, "rb")
         if embed and not isinstance(embed, dict):
             embed = embed.to_dict()
         _att = []
@@ -231,17 +248,25 @@ class APIClient:
                 if not isinstance(x, dict):
                     x = x.to_dict()
                 _att.append(x)
+        if components:
+            components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
         params = {"channel_id": int(channel),
                   "message_id": int(message),
                   "content": content,
                   "embed": embed,
                   "flags": None,
                   "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
-                  "attachments": _att}
-        msg = self.http.edit_message(**params)
-        if isinstance(msg, dict):
-            msg = Message.create(self, msg)
-        return wrap_to_async(Message, self, msg)
+                  "attachments": _att,
+                  "components": components}
+        if files:
+            params["files"] = files
+        try:
+            msg = self.http.edit_message(**params) if not files else self.http.edit_message_with_files(**params)
+            if isinstance(msg, dict):
+                msg = Message.create(self, msg)
+            return wrap_to_async(Message, self, msg)
+        finally:
+            [x.close() for x in files]
 
     def delete_message(self,
                        channel: typing.Union[int, str, Snowflake, Channel],

@@ -72,13 +72,14 @@ class AsyncHTTPRequest(HTTPRequestBase):
 
     def create_message_with_files(self,
                                   channel_id,
-                                  content: str,
-                                  files: typing.List[io.FileIO],
-                                  nonce: typing.Union[int, str],
-                                  tts: bool,
-                                  embed: dict,
-                                  allowed_mentions: dict,
-                                  message_reference: dict):
+                                  content: str = None,
+                                  files: typing.List[io.FileIO] = None,
+                                  nonce: typing.Union[int, str] = None,
+                                  tts: bool = None,
+                                  embed: dict = None,
+                                  allowed_mentions: dict = None,
+                                  message_reference: dict = None,
+                                  components: typing.List[dict] = None):
         if not (content or embed or files):
             raise ValueError("either content or embed or files must be passed.")
         payload_json = {}
@@ -95,6 +96,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["allowed_mentions"] = allowed_mentions
         if message_reference:
             payload_json["message_reference"] = message_reference
+        if components:
+            payload_json["components"] = components
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
         for x in range(len(files)):
             name = f"file{x if len(files) > 1 else ''}"
@@ -102,6 +105,38 @@ class AsyncHTTPRequest(HTTPRequestBase):
             f = sel.read()
             form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/channels/{channel_id}/messages", "POST", form)
+
+    def edit_message_with_files(self,
+                                channel_id,
+                                message_id,
+                                content: str = None,
+                                embed: dict = None,
+                                flags: int = None,
+                                files: typing.List[io.FileIO] = None,
+                                allowed_mentions: dict = None,
+                                attachments: typing.List[dict] = None,
+                                components: typing.List[dict] = None):
+        payload_json = {}
+        form = aiohttp.FormData()
+        if content is not None:
+            payload_json["content"] = content
+        if embed is not None:
+            payload_json["embed"] = embed
+        if flags is not None:
+            payload_json["flags"] = flags
+        if allowed_mentions is not None:
+            payload_json["allowed_mentions"] = allowed_mentions
+        if attachments is not None:
+            payload_json["attachments"] = attachments
+        if components is not None:
+            payload_json["components"] = components
+        form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
+        for x in range(len(files)):
+            name = f"file{x if len(files) > 1 else ''}"
+            sel = files[x]
+            f = sel.read()
+            form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
+        return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", form)
 
     def execute_webhook_with_files(self,
                                    webhook_id,

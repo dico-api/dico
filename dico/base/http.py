@@ -193,7 +193,8 @@ class HTTPRequestBase(ABC):
                        tts: bool = False,
                        embed: dict = None,
                        allowed_mentions: dict = None,
-                       message_reference: dict = None):
+                       message_reference: dict = None,
+                       components: typing.List[dict] = None):
         """
         Sends create message request.
 
@@ -204,6 +205,7 @@ class HTTPRequestBase(ABC):
         :param embed: Embed of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param message_reference: Message to reference.
+        :param components: Components of the message.
         :return: Message object dict.
         """
         if not (content or embed):
@@ -221,18 +223,21 @@ class HTTPRequestBase(ABC):
             body["allowed_mentions"] = allowed_mentions
         if message_reference is not None:
             body["message_reference"] = message_reference
+        if components is not None:
+            body["components"] = components
         return self.request(f"/channels/{channel_id}/messages", "POST", body, is_json=True)
 
     @abstractmethod
     def create_message_with_files(self,
                                   channel_id,
-                                  content: str,
-                                  files: typing.List[io.FileIO],
-                                  nonce: typing.Union[int, str],
-                                  tts: bool,
-                                  embed: dict,
-                                  allowed_mentions: dict,
-                                  message_reference: dict):
+                                  content: str = None,
+                                  files: typing.List[io.FileIO] = None,
+                                  nonce: typing.Union[int, str] = None,
+                                  tts: bool = None,
+                                  embed: dict = None,
+                                  allowed_mentions: dict = None,
+                                  message_reference: dict = None,
+                                  components: typing.List[dict] = None):
         """
         Sends create message request with files.
 
@@ -244,6 +249,7 @@ class HTTPRequestBase(ABC):
         :param embed: Embed of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param message_reference: Message to reference.
+        :param components: Components of the message.
         :return: Message object dict.
         """
         pass
@@ -321,7 +327,8 @@ class HTTPRequestBase(ABC):
                      embed: dict = None,
                      flags: int = None,
                      allowed_mentions: dict = None,
-                     attachments: typing.List[dict] = None):
+                     attachments: typing.List[dict] = None,
+                     components: typing.List[dict] = None):
         """
         Sends edit message request.
 
@@ -329,9 +336,10 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to edit.
         :param content: Content of the message.
         :param embed: Embed of the message.
-        :param flags:
+        :param flags: Flags of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param attachments: Attachments to keep.
+        :param components: Components of the message.
         :return: Message object dict.
         """
         body = {}
@@ -345,7 +353,36 @@ class HTTPRequestBase(ABC):
             body["allowed_mentions"] = allowed_mentions
         if attachments is not None:
             body["attachments"] = attachments
+        if components is not None:
+            body["components"] = components
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", body, is_json=True)
+
+    @abstractmethod
+    def edit_message_with_files(self,
+                                channel_id,
+                                message_id,
+                                content: str = None,
+                                embed: dict = None,
+                                flags: int = None,
+                                files: typing.List[io.FileIO] = None,
+                                allowed_mentions: dict = None,
+                                attachments: typing.List[dict] = None,
+                                components: typing.List[dict] = None):
+        """
+        Sends edit message request with files.
+
+        :param channel_id: ID of the channel.
+        :param message_id: ID of the message to edit.
+        :param content: Content of the message.
+        :param embed: Embed of the message.
+        :param flags: Flags of the message.
+        :param files: Files of the message.
+        :param allowed_mentions: Allowed mentions of the message.
+        :param attachments: Attachments to keep.
+        :param components: Components of the message.
+        :return: Message object dict.
+        """
+        pass
 
     def delete_message(self, channel_id, message_id):
         """
