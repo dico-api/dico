@@ -194,7 +194,7 @@ class Message(DiscordObjectBase):
         self.mention_roles = [Role(self.client, x) for x in resp["mention_roles"]]
         self.mention_channels = [ChannelMention(x) for x in resp.get("mention_channels", [])]
         self.attachments = [Attachment(self.client, x) for x in resp["attachments"] or []]
-        self.embeds = [Embed(x) for x in resp["embeds"] or []]
+        self.embeds = [Embed.create(x) for x in resp["embeds"] or []]
         self.reactions = [Reaction(self.client, x) for x in resp.get("reactions", [])]
         self.nonce = resp.get("nonce")
         self.pinned = resp["pinned"]
@@ -454,7 +454,9 @@ class ThreadMember:
 
 
 class Embed:
-    def __init__(self, resp):
+    def __init__(self, *, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None, **kwargs):
+        resp = self.__create(title=title, description=description, url=url, timestamp=timestamp, color=color)
+        resp.update(kwargs)
         self.title = resp.get("title")
         self.type = resp.get("type", "rich")
         self.description = resp.get("description")
@@ -470,9 +472,13 @@ class Embed:
         self.author = EmbedAuthor.optional(resp.get("author"))
         self.fields = [EmbedField(x) for x in resp.get("fields", [])]
 
+    @staticmethod
+    def __create(*, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None):
+        return {"title": title, "description": description, "url": url, "timestamp": str(timestamp) if timestamp else timestamp, "color": color}
+
     @classmethod
-    def create(cls, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None):
-        return cls({"title": title, "description": description, "url": url, "timestamp": str(timestamp) if timestamp else timestamp, "color": color})
+    def create(cls, resp):
+        return cls(**resp)
 
     def set_footer(self, text: str, icon_url: str = None, proxy_icon_url: str = None):
         self.footer = EmbedFooter({"text": text, "icon_url": icon_url, "proxy_icon_url": proxy_icon_url})
