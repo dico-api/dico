@@ -9,7 +9,9 @@ Yet another Discord API wrapper for Python, aimed to follow Discord API format a
 [Discord Server](https://discord.gg/QH4AXNySpB)
 
 ## Features
-soon™
+- Discord v9 API
+- Full interaction support
+- More soon™
 
 ## Installation
 Development Version:
