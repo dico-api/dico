@@ -1,6 +1,6 @@
 import typing
 from .slashcommands import ApplicationCommandInteractionData
-from .components import TemporaryComponentResponse
+from .components import TemporaryComponentResponse, Component
 from ..channel import Embed, AllowedMentions
 from ..guild import Member
 from ..snowflake import Snowflake
@@ -63,12 +63,14 @@ class InteractionApplicationCommandCallbackData:
                  content: str = None,
                  embeds: typing.List[Embed] = None,
                  allowed_mentions: AllowedMentions = None,
-                 flags: int = None):
+                 flags: int = None,
+                 components: typing.List[typing.Union[dict, Component]] = None):
         self.tts = tts
         self.content = content
         self.embeds = embeds
         self.allowed_mentions = allowed_mentions
         self.flags = flags
+        self.components = components
 
     def to_dict(self):
         ret = {}
@@ -82,16 +84,18 @@ class InteractionApplicationCommandCallbackData:
             ret["allowed_mentions"] = self.allowed_mentions.to_dict()
         if self.flags is not None:
             ret["flags"] = int(self.flags)
+        if self.components is not None:
+            ret["components"] = [x if isinstance(x, dict) else x.to_dict() for x in self.components]
         return ret
 
 
 class InteractionResponse:
-    def __init__(self, callback_type: typing.Union[int, InteractionCallbackType], data: InteractionApplicationCommandCallbackData):
+    def __init__(self, callback_type: typing.Union[int, InteractionCallbackType], data: typing.Union[dict, InteractionApplicationCommandCallbackData]):
         self.type = callback_type
         self.data = data
 
     def to_dict(self):
-        return {"type": int(self.type), "data": self.data.to_dict()}
+        return {"type": int(self.type), "data": self.data if isinstance(self.data, dict) else self.data.to_dict()}
 
 
 class MessageInteraction:
