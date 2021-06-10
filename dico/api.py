@@ -277,7 +277,8 @@ class APIClient:
                 msg = Message.create(self, msg)
             return wrap_to_async(Message, self, msg)
         finally:
-            [x.close() for x in files]
+            if files:
+                [x.close() for x in files]
 
     def delete_message(self,
                        channel: typing.Union[int, str, Snowflake, Channel],
