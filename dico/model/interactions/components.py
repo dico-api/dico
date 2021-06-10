@@ -1,23 +1,23 @@
 import typing
 
 from ..emoji import Emoji
+from ..snowflake import Snowflake
 from ...base.model import TypeBase
 
 
 class Component:
-    def __init__(self, client, component_type: typing.Union[int, "ComponentTypes"]):
-        self.client = client
+    def __init__(self, component_type: typing.Union[int, "ComponentTypes"]):
         self.type = ComponentTypes(component_type) if isinstance(component_type, int) else component_type
 
     def to_dict(self):
         return {"type": self.type.value}
 
     @classmethod
-    def auto_detect(cls, client, resp):
+    def auto_detect(cls,  resp):
         if resp["type"] == ComponentTypes.ACTION_ROW:
-            return ActionRow.create(client, resp)
+            return ActionRow.create(resp)
         elif resp["type"] == ComponentTypes.BUTTON:
-            return Button.create(client, resp)
+            return Button.create(resp)
         else:
             raise NotImplementedError
 
@@ -28,34 +28,32 @@ class ComponentTypes(TypeBase):
 
 
 class ActionRow(Component):
-    def __init__(self, client, *components: typing.Union[Component, dict]):
-        super().__init__(client, ComponentTypes.ACTION_ROW)
-        self.components = [Component.auto_detect(client, x) if isinstance(x, dict) else x for x in components or []]
+    def __init__(self, *components: typing.Union[Component, dict]):
+        super().__init__(ComponentTypes.ACTION_ROW)
+        self.components = [Component.auto_detect(x) if isinstance(x, dict) else x for x in components or []]
 
     def to_dict(self):
         return {"type": self.type.value, "components": [x.to_dict() for x in self.components]}
 
     @classmethod
-    def create(cls, client, resp):
-        return cls(client, *[Component.auto_detect(client, x) for x in resp["components"]])
+    def create(cls, resp):
+        return cls(*[Component.auto_detect(x) for x in resp["components"]])
 
 
 class Button(Component):
     def __init__(self,
-                 client,
                  *,
                  style: typing.Union["ButtonStyles", int],
                  label: str = None,
-                 emoji: typing.Union[Emoji, dict] = None,
+                 emoji: typing.Union[Emoji, dict, "PartialEmoji"] = None,
                  custom_id: str = None,
                  url: str = None,
                  disabled: bool = False,
                  **_):  # Dummy.
-        super().__init__(client, ComponentTypes.BUTTON)
+        super().__init__(ComponentTypes.BUTTON)
         self.style = ButtonStyles(style) if isinstance(style, int) else style
         self.label = label
-        self.__emoji = emoji
-        self.emoji = Emoji(client, self.__emoji) if isinstance(emoji, dict) else self.__emoji
+        self.emoji = PartialEmoji(emoji) if isinstance(emoji, dict) else PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else emoji
         self.custom_id = custom_id
         self.url = url
         self.disabled = disabled
@@ -77,8 +75,8 @@ class Button(Component):
         return ret
 
     @classmethod
-    def create(cls, client, resp):
-        return cls(client, **resp)
+    def create(cls, resp):
+        return cls(**resp)
 
 
 class ButtonStyles(TypeBase):
@@ -87,3 +85,14 @@ class ButtonStyles(TypeBase):
     SUCCESS = 3
     DANGER = 4
     LINK = 5
+
+
+class PartialEmoji:
+    def __init__(self, resp):
+        self.name = resp["name"]
+        self.id = Snowflake.optional(resp.get("id"))
+        self.animated = resp.get("animated")
+
+    @classmethod
+    def from_full_emoji(cls, emoji: Emoji):
+        return cls({"name": emoji.name, "id": int(emoji.id), "animated": emoji.animated})
