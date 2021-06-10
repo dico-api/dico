@@ -91,15 +91,6 @@ class ApplicationCommandPermissionType(TypeBase):
     USER = 2
 
 
-class ApplicationCommandInteractionData:
-    def __init__(self, client, resp: dict):
-        self.id = Snowflake(resp["id"])
-        self.name = resp["name"]
-        self.__resolved = resp.get("resolved")
-        self.resolved = ApplicationCommandInteractionDataResolved(client, resp.get("resolved")) if self.__resolved else self.__resolved
-        self.options = resp.get("options")
-
-
 class ApplicationCommandInteractionDataResolved:
     def __init__(self, client, resp: dict):
         self.users = [User.create(client, x) for x in resp.get("users", {}).values()]

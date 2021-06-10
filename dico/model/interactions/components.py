@@ -87,10 +87,3 @@ class ButtonStyles(TypeBase):
     SUCCESS = 3
     DANGER = 4
     LINK = 5
-
-
-class TemporaryComponentResponse:
-    def __init__(self, resp):
-        self.raw = resp
-        self.custom_id = resp.get("custom_id")
-        self.component_type = ComponentTypes(resp.get("component_type")) if resp.get("component_type") else None

@@ -1,6 +1,6 @@
 import typing
-from .slashcommands import ApplicationCommandInteractionData
-from .components import TemporaryComponentResponse, Component
+from .slashcommands import ApplicationCommandInteractionDataResolved
+from .components import Component, ComponentTypes
 from ..channel import Embed, AllowedMentions
 from ..guild import Member
 from ..snowflake import Snowflake
@@ -14,7 +14,7 @@ class Interaction:
         self.id = Snowflake(resp["id"])
         self.application_id = Snowflake(resp["application_id"])
         self.type = InteractionType(resp["type"])
-        self.data = ApplicationCommandInteractionData(client, resp.get("data")) if self.type.application_command else TemporaryComponentResponse(resp.get("data"))
+        self.data = ApplicationCommandInteractionData(client, resp.get("data")) if self.type.application_command else resp.get("data")
         self.guild_id = Snowflake(resp.get("guild_id"))
         self.channel_id = Snowflake(resp.get("channel_id"))
         self.__member = resp.get("member")
@@ -42,6 +42,17 @@ class InteractionType(TypeBase):
     PING = 1
     APPLICATION_COMMAND = 2
     MESSAGE_COMPONENT = 3
+
+
+class ApplicationCommandInteractionData:
+    def __init__(self, client, resp: dict):
+        self.id = Snowflake(resp["id"])
+        self.name = resp["name"]
+        self.__resolved = resp.get("resolved")
+        self.resolved = ApplicationCommandInteractionDataResolved(client, resp.get("resolved")) if self.__resolved else self.__resolved
+        self.options = resp.get("options")
+        self.custom_id = resp.get("custom_id")
+        self.component_type = ComponentTypes(resp.get("component_type")) if resp.get("component_type") else None
 
 
 class InteractionCallbackType(TypeBase):
