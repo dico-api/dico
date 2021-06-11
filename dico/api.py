@@ -5,7 +5,7 @@ import datetime
 from .base.http import HTTPRequestBase
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
-    ThreadMember, ListThreadsResponse, Component
+    ThreadMember, ListThreadsResponse, Component, Role
 from .utils import from_emoji, wrap_to_async
 
 
@@ -416,6 +416,30 @@ class APIClient:
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
         return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
+
+    # Emoji
+
+    def request_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], emoji: typing.Union[int, str, Snowflake, Emoji]):
+        resp = self.http.request_guild_emoji(int(guild), int(emoji))
+        if isinstance(resp, dict):
+            return Emoji(self, resp)
+        return wrap_to_async(Emoji, self, resp, as_create=False)
+
+    def create_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], name: str, image: str, roles: typing.List[typing.Union[str, int, Snowflake, Role]] = None):
+        resp = self.http.create_guild_emoji(int(guild), name, image, [int(x) for x in roles or []])
+        if isinstance(resp, dict):
+            return Emoji(self, resp)
+        return wrap_to_async(Emoji, self, resp, as_create=False)
+
+    def modify_guild_emoji(self,
+                           guild: typing.Union[int, str, Snowflake, Guild],
+                           emoji: typing.Union[int, str, Snowflake, Emoji],
+                           name: str,
+                           roles: typing.List[typing.Union[str, int, Snowflake, Role]]):
+        resp = self.http.modify_guild_emoji(int(guild), int(emoji), name, [str(int(x)) for x in roles])
+        if isinstance(resp, dict):
+            return Emoji(self, resp)
+        return wrap_to_async(Emoji, self, resp, as_create=False)
 
     # Webhook
 

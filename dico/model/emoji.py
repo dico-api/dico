@@ -16,3 +16,6 @@ class Emoji:
 
     def __str__(self):
         return f"<:{self.name}:{self.id}>" if self.id else self.name
+
+    def __int__(self):
+        return int(self.id)

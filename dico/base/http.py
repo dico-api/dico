@@ -653,6 +653,41 @@ class HTTPRequestBase(ABC):
             params["limit"] = limit
         return self.request(f"/channels/{channel_id}/users/@me/threads/archived/private", "GET", params=params)
 
+    # Emoji Requests
+
+    def request_guild_emoji(self, guild_id, emoji_id):
+        """
+        Sends get guild emoji request.
+
+        :param guild_id: ID of the guild.
+        :param emoji_id: ID of the emoji to request.
+        """
+        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "GET")
+
+    def create_guild_emoji(self, guild_id, name: str, image: str, roles: typing.List[str]):
+        """
+        Sends create guild emoji request.
+
+        :param guild_id: ID of the guild.
+        :param name: Name of the emoji.
+        :param image: Image data of the emoji.
+        :param roles: Roles that are allowed to use this emoji.
+        """
+        body = {"name": name, "image": image, "roles": roles}
+        return self.request(f"/guilds/{guild_id}/emojis", "POST", body, is_json=True)
+
+    def modify_guild_emoji(self, guild_id, emoji_id, name: str, roles: typing.List[str]):
+        """
+        Sends modify guild emoji request.
+
+        :param guild_id: ID of the guild.
+        :param emoji_id: ID of the emoji.
+        :param name: Name of the emoji to change.
+        :param roles: Roles to change.
+        """
+        body = {"name": name, "roles": roles}
+        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "PATCH", body, is_json=True)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

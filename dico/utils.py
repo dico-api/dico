@@ -1,5 +1,8 @@
+import io
 import sys
+import base64
 import typing
+import pathlib
 import inspect
 import traceback
 
@@ -84,3 +87,15 @@ async def wrap_to_async(cls, client, resp, as_create: bool = True, **kwargs):
         return ret
     else:
         return resp
+
+
+def to_image_data(image: typing.Union[io.FileIO, typing.BinaryIO, pathlib.Path, str]):
+    if isinstance(image, str):
+        with open(image, "rb") as f:
+            img_type = image.split(".")[-1]
+            img = f.read()
+    else:
+        img_type = image.name.split(".")[-1]
+        img = image.read()
+    img = base64.b64encode(img)
+    return f"data:image/{img_type};base64,{img.decode()}"
