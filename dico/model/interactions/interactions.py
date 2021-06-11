@@ -46,8 +46,8 @@ class InteractionType(TypeBase):
 
 class ApplicationCommandInteractionData:
     def __init__(self, client, resp: dict):
-        self.id = Snowflake(resp["id"])
-        self.name = resp["name"]
+        self.id = Snowflake.optional(resp.get("id"))
+        self.name = resp.get("name")
         self.__resolved = resp.get("resolved")
         self.resolved = ApplicationCommandInteractionDataResolved(client, resp.get("resolved")) if self.__resolved else self.__resolved
         self.options = resp.get("options")
