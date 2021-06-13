@@ -1,4 +1,3 @@
-import copy
 import inspect
 import typing
 import pathlib
@@ -9,7 +8,7 @@ from .guild import Member
 from .permission import PermissionFlags, Role
 from .snowflake import Snowflake
 from .user import User
-from ..base.model import DiscordObjectBase, TypeBase, FlagBase
+from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
 
 
 class Channel(DiscordObjectBase):
@@ -387,7 +386,7 @@ class Reaction:
         self.emoji = Emoji(client, resp["emoji"])
 
 
-class Overwrite:
+class Overwrite(CopyableObject):
     def __init__(self, resp):
         self.id = Snowflake(resp["id"])
         self.type = resp["type"]
@@ -452,7 +451,7 @@ class ThreadMember:
             return cls(client, resp)
 
 
-class Embed:
+class Embed(CopyableObject):
     def __init__(self, *, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None, **kwargs):
         resp = self.__create(title=title, description=description, url=url, timestamp=timestamp, color=color)
         resp.update(kwargs)
@@ -533,7 +532,7 @@ class Embed:
         return ret
 
 
-class EmbedThumbnail:
+class EmbedThumbnail(CopyableObject):
     def __init__(self, resp):
         self.url = resp.get("url")
         self.proxy_url = resp.get("proxy_url")
@@ -558,7 +557,7 @@ class EmbedThumbnail:
             return cls(resp)
 
 
-class EmbedVideo:
+class EmbedVideo(CopyableObject):
     def __init__(self, resp):
         self.url = resp.get("url")
         self.proxy_url = resp.get("proxy_url")
@@ -583,7 +582,7 @@ class EmbedVideo:
             return cls(resp)
 
 
-class EmbedImage:
+class EmbedImage(CopyableObject):
     def __init__(self, resp):
         self.url = resp.get("url")
         self.proxy_url = resp.get("proxy_url")
@@ -608,7 +607,7 @@ class EmbedImage:
             return cls(resp)
 
 
-class EmbedProvider:
+class EmbedProvider(CopyableObject):
     def __init__(self, resp):
         self.name = resp.get("name")
         self.url = resp.get("url")
@@ -627,7 +626,7 @@ class EmbedProvider:
             return cls(resp)
 
 
-class EmbedAuthor:
+class EmbedAuthor(CopyableObject):
     def __init__(self, resp):
         self.name = resp.get("name")
         self.url = resp.get("url")
@@ -652,7 +651,7 @@ class EmbedAuthor:
             return cls(resp)
 
 
-class EmbedFooter:
+class EmbedFooter(CopyableObject):
     def __init__(self, resp):
         self.text = resp["text"]
         self.icon_url = resp.get("icon_url")
@@ -672,7 +671,7 @@ class EmbedFooter:
             return cls(resp)
 
 
-class EmbedField:
+class EmbedField(CopyableObject):
     def __init__(self, resp):
         self.name = resp["name"]
         self.value = resp["value"]
@@ -740,7 +739,7 @@ class ChannelMention:
         self.name = resp["name"]
 
 
-class AllowedMentions:
+class AllowedMentions(CopyableObject):
     def __init__(self, *,
                  everyone: bool = False,
                  users: typing.List[typing.Union[str, int, Snowflake]] = None,
@@ -764,9 +763,6 @@ class AllowedMentions:
         if reply:
             ret["replied_user"] = self.replied_user
         return ret
-
-    def copy(self):
-        return copy.copy(self)
 
 
 class ListThreadsResponse:

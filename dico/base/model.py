@@ -1,4 +1,10 @@
+import copy
 from ..model.snowflake import Snowflake
+
+
+class CopyableObject:
+    def copy(self):
+        return copy.copy(self)
 
 
 class EventBase:
