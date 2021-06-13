@@ -8,7 +8,7 @@ from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .handler import EventHandler
-from .model import Intents, AllowedMentions, Snowflake, Application, Activity
+from .model import Intents, AllowedMentions, Snowflake, Application, Activity, Guild, Channel
 
 
 class Client(APIClient):
@@ -104,7 +104,7 @@ class Client(APIClient):
     def on(self):
         return self.on_
 
-    async def wait(self, event_name: str, timeout: float = None, check: typing.Callable = None):
+    def wait(self, event_name: str, timeout: float = None, check: typing.Callable = None):
         async def wrap():
             while True:
                 future = asyncio.Future()
@@ -117,7 +117,7 @@ class Client(APIClient):
                     return ret
                 elif not check:
                     return ret
-        return await asyncio.wait_for(wrap(), timeout=timeout, loop=self.loop)
+        return asyncio.wait_for(wrap(), timeout=timeout, loop=self.loop)
 
     def dispatch(self, name, *args):
         """
@@ -153,9 +153,16 @@ class Client(APIClient):
             await self.ws.close()
             await self.http.close()
 
-    async def update_presence(self, *, since: int = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
+    def update_presence(self, *, since: int = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
         activities = [x.to_dict() if not isinstance(x, dict) else x for x in activities]
-        return await self.ws.update_presence(since, activities, status, afk)
+        return self.ws.update_presence(since, activities, status, afk)
+
+    def update_voice_state(self,
+                           guild: typing.Union[int, str, Snowflake, Guild],
+                           channel: typing.Union[int, str, Snowflake, Channel] = None,
+                           self_mute: bool = False,
+                           self_deaf: bool = False):
+        return self.ws.update_voice_state(str(int(guild)), str(int(channel)) if channel else None, self_mute, self_deaf)
 
     @property
     def has_cache(self):
