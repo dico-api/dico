@@ -168,6 +168,12 @@ class Client(APIClient):
     def has_cache(self):
         return self.__use_cache
 
+    @property
+    def websocket_closed(self):
+        if self.ws:
+            return self.ws.closed
+        return True
+
     def __setattr__(self, key, value):
         if not key.lower().startswith("on_") or key.lower() in ["on", "on_"]:
             return super().__setattr__(key, value)

@@ -193,6 +193,10 @@ class WebSocketClient:
         }
         await self.ws.send_json(data)
 
+    @property
+    def closed(self):
+        return self._closed
+
     @classmethod
     async def connect(cls, http, intents, event_handler):
         resp = await http.request("/gateway/bot", "GET")
