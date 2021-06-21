@@ -441,6 +441,27 @@ class APIClient:
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
+    # Guild
+
+    def remove_guild_member(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
+        return self.http.remove_guild_member(int(guild), int(user))
+
+    @property
+    def kick(self):
+        return self.remove_guild_member
+
+    def create_guild_ban(self,
+                         guild: typing.Union[int, str, Snowflake, Guild],
+                         user: typing.Union[int, str, Snowflake, User],
+                         *,
+                         delete_message_days: int = None,
+                         reason: str = None):
+        return self.http.create_guild_ban(int(guild), int(user), delete_message_days, reason)
+
+    @property
+    def ban(self):
+        return self.create_guild_ban
+
     # Webhook
 
     def create_webhook(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, avatar: str = None):

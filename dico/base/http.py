@@ -18,7 +18,7 @@ class HTTPRequestBase(ABC):
     BASE_URL = "https://discord.com/api/v9"
 
     @abstractmethod
-    def request(self, route: str, meth: str, body: dict = None, is_json: bool = False, *, retry: int = 3, **kwargs):
+    def request(self, route: str, meth: str, body: dict = None, *, is_json: bool = False, reason_header: str = None, retry: int = 3, **kwargs):
         """
         This function should wrap :meth:`._request` with rate limit handling.
         :return:
@@ -26,7 +26,7 @@ class HTTPRequestBase(ABC):
         pass
 
     @abstractmethod
-    def _request(self, route: str, meth: str, body: dict = None, is_json: bool = False, **kwargs) -> typing.Tuple[int, dict]:
+    def _request(self, route: str, meth: str, body: dict = None, is_json: bool = False, reason_header: str = None, **kwargs) -> typing.Tuple[int, dict]:
         """
         HTTP Requesting part.
         :return: Tuple[int, dict]
@@ -687,6 +687,33 @@ class HTTPRequestBase(ABC):
         """
         body = {"name": name, "roles": roles}
         return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "PATCH", body, is_json=True)
+
+    # Guild Requests
+
+    def remove_guild_member(self, guild_id, user_id):
+        """
+        Sends remove guild member request.
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user to remove.
+        """
+        return self.request(f"/guilds/{guild_id}/members/{user_id}", "DELETE")
+
+    def create_guild_ban(self, guild_id, user_id, delete_message_days: int = None, reason: str = None):
+        """
+        Sends create guild ban request.
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user to ban.
+        :param delete_message_days: Days of message sent by banned user to delete.
+        :param reason: Reason for banning user.
+        """
+        body = {}
+        if delete_message_days is not None:
+            body["delete_message_days"] = delete_message_days
+        if reason is not None:
+            body["reason"] = reason
+        return self.request(f"/guilds/{guild_id}/bans/{user_id}", "PUT", body, is_json=True)
 
     # Webhook Requests
 

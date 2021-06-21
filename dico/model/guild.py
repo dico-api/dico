@@ -1,3 +1,4 @@
+import typing
 import datetime
 
 from .emoji import Emoji
@@ -78,6 +79,20 @@ class Guild(DiscordObjectBase):
     def banner_url(self, *, extension="webp", size=1024):
         if self.banner:
             return cdn_url("banners/{guild_id}", image_hash=self.banner, extension=extension, size=size, guild_id=self.id)
+
+    def remove_guild_member(self, user: typing.Union[int, str, Snowflake, User]):
+        return self.client.remove_guild_member(self, user)
+
+    @property
+    def kick(self):
+        return self.remove_guild_member
+
+    def create_ban(self, user: typing.Union[int, str, Snowflake, User], *, delete_message_days: int = None, reason: str = None):
+        return self.client.create_guild_ban(self, user, delete_message_days=delete_message_days, reason=reason)
+
+    @property
+    def ban(self):
+        return self.create_ban
 
     @property
     def get(self):
@@ -171,6 +186,16 @@ class GuildMember:
     def __int__(self):
         if self.user:
             return self.user.id
+
+    def remove(self):
+        return self.client.remove_guild_member(self.guild_id, self)
+
+    @property
+    def kick(self):
+        return self.remove
+
+    def ban(self, *, delete_message_days: int = None, reason: str = None):
+        return self.client.create_guild_ban(self.guild_id, self, delete_message_days=delete_message_days, reason=reason)
 
     @property
     def mention(self):

@@ -34,12 +34,12 @@ class AsyncHTTPRequest(HTTPRequestBase):
             await self.session.close()
             self._closed = True
 
-    async def request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, *, retry: int = None, **kwargs) -> dict:
+    async def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = None, **kwargs) -> dict:
         code = 429  # Empty code in case of rate limit fail.
         resp = {}   # Empty resp in case of rate limit fail.
         retry = (retry if retry > 0 else 1) if retry is not None else self.default_retry
         for x in range(retry):
-            code, resp = await self._request(route, meth, body, is_json, **kwargs)
+            code, resp = await self._request(route, meth, body, is_json, reason_header, **kwargs)
             if 200 <= code < 300:
                 return resp
             elif code == 400:
@@ -59,13 +59,15 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 raise exception.Unknown(route, code, resp)
         raise exception.RateLimited(route, code, resp)
 
-    async def _request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, **kwargs) -> typing.Tuple[int, dict]:
+    async def _request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, reason_header: str = None, **kwargs) -> typing.Tuple[int, dict]:
         headers = {"Authorization": f"Bot {self.token}"}
         if meth not in ["GET"] and body is not None:
             if is_json:
                 headers["Content-Type"] = "application/json"
                 body = json.dumps(body)
             kwargs["data"] = body
+        if reason_header is not None:
+            headers["X-Audit-Log-Reason"] = reason_header
         async with self.session.request(meth, self.BASE_URL+route, headers=headers, **kwargs) as resp:
             self.logger.debug(f"{route}: {meth} request - {resp.status}")
             return resp.status, await resp.json() if resp.status != 204 else None  # if resp.headers.get("Content-Type") == "applications/json" else {"text": await resp.text()}
