@@ -2,7 +2,7 @@ import typing
 from .slashcommands import ApplicationCommandInteractionDataResolved
 from .components import Component, ComponentTypes
 from ..channel import Embed, AllowedMentions
-from ..guild import Member
+from ..guild import GuildMember
 from ..snowflake import Snowflake
 from ..user import User
 from ...base.model import TypeBase, FlagBase
@@ -18,7 +18,7 @@ class Interaction:
         self.guild_id = Snowflake(resp.get("guild_id"))
         self.channel_id = Snowflake(resp.get("channel_id"))
         self.__member = resp.get("member")
-        self.member = Member.create(client, self.__member, guild_id=self.guild_id) if self.__member else None
+        self.member = GuildMember.create(client, self.__member, guild_id=self.guild_id) if self.__member else None
         self.__user = resp.get("user")
         self.user = User.create(client, self.__user) if self.__user else None
         self.token = resp["token"]

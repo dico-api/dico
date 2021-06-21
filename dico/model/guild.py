@@ -43,7 +43,7 @@ class Guild(DiscordObjectBase):
         self.unavailable = resp.get("unavailable", False)
         self.member_count = resp.get("member_count", 0)
         self.voice_states = resp.get("voice_states", [])
-        self.members = [Member.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
+        self.members = [GuildMember.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
         self.channels = [Channel.create(client, x, guild_id=self.id) for x in resp.get("channels", [])]
         self.presences = resp.get("presences", [])
         self.max_presences = resp.get("max_presences", 25000)
@@ -147,7 +147,7 @@ class GuildWidget:
         self.channel_id = Snowflake.optional(resp["channel_id"])
 
 
-class Member:
+class GuildMember:
     def __init__(self, client, resp, *, user: User = None, guild_id=None):
         self.raw = resp
         self.client = client

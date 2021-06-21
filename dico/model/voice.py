@@ -1,5 +1,5 @@
 import datetime
-from .guild import Member
+from .guild import GuildMember
 from .snowflake import Snowflake
 
 
@@ -11,7 +11,7 @@ class VoiceState:
         self.channel_id = Snowflake.optional(resp["channel_id"])
         self.user_id = Snowflake(resp["user_id"])
         self.__member = resp.get("member")
-        self.member = Member.create(client, self.__member, user=self.user, guild_id=self.guild_id) if self.__member else self.__member
+        self.member = GuildMember.create(client, self.__member, user=self.user, guild_id=self.guild_id) if self.__member else self.__member
         self.session_id = resp["session_id"]
         self.deaf = resp["deaf"]
         self.mute = resp["mute"]

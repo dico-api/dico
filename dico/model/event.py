@@ -2,7 +2,7 @@ import datetime
 from .channel import Channel, Message
 from .emoji import Emoji
 from .gateway import Activity
-from .guild import Guild, Member
+from .guild import Guild, GuildMember
 from .permission import Role
 from .snowflake import Snowflake
 from .user import User
@@ -123,7 +123,7 @@ class GuildIntegrationsUpdate(EventBase):
             return self.client.get(self.guild_id, "guild")
 
 
-GuildMemberAdd = Member
+GuildMemberAdd = GuildMember
 
 
 class GuildMemberRemove(EventBase):
@@ -147,7 +147,7 @@ class GuildMemberRemove(EventBase):
             return self.guild.get(self.user.id, "member")
 
 
-class GuildMemberUpdate(Member):
+class GuildMemberUpdate(GuildMember):
     def __del__(self):
         super().create(self.client, self.raw, user=self.user, guild_id=self.guild_id, cache=True)
 
@@ -356,7 +356,7 @@ class MessageReactionAdd(EventBase):
         self.message_id = Snowflake(resp["message_id"])
         self.guild_id = Snowflake.optional(resp.get("guild_id"))
         self.__member = resp.get("member")
-        self.member = Member.create(client, self.__member, guild_id=self.guild_id)
+        self.member = GuildMember.create(client, self.__member, guild_id=self.guild_id)
         self.emoji = Emoji(client, resp["emoji"])
 
     @property

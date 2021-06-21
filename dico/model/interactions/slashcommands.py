@@ -1,5 +1,5 @@
 from ..channel import Channel
-from ..guild import Member
+from ..guild import GuildMember
 from ..permission import Role
 from ..snowflake import Snowflake
 from ..user import User
@@ -94,7 +94,7 @@ class ApplicationCommandPermissionType(TypeBase):
 class ApplicationCommandInteractionDataResolved:
     def __init__(self, client, resp: dict):
         self.users = [User.create(client, x) for x in resp.get("users", {}).values()]
-        self.members = [Member.create(client, x) for x in resp.get("members", {}).values()]
+        self.members = [GuildMember.create(client, x) for x in resp.get("members", {}).values()]
         self.roles = [Role.create(client, x) for x in resp.get("roles", {}).values()]
         self.channels = [Channel.create(client, x) for x in resp.get("channels", {}).values()]
 

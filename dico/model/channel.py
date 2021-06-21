@@ -4,7 +4,7 @@ import pathlib
 import datetime
 
 from .emoji import Emoji
-from .guild import Member
+from .guild import GuildMember
 from .permission import PermissionFlags, Role
 from .snowflake import Snowflake
 from .user import User
@@ -182,7 +182,7 @@ class Message(DiscordObjectBase):
         self.guild_id = Snowflake.optional(resp.get("guild_id") or guild_id)
         self.author = User.create(client, resp["author"])
         self.__member = resp.get("member")
-        self.member = Member.create(self.client, self.__member, user=self.author, guild_id=self.guild_id) if self.__member else self.__member
+        self.member = GuildMember.create(self.client, self.__member, user=self.author, guild_id=self.guild_id) if self.__member else self.__member
         self.content = resp["content"]
         self.timestamp = datetime.datetime.fromisoformat(resp["timestamp"])
         self.__edited_timestamp = resp["edited_timestamp"]
