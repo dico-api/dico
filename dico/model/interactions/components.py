@@ -12,12 +12,14 @@ class Component:
     def to_dict(self):
         return {"type": self.type.value}
 
-    @classmethod
-    def auto_detect(cls,  resp):
+    @staticmethod
+    def auto_detect(resp):
         if resp["type"] == ComponentTypes.ACTION_ROW:
             return ActionRow.create(resp)
         elif resp["type"] == ComponentTypes.BUTTON:
             return Button.create(resp)
+        elif resp["type"] == ComponentTypes.SELECT_MENU:
+            return SelectMenu.create(resp)
         else:
             raise NotImplementedError
 
@@ -25,6 +27,7 @@ class Component:
 class ComponentTypes(TypeBase):
     ACTION_ROW = 1
     BUTTON = 2
+    SELECT_MENU = 3
 
 
 class ActionRow(Component):
@@ -85,6 +88,70 @@ class ButtonStyles(TypeBase):
     SUCCESS = 3
     DANGER = 4
     LINK = 5
+
+
+class SelectMenu(Component):
+    def __init__(self,
+                 *,
+                 custom_id: str,
+                 options: typing.List[typing.Union["SelectOptions", dict]],
+                 placeholder: str = None,
+                 min_values: int = None,
+                 max_values: int = None,
+                 **_):  # Dummy.
+        super().__init__(ComponentTypes.SELECT_MENU)
+        self.custom_id = custom_id
+        self.options = [SelectOptions.create(x) if isinstance(x, dict) else x for x in options]
+        self.placeholder = placeholder
+        self.min_values = min_values
+        self.max_values = max_values
+
+    def to_dict(self):
+        ret = {"type": self.type.value}
+        if self.custom_id is not None:
+            ret["custom_id"] = self.custom_id
+        if self.options is not None:
+            ret["options"] = [x.to_dict() for x in self.options]
+        if self.placeholder is not None:
+            ret["placeholder"] = self.placeholder
+        if self.min_values is not None:
+            ret["min_values"] = self.min_values
+        if self.max_values is not None:
+            ret["max_values"] = self.max_values
+        return ret
+
+    @classmethod
+    def create(cls, resp):
+        return cls(**resp)
+
+
+class SelectOptions:
+    def __init__(self,
+                 *,
+                 label: str,
+                 value: str,
+                 description: str = None,
+                 emoji: typing.Union["PartialEmoji", Emoji, dict] = None,
+                 default: bool = None):
+        self.label = label
+        self.value = value
+        self.description = description
+        self.emoji = PartialEmoji(emoji) if isinstance(emoji, dict) else PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else emoji
+        self.default = default
+
+    def to_dict(self):
+        ret = {"label": self.label, "value": self.value}
+        if self.description is not None:
+            ret["description"] = self.description
+        if self.emoji is not None:
+            ret["emoji"] = {"name": self.emoji.name, "id": self.emoji.id, "animated": self.emoji.animated or False}  # We only need name, id, and animated
+        if self.default is not None:
+            ret["default"] = self.default
+        return ret
+
+    @classmethod
+    def create(cls, resp):
+        return cls(**resp)
 
 
 class PartialEmoji:
