@@ -63,9 +63,8 @@ class InteractionCallbackType(TypeBase):
     UPDATE_MESSAGE = 7
 
 
-class InteractionCallbackFlags(FlagBase):
-    # This actually still doesn't exist.
-    EPHEMERAL = 64
+class InteractionApplicationCommandCallbackDataFlags(FlagBase):
+    EPHEMERAL = 1 << 6
 
 
 class InteractionApplicationCommandCallbackData:
@@ -74,13 +73,13 @@ class InteractionApplicationCommandCallbackData:
                  content: str = None,
                  embeds: typing.List[Embed] = None,
                  allowed_mentions: AllowedMentions = None,
-                 flags: int = None,
+                 flags: typing.Union[InteractionApplicationCommandCallbackDataFlags, int] = None,
                  components: typing.List[typing.Union[dict, Component]] = None):
         self.tts = tts
         self.content = content
         self.embeds = embeds
         self.allowed_mentions = allowed_mentions
-        self.flags = flags
+        self.flags = InteractionApplicationCommandCallbackDataFlags.from_value(flags) if isinstance(flags, int) else flags
         self.components = components
 
     def to_dict(self):
