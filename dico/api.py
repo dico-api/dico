@@ -115,6 +115,7 @@ class APIClient:
                        content: str = None,
                        *,
                        embed: typing.Union[Embed, dict] = None,
+                       embeds: typing.List[typing.Union[Embed, dict]] = None,
                        file: typing.Union[io.FileIO, pathlib.Path, str] = None,
                        files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                        tts: bool = False,
@@ -136,12 +137,13 @@ class APIClient:
         :param channel: Channel to create message. Accepts both :class:`.model.channel.Channel` and channel ID.
         :param content: Content of the message.
         :param embed: Embed of the message.
+        :param embeds: List of embeds of the message.
         :param file: File of the message.
         :param files: Files of the message.
         :param tts: Whether to speak message.
         :param allowed_mentions: :class:`.model.channel.AllowedMentions` to use for this request.
         :param message_reference: Message to reply.
-        :param components: Component of the message.
+        :param component: Component of the message.
         :param components: List of  components of the message.
         :return: Union[:class:`.model.channel.Message`, Coroutine[dict]]
         """
@@ -156,8 +158,12 @@ class APIClient:
                     files[x] = open(sel, "rb")
         if isinstance(message_reference, Message):
             message_reference = MessageReference.from_message(message_reference)
-        if embed and not isinstance(embed, dict):
-            embed = embed.to_dict()
+        if embed and embeds:
+            raise TypeError("you can't pass both embed and embeds.")
+        if embed:
+            embeds = [embed]
+        if embeds:
+            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
         if message_reference and not isinstance(message_reference, dict):
             message_reference = message_reference.to_dict()
         if component and components:
@@ -168,7 +174,7 @@ class APIClient:
             components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
         params = {"channel_id": int(channel),
                   "content": content,
-                  "embed": embed,
+                  "embeds": embeds,
                   "nonce": None,  # What does this do tho?
                   "message_reference": message_reference,
                   "tts": tts,
@@ -232,6 +238,7 @@ class APIClient:
                      *,
                      content: str = None,
                      embed: typing.Union[Embed, dict] = None,
+                     embeds: typing.List[typing.Union[Embed, dict]] = None,
                      file: typing.Union[io.FileIO, pathlib.Path, str] = None,
                      files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                      allowed_mentions: typing.Union[AllowedMentions, dict] = None,
@@ -247,8 +254,12 @@ class APIClient:
                 sel = files[x]
                 if not isinstance(sel, io.FileIO):
                     files[x] = open(sel, "rb")
-        if embed and not isinstance(embed, dict):
-            embed = embed.to_dict()
+        if embed and embeds:
+            raise TypeError("you can't pass both embed and embeds.")
+        if embed:
+            embeds = [embed]
+        if embeds:
+            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
         _att = []
         if attachments:
             for x in attachments:
@@ -264,7 +275,7 @@ class APIClient:
         params = {"channel_id": int(channel),
                   "message_id": int(message),
                   "content": content,
-                  "embed": embed,
+                  "embeds": embeds,
                   "flags": None,
                   "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
                   "attachments": _att,

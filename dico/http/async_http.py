@@ -78,18 +78,18 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                   files: typing.List[io.FileIO] = None,
                                   nonce: typing.Union[int, str] = None,
                                   tts: bool = None,
-                                  embed: dict = None,
+                                  embeds: typing.List[dict] = None,
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
                                   components: typing.List[dict] = None):
-        if not (content or embed or files):
+        if not (content or embeds or files):
             raise ValueError("either content or embed or files must be passed.")
         payload_json = {}
         form = aiohttp.FormData()
         if content:
             payload_json["content"] = content
-        if embed:
-            payload_json["embed"] = embed
+        if embeds:
+            payload_json["embeds"] = embeds
         if nonce:
             payload_json["nonce"] = nonce
         if tts is not None:
@@ -112,7 +112,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                 channel_id,
                                 message_id,
                                 content: str = None,
-                                embed: dict = None,
+                                embeds: typing.List[dict] = None,
                                 flags: int = None,
                                 files: typing.List[io.FileIO] = None,
                                 allowed_mentions: dict = None,
@@ -122,8 +122,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
         form = aiohttp.FormData()
         if content is not None:
             payload_json["content"] = content
-        if embed is not None:
-            payload_json["embed"] = embed
+        if embeds is not None:
+            payload_json["embeds"] = embeds
         if flags is not None:
             payload_json["flags"] = flags
         if allowed_mentions is not None:

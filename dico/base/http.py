@@ -191,7 +191,7 @@ class HTTPRequestBase(ABC):
                        content: str = None,
                        nonce: typing.Union[int, str] = None,
                        tts: bool = False,
-                       embed: dict = None,
+                       embeds: typing.List[dict] = None,
                        allowed_mentions: dict = None,
                        message_reference: dict = None,
                        components: typing.List[dict] = None):
@@ -202,19 +202,19 @@ class HTTPRequestBase(ABC):
         :param content: Content of the message.
         :param nonce:
         :param tts: Whether this message is TTS.
-        :param embed: Embed of the message.
+        :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param message_reference: Message to reference.
         :param components: Components of the message.
         :return: Message object dict.
         """
-        if not (content or embed):
+        if not (content or embeds):
             raise ValueError("either content or embed must be passed.")
         body = {}
         if content is not None:
             body["content"] = content
-        if embed is not None:
-            body["embed"] = embed
+        if embeds is not None:
+            body["embeds"] = embeds
         if nonce is not None:
             body["nonce"] = nonce
         if tts is not None:
@@ -234,7 +234,7 @@ class HTTPRequestBase(ABC):
                                   files: typing.List[io.FileIO] = None,
                                   nonce: typing.Union[int, str] = None,
                                   tts: bool = None,
-                                  embed: dict = None,
+                                  embeds: typing.List[dict] = None,
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
                                   components: typing.List[dict] = None):
@@ -246,7 +246,7 @@ class HTTPRequestBase(ABC):
         :param files: Files of the message.
         :param nonce:
         :param tts: Whether this message is TTS.
-        :param embed: Embed of the message.
+        :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param message_reference: Message to reference.
         :param components: Components of the message.
@@ -324,7 +324,7 @@ class HTTPRequestBase(ABC):
                      channel_id,
                      message_id,
                      content: str = None,
-                     embed: dict = None,
+                     embeds: typing.List[dict] = None,
                      flags: int = None,
                      allowed_mentions: dict = None,
                      attachments: typing.List[dict] = None,
@@ -335,7 +335,7 @@ class HTTPRequestBase(ABC):
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to edit.
         :param content: Content of the message.
-        :param embed: Embed of the message.
+        :param embeds: List of embeds of the message.
         :param flags: Flags of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param attachments: Attachments to keep.
@@ -345,8 +345,8 @@ class HTTPRequestBase(ABC):
         body = {}
         if content is not None:
             body["content"] = content
-        if embed is not None:
-            body["embed"] = embed
+        if embeds is not None:
+            body["embeds"] = embeds
         if flags is not None:
             body["flags"] = flags
         if allowed_mentions is not None:
@@ -362,7 +362,7 @@ class HTTPRequestBase(ABC):
                                 channel_id,
                                 message_id,
                                 content: str = None,
-                                embed: dict = None,
+                                embeds: typing.List[dict] = None,
                                 flags: int = None,
                                 files: typing.List[io.FileIO] = None,
                                 allowed_mentions: dict = None,
@@ -374,7 +374,7 @@ class HTTPRequestBase(ABC):
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to edit.
         :param content: Content of the message.
-        :param embed: Embed of the message.
+        :param embeds: List of embeds of the message.
         :param flags: Flags of the message.
         :param files: Files of the message.
         :param allowed_mentions: Allowed mentions of the message.
