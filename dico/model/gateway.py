@@ -107,7 +107,11 @@ class ApplicationFlags(FlagBase):
 
 
 class Activity:
-    def __init__(self, resp):
+    def __init__(self, resp=None, *, name=None, activity_type=None, url=None):
+        if resp is None:
+            if name is None or activity_type is None:
+                raise ValueError("parameter name and activity_type is required.")
+            resp = {"name": name, "type": activity_type, "url": url}
         self.name = resp["name"]
         self.type = ActivityTypes(resp["type"])
         self.url = resp.get("url")
@@ -155,10 +159,6 @@ class Activity:
         if self.buttons:
             ret["buttons"] = self.buttons.to_dict()
         return ret
-
-    @classmethod
-    def create(cls, *, name, activity_type, url=None):
-        return cls({"name": name, "type": activity_type, "url": url})
 
 
 class ActivityTypes(TypeBase):
