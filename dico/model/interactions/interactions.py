@@ -53,6 +53,7 @@ class ApplicationCommandInteractionData:
         self.options = resp.get("options")
         self.custom_id = resp.get("custom_id")
         self.component_type = ComponentTypes(resp.get("component_type")) if resp.get("component_type") else None
+        self.values = resp.get("values", [])
 
 
 class InteractionCallbackType(TypeBase):
