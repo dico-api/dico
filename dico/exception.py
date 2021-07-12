@@ -5,6 +5,10 @@ class DicoException(Exception):
     """Base exception class for this library."""
 
 
+class WebsocketClosed(DicoException):
+    """Websocket is closed, so this action could not be performed."""
+
+
 class HTTPError(DicoException):
     """Special exception class for HTTP."""
     def __init__(self, route, code, resp):

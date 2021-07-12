@@ -14,7 +14,8 @@ class WebSocketClient:
                  ws: aiohttp.ClientWebSocketResponse,
                  base_url: str,
                  intents: typing.Union[gateway.Intents, int],
-                 event_handler: EventHandler):
+                 event_handler: EventHandler,
+                 try_reconnect: bool):
         self.ws = ws
         self.http = http
         self.base_url = base_url
@@ -32,6 +33,7 @@ class WebSocketClient:
         self.intents = intents
         self.ping = 0.0
         self._ping_start = 0.0
+        self.try_reconnect = try_reconnect
 
     def __del__(self):
         if not self._closed:
@@ -53,6 +55,9 @@ class WebSocketClient:
                     resp = await self.receive()
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
+                    if ex.code is None and self.try_reconnect:
+                        self.logger.warning("Trying to reconnect...")
+                        await self.reconnect(fresh=True)
                     break
                 self.logger.debug(f"Received `{gateway.Opcodes.as_string(resp.op)}` payload"
                                   f"{f' with event name `{resp.t}`' if resp.op == gateway.Opcodes.DISPATCH else ''}.")
@@ -198,12 +203,12 @@ class WebSocketClient:
         return self._closed
 
     @classmethod
-    async def connect(cls, http, intents, event_handler):
+    async def connect(cls, http, intents, event_handler, try_reconnect):
         resp = await http.request("/gateway/bot", "GET")
         gw = gateway.GetGateway(resp)
         base_url = gw.url+f"?v=8&encoding=json"
         ws = await http.session.ws_connect(base_url)
-        return cls(http, ws, base_url, intents, event_handler)
+        return cls(http, ws, base_url, intents, event_handler, try_reconnect)
 
 
 class WSClosing(Exception):
