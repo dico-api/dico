@@ -32,7 +32,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
     async def close(self):
         if self._close_on_del:
             await self.session.close()
-            self._closed = True
+        self._closed = True
 
     async def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = None, **kwargs) -> dict:
         code = 429  # Empty code in case of rate limit fail.

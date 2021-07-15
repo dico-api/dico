@@ -149,6 +149,11 @@ class Client(APIClient):
             await self.ws.close()
             await self.http.close()
 
+    async def close(self):
+        """Clears all connections and closes session."""
+        await self.ws.close()
+        await self.http.close()
+
     def update_presence(self, *, since: int = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
         """
         Updates the bot presence.
