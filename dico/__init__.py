@@ -6,7 +6,7 @@ Yet another Discord API wrapper for Python.
 :license: MIT
 """
 
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 
 from .client import Client
 from .model.channel import *
