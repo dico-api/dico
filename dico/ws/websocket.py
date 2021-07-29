@@ -206,7 +206,7 @@ class WebSocketClient:
     async def connect(cls, http, intents, event_handler, try_reconnect):
         resp = await http.request("/gateway/bot", "GET")
         gw = gateway.GetGateway(resp)
-        base_url = gw.url+f"?v=8&encoding=json"
+        base_url = gw.url+f"?v=9&encoding=json"
         ws = await http.session.ws_connect(base_url)
         return cls(http, ws, base_url, intents, event_handler, try_reconnect)
 
