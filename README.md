@@ -31,7 +31,7 @@ import dico
 client = dico.Client("YOUR_BOT_TOKEN_HERE", intents=dico.Intents.full())
 
 
-@client.on_("MESSAGE_CREATE")
+@client.on_message_create
 async def on_message_create(message):
     if message.content.startswith("!hello"):
         await message.reply("Hello, World!")
