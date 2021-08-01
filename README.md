@@ -2,7 +2,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/0eff61ab0fd741ff8e13a086699d6672)](https://www.codacy.com/gh/eunwoo1104/dico/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=eunwoo1104/dico&amp;utm_campaign=Badge_Grade)
 [![Discord](https://img.shields.io/discord/832488748843401217)](https://discord.gg/QH4AXNySpB)
 
-**This project is still in development, therefore I won't accept any PRs or Issues in this point.**
+**Keep in mind that this project is still WIP, therefore it might be unstable.**
 
 Yet another Discord API wrapper for Python, aimed to follow Discord API format as much as possible but also simple and easy to use.
 
