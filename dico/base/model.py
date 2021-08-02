@@ -68,6 +68,11 @@ class FlagBase:
     def __getattr__(self, item):
         return self.has(item)
 
+    def __iter__(self):
+        for k, v in self.values.items():
+            if self.has(k):
+                yield v
+
     def has(self, name: str):
         if name.upper() not in self.values:
             raise AttributeError(f"invalid name: `{name}`")
