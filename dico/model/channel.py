@@ -40,6 +40,8 @@ class Channel(DiscordObjectBase):
         self.member_count = resp.get("member_count")
         self.thread_metadata = ThreadMetadata.optional(self.client, resp.get("thread_metadata"))
         self.member = ThreadMember.optional(self.client, resp.get("member"))
+        self.default_auto_archive_duration = resp.get("default_auto_archive_duration")
+        self.permissions = resp.get("permissions")
 
     def create_message(self, *args, **kwargs):
         if not self.is_messageable():
