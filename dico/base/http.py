@@ -655,6 +655,14 @@ class HTTPRequestBase(ABC):
 
     # Emoji Requests
 
+    def list_guild_emojis(self, guild_id):
+        """
+        Sends list guild emojis request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/emojis", "GET")
+
     def request_guild_emoji(self, guild_id, emoji_id):
         """
         Sends get guild emoji request.
@@ -687,6 +695,15 @@ class HTTPRequestBase(ABC):
         """
         body = {"name": name, "roles": roles}
         return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "PATCH", body, is_json=True)
+
+    def delete_guild_emoji(self, guild_id, emoji_id):
+        """
+        Sends delete guild emoji request.
+
+        :param guild_id: ID of the guild.
+        :param emoji_id: ID of the emoji to delete.
+        """
+        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "DELETE")
 
     # Guild Requests
 

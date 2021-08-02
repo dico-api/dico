@@ -430,6 +430,12 @@ class APIClient:
 
     # Emoji
 
+    def list_guild_emojis(self, guild: typing.Union[int, str, Snowflake, Guild]):
+        resp = self.http.list_guild_emojis(int(guild))
+        if isinstance(resp, list):
+            return [Emoji(self, x) for x in resp]
+        return wrap_to_async(Emoji, self, resp, as_create=False)
+
     def request_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], emoji: typing.Union[int, str, Snowflake, Emoji]):
         resp = self.http.request_guild_emoji(int(guild), int(emoji))
         if isinstance(resp, dict):
@@ -451,6 +457,9 @@ class APIClient:
         if isinstance(resp, dict):
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
+
+    def delete_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], emoji: typing.Union[int, str, Snowflake, Emoji]):
+        return self.http.delete_guild_emoji(int(guild), int(emoji))
 
     # Guild
 
