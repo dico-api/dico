@@ -138,6 +138,11 @@ class Channel(DiscordObjectBase):
     def list_joined_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
         return self.client.list_joined_private_archived_threads(self, before, limit)
 
+    def archive(self, locked: bool = False):
+        if not self.is_thread_channel():
+            raise AttributeError("This type of channel is not allowed to archive.")
+        return self.modify(archived=True, locked=locked)
+
     @property
     def mention(self):
         return f"<#{self.id}>"

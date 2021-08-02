@@ -1,5 +1,5 @@
 import datetime
-from .channel import Channel, Message
+from .channel import Channel, Message, ThreadMember
 from .emoji import Emoji
 from .gateway import Activity
 from .guild import Guild, GuildMember
@@ -72,6 +72,53 @@ class ChannelPinsUpdate(EventBase):
     def channel(self):
         if self.client.has_cache:
             return self.client.get(self.channel_id, "channel")
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get(self.guild_id, "guild")
+
+
+ThreadCreate = Channel
+ThreadUpdate = ChannelUpdate
+ThreadDelete = ChannelDelete
+
+
+class ThreadListSync(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.guild_id = Snowflake(resp["guild_id"])
+        self.channel_ids = [Snowflake(x) for x in resp.get("channel_ids", [])]
+        self.threads = [Channel.create(client, x) for x in resp["threads"]]
+        self.members = [ThreadMember(client, x) for x in resp["members"]]
+
+    @property
+    def guild(self):
+        if self.guild_id:
+            return self.client.get(self.guild_id, "guild")
+
+    @property
+    def channels(self):
+        if self.client.has_cache:
+            return [self.client.get(x, "channel") for x in self.channel_ids]
+
+
+ThreadMemberUpdate = ThreadMember
+
+
+class ThreadMembersUpdate(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.id = Snowflake(resp["id"])
+        self.guild_id = Snowflake(resp["guild_id"])
+        self.member_count = resp["member_count"]
+        self.added_members = [ThreadMember(client, x) for x in resp.get("added_members", [])]
+        self.removed_member_ids = [Snowflake(x) for x in resp.get("removed_member_ids", [])]
+
+    @property
+    def thread(self):
+        if self.client.has_cache:
+            return self.client.get(self.id, "channel")
 
     @property
     def guild(self):
@@ -269,6 +316,8 @@ MessageCreate = Message
 
 class MessageUpdate(Message):
     def __del__(self):
+        if self.client.has_cache and not self.client.get(self.id, "message"):
+            return
         Message.create(self.client, self.raw, guild_id=self.guild_id)
 
     @classmethod
