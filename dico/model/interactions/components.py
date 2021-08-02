@@ -48,7 +48,7 @@ class Button(Component):
                  *,
                  style: typing.Union["ButtonStyles", int],
                  label: str = None,
-                 emoji: typing.Union[Emoji, dict, "PartialEmoji"] = None,
+                 emoji: typing.Union[Emoji, dict, "PartialEmoji", str] = None,
                  custom_id: str = None,
                  url: str = None,
                  disabled: bool = False,
@@ -56,7 +56,9 @@ class Button(Component):
         super().__init__(ComponentTypes.BUTTON)
         self.style = ButtonStyles(style) if isinstance(style, int) else style
         self.label = label
-        self.emoji = PartialEmoji(emoji) if isinstance(emoji, dict) else PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else emoji
+        self.emoji = PartialEmoji(emoji) if isinstance(emoji, dict) else \
+            PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else \
+            PartialEmoji.from_str(emoji) if isinstance(emoji, str) else emoji
         self.custom_id = custom_id
         self.url = url
         self.disabled = disabled
@@ -68,7 +70,7 @@ class Button(Component):
         if self.label is not None:
             ret["label"] = self.label
         if self.emoji is not None:
-            ret["emoji"] = {"name": self.emoji.name, "id": self.emoji.id, "animated": self.emoji.animated or False}  # We only need name, id, and animated
+            ret["emoji"] = self.emoji.to_dict()
         if self.custom_id is not None:
             ret["custom_id"] = self.custom_id
         if self.url is not None:
@@ -94,14 +96,14 @@ class SelectMenu(Component):
     def __init__(self,
                  *,
                  custom_id: str,
-                 options: typing.List[typing.Union["SelectOptions", dict]],
+                 options: typing.List[typing.Union["SelectOption", dict]],
                  placeholder: str = None,
                  min_values: int = None,
                  max_values: int = None,
                  **_):  # Dummy.
         super().__init__(ComponentTypes.SELECT_MENU)
         self.custom_id = custom_id
-        self.options = [SelectOptions.create(x) if isinstance(x, dict) else x for x in options]
+        self.options = [SelectOption.create(x) if isinstance(x, dict) else x for x in options]
         self.placeholder = placeholder
         self.min_values = min_values
         self.max_values = max_values
@@ -125,18 +127,20 @@ class SelectMenu(Component):
         return cls(**resp)
 
 
-class SelectOptions:
+class SelectOption:
     def __init__(self,
                  *,
                  label: str,
                  value: str,
                  description: str = None,
-                 emoji: typing.Union["PartialEmoji", Emoji, dict] = None,
+                 emoji: typing.Union["PartialEmoji", Emoji, dict, str] = None,
                  default: bool = None):
         self.label = label
         self.value = value
         self.description = description
-        self.emoji = PartialEmoji(emoji) if isinstance(emoji, dict) else PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else emoji
+        self.emoji = PartialEmoji(emoji) if isinstance(emoji, dict) else \
+            PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else \
+            PartialEmoji.from_str(emoji) if isinstance(emoji, str) else emoji
         self.default = default
 
     def to_dict(self):
@@ -144,7 +148,7 @@ class SelectOptions:
         if self.description is not None:
             ret["description"] = self.description
         if self.emoji is not None:
-            ret["emoji"] = {"name": self.emoji.name, "id": self.emoji.id, "animated": self.emoji.animated or False}  # We only need name, id, and animated
+            ret["emoji"] = self.emoji.to_dict()
         if self.default is not None:
             ret["default"] = self.default
         return ret
@@ -158,8 +162,24 @@ class PartialEmoji:
     def __init__(self, resp):
         self.name = resp["name"]
         self.id = Snowflake.optional(resp.get("id"))
-        self.animated = resp.get("animated")
+        self.animated = resp.get("animated", False)
+
+    def to_dict(self):
+        resp = {"name": self.name}
+        if self.id:
+            resp["id"] = str(self.id)
+            resp["animated"] = self.animated
+        return resp
 
     @classmethod
     def from_full_emoji(cls, emoji: Emoji):
-        return cls({"name": emoji.name, "id": int(emoji.id), "animated": emoji.animated})
+        return cls({"name": emoji.name, "id": str(int(emoji.id)), "animated": emoji.animated})
+
+    @classmethod
+    def from_str(cls, emoji: str):
+        if not emoji.startswith("<") and not emoji.endswith(">"):
+            return cls({"name": emoji, "id": None})
+        emoji = emoji.lstrip("<").rstrip(">")
+        animated = emoji.startswith("a:")
+        name, emoji_id = emoji.lstrip("a:").split(":")
+        return cls({"name": name, "id": emoji_id, "animated": animated})

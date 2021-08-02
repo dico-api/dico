@@ -106,7 +106,7 @@ class WebSocketClient:
             res = gateway.GatewayResponse(resp.json())
             self.seq = res.s
             return res
-        elif resp.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):  # Somehow this is not mentioned in aiohttp document hmm.
+        elif resp.type in aiohttp.WSMsgType.CLOSE:
             raise WSClosing(resp.data)
 
     async def reconnect(self, fresh: bool = False):
