@@ -1,3 +1,5 @@
+import typing
+
 from ..channel import Channel
 from ..guild import GuildMember
 from ..permission import Role
@@ -7,44 +9,64 @@ from ...base.model import TypeBase
 
 
 class ApplicationCommand:
-    def __init__(self, resp: dict, command_creation: bool = False):
-        self.id = Snowflake(resp["id"])
-        self.application_id = Snowflake(resp["application_id"])
-        self.name = resp["name"]
-        self.description = resp["description"]
-        self.options = [ApplicationCommandOption(x) for x in resp.get("options", [])]
-        self.default_permission = resp.get("default_permission", True)
-        self.__command_creation = command_creation
+    def __init__(self,
+                 name: str,
+                 description: str,
+                 options: typing.List["ApplicationCommandOption"] = None,
+                 default_permission: bool = True,
+                 **resp):
+        self.id = Snowflake.optional(resp.get("id"))
+        self.application_id = Snowflake.optional(resp.get("application_id"))
+        self.name = name
+        self.description = description
+        self.options = options or []
+        self.default_permission = default_permission
+        self.__command_creation = bool(resp)
 
     def to_dict(self):
+        resp = {"name": self.name, "description": self.description, "options": [x.to_dict() for x in self.options], "default_permission": self.default_permission}
         if self.__command_creation:
-            return {"name": self.name, "description": self.description, "options": [x.to_dict() for x in self.options], "default_permission": self.default_permission}
-        return {"id": self.id, "application_id": self.application_id, "name": self.name,
-                "description": self.description, "options": self.options, "default_permission": self.default_permission}
+            return resp
+        resp["id"] = str(self.id)
+        resp["application_id"] = str(self.application_id)
+        return resp
 
     @classmethod
-    def create(cls, name, description, options, default_permission):
-        return cls({"name": name, "description": description, "options": options, "default_permission": default_permission}, command_creation=True)
+    def create(cls, resp):
+        resp["options"] = [ApplicationCommandOption.create(x) for x in resp.get("options", [])]
+        return cls(**resp)
 
 
 class ApplicationCommandOption:
-    def __init__(self, resp: dict):
-        self.type = ApplicationCommandOptionType(resp["type"])
-        self.application_id = Snowflake(resp["application_id"])
-        self.name = resp["name"]
-        self.description = resp["description"]
-        self.required = resp.get("required", False)
-        self.choices = [ApplicationCommandOptionChoice(x) for x in resp.get("choices", [])]
-        self.options = [ApplicationCommandOption(x) for x in resp.get("options", [])]
+    def __init__(self,
+                 option_type: typing.Union["ApplicationCommandOptionType", int],
+                 name: str,
+                 description: str,
+                 required: bool = False,
+                 choices: typing.List["ApplicationCommandOptionChoice"] = None,
+                 options: typing.List["ApplicationCommandOption"] = None,
+                 **kw):
+        self.type = ApplicationCommandOptionType(int(option_type))
+        self.name = name
+        self.description = description
+        self.required = required
+        self.choices = choices or []
+        self.options = options or []
 
     def to_dict(self):
-        ret = {"type": self.type, "application_id": self.application_id, "name": self.name, "description": self.description,
-               "required": self.required, "choices": [x.to_dict() for x in self.choices], "options": [x.to_dict() for x in self.options]}
+        ret = {"type": self.type, "name": self.name, "description": self.description, "required": self.required,
+               "choices": [x.to_dict() for x in self.choices], "options": [x.to_dict() for x in self.options]}
         if not ret["options"]:
             del ret["options"]
         if not ret["choices"]:
             del ret["choices"]
         return ret
+
+    @classmethod
+    def create(cls, resp):
+        resp["choices"] = [ApplicationCommandOptionChoice.create(x) for x in resp.get("choices", [])]
+        resp["options"] = [cls.create(x) for x in resp.get("options", [])]
+        return cls(**resp)
 
 
 class ApplicationCommandOptionType(TypeBase):
@@ -60,16 +82,16 @@ class ApplicationCommandOptionType(TypeBase):
 
 
 class ApplicationCommandOptionChoice:
-    def __init__(self, resp: dict):
-        self.name = resp["name"]
-        self.value = resp["value"]
+    def __init__(self, name: str, value: typing.Union[str, int, float]):
+        self.name = name
+        self.value = value
 
     def to_dict(self):
         return {"name": self.name, "value": self.value}
 
     @classmethod
-    def create(cls, name, value):
-        return cls({"name": name, "value": value})
+    def create(cls, resp):
+        return cls(**resp)
 
 
 class GuildApplicationCommandPermissions:
@@ -77,14 +99,24 @@ class GuildApplicationCommandPermissions:
         self.id = Snowflake(resp["id"])
         self.application_id = Snowflake(resp["application_id"])
         self.guild_id = Snowflake(resp["guild_id"])
-        self.permissions = [ApplicationCommandPermissions(x) for x in resp["permissions"]]
+        self.permissions = [ApplicationCommandPermissions.create(x) for x in resp["permissions"]]
 
 
 class ApplicationCommandPermissions:
-    def __init__(self, resp: dict):
-        self.id = Snowflake(resp["id"])
-        self.type = ApplicationCommandPermissionType(resp["type"])
-        self.permission = resp["permission"]
+    def __init__(self,
+                 target: typing.Union[int, Role, User],
+                 permission_type: typing.Union[int, "ApplicationCommandPermissionType"],
+                 permission: bool):
+        self.id = Snowflake.ensure_snowflake(int(target))
+        self.type = ApplicationCommandPermissionType(int(permission_type))
+        self.permission = permission
+
+    def to_dict(self):
+        return {"id": str(self.id), "type": int(self.type), "permission": self.permission}
+
+    @classmethod
+    def create(cls, resp):
+        return cls(**resp)
 
 
 class ApplicationCommandPermissionType(TypeBase):

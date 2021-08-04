@@ -104,9 +104,10 @@ class WebSocketClient:
         resp = await self.ws.receive()
         if resp.type == aiohttp.WSMsgType.TEXT:
             res = gateway.GatewayResponse(resp.json())
-            self.seq = res.s
+            if res.s is not None:
+                self.seq = res.s
             return res
-        elif resp.type in aiohttp.WSMsgType.CLOSE:
+        elif resp.type == aiohttp.WSMsgType.CLOSE:
             raise WSClosing(resp.data)
 
     async def reconnect(self, fresh: bool = False):

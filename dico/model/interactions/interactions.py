@@ -1,5 +1,5 @@
 import typing
-from .slashcommands import ApplicationCommandInteractionDataResolved
+from .slashcommands import ApplicationCommandInteractionDataResolved, ApplicationCommandInteractionDataOption
 from .components import Component, ComponentTypes
 from ..channel import Embed, AllowedMentions
 from ..guild import GuildMember
@@ -50,7 +50,7 @@ class ApplicationCommandInteractionData:
         self.name = resp.get("name")
         self.__resolved = resp.get("resolved")
         self.resolved = ApplicationCommandInteractionDataResolved(client, resp.get("resolved")) if self.__resolved else self.__resolved
-        self.options = resp.get("options")
+        self.options = [ApplicationCommandInteractionDataOption(x) for x in resp.get("options", [])]
         self.custom_id = resp.get("custom_id")
         self.component_type = ComponentTypes(resp.get("component_type")) if resp.get("component_type") else None
         self.values = resp.get("values", [])

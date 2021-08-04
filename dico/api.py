@@ -662,8 +662,8 @@ class APIClient:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         app_commands = self.http.request_application_commands(int(application_id or self.application_id), int(guild) if guild else guild)
         if isinstance(app_commands, list):
-            return [ApplicationCommand(x) for x in app_commands]
-        return wrap_to_async(ApplicationCommand, None, app_commands, as_create=False)
+            return [ApplicationCommand.create(x) for x in app_commands]
+        return wrap_to_async(ApplicationCommand, None, app_commands)
 
     def create_interaction_response(self,
                                     interaction: typing.Union[int, str, Snowflake, Interaction],
