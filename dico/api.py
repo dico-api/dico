@@ -5,7 +5,7 @@ import datetime
 from .base.http import HTTPRequestBase
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
-    ThreadMember, ListThreadsResponse, Component, Role
+    ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption
 from .utils import from_emoji, wrap_to_async
 
 
@@ -443,7 +443,7 @@ class APIClient:
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
     def create_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], name: str, image: str, roles: typing.List[typing.Union[str, int, Snowflake, Role]] = None):
-        resp = self.http.create_guild_emoji(int(guild), name, image, [int(x) for x in roles or []])
+        resp = self.http.create_guild_emoji(int(guild), name, image, [str(int(x)) for x in roles or []])
         if isinstance(resp, dict):
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
@@ -665,6 +665,75 @@ class APIClient:
             return [ApplicationCommand.create(x) for x in app_commands]
         return wrap_to_async(ApplicationCommand, None, app_commands)
 
+    def create_application_command(self,
+                                   guild: typing.Union[int, str, Snowflake, Guild] = None,
+                                   *,
+                                   name: str,
+                                   description: str,
+                                   options: typing.List[typing.Union[ApplicationCommandOption, dict]] = None,
+                                   default_permission: bool = None,
+                                   application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        options = [x if isinstance(x, dict) else x.to_dict() for x in options or []]
+        resp = self.http.create_application_command(int(application_id or self.application_id), name, description, options, default_permission, int(guild) if guild else guild)
+        if isinstance(resp, dict):
+            return ApplicationCommand.create(resp)
+        return wrap_to_async(ApplicationCommand, None, resp)
+
+    def request_application_command(self,
+                                    command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                    *,
+                                    guild: typing.Union[int, str, Snowflake, Guild] = None,
+                                    application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        command_id = command.id if isinstance(command, ApplicationCommand) else int(command)
+        resp = self.http.request_application_command(int(application_id or self.application_id), command_id, int(guild))
+        if isinstance(resp, dict):
+            return ApplicationCommand.create(resp)
+        return wrap_to_async(ApplicationCommand, None, resp)
+
+    def edit_application_command(self,
+                                 command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                 *,
+                                 name: str = None,
+                                 description: str = None,
+                                 options: typing.List[typing.Union[ApplicationCommandOption, dict]] = None,
+                                 default_permission: bool = None,
+                                 guild: typing.Union[int, str, Snowflake, Guild] = None,
+                                 application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        command_id = command.id if isinstance(command, ApplicationCommand) else int(command)
+        options = [x if isinstance(x, dict) else x.to_dict() for x in options or []]
+        resp = self.http.edit_application_command(int(application_id or self.application_id), command_id, name, description, options, default_permission, int(guild) if guild else guild)
+        if isinstance(resp, dict):
+            return ApplicationCommand.create(resp)
+        return wrap_to_async(ApplicationCommand, None, resp)
+
+    def delete_application_command(self,
+                                   command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                   *,
+                                   guild: typing.Union[int, str, Snowflake, Guild] = None,
+                                   application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        command_id = command.id if isinstance(command, ApplicationCommand) else int(command)
+        return self.http.delete_application_command(int(application_id or self.application_id), command_id, int(guild))
+
+    def bulk_overwrite_application_commands(self,
+                                            *commands: typing.Union[dict, ApplicationCommand],
+                                            guild: typing.Union[int, str, Snowflake, Guild] = None,
+                                            application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        commands = [x if isinstance(x, dict) else x.to_dict() for x in commands]
+        app_commands = self.http.bulk_overwrite_application_commands(int(application_id or self.application_id), commands, int(guild) if guild else guild)
+        if isinstance(app_commands, list):
+            return [ApplicationCommand.create(x) for x in app_commands]
+        return wrap_to_async(ApplicationCommand, None, app_commands)
+
     def create_interaction_response(self,
                                     interaction: typing.Union[int, str, Snowflake, Interaction],
                                     interaction_response: InteractionResponse,
@@ -674,19 +743,21 @@ class APIClient:
             raise TypeError("you must pass interaction_token if interaction is not dico.Interaction object.")
         return self.http.create_interaction_response(int(interaction), interaction_token or interaction.token, interaction_response.to_dict())
 
-    def request_original_interaction_response(self,
-                                              interaction: typing.Union[int, str, Snowflake, Interaction] = None,
-                                              *,
-                                              interaction_token: str = None,
-                                              application_id: typing.Union[int, str, Snowflake] = None):
+    def request_interaction_response(self,
+                                     interaction: typing.Union[int, str, Snowflake, Interaction] = None,
+                                     message: typing.Union[int, str, Snowflake, Message] = "@original",
+                                     *,
+                                     interaction_token: str = None,
+                                     application_id: typing.Union[int, str, Snowflake] = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
             raise TypeError("you must pass interaction_token if interaction is not dico.Interaction object.")
-        msg = self.http.request_original_interaction_response(application_id or self.application_id, interaction_token or interaction.token)
+        msg = self.http.request_interaction_response(application_id or self.application_id, interaction_token or interaction.token, int(message) if message != "@original" else message)
+        original_response = message == "@original"
         if isinstance(msg, dict):
-            return Message.create(self, msg, interaction_token=interaction_token or interaction.token, original_response=True)
-        return wrap_to_async(Message, self, msg, interaction_token=interaction_token or interaction.token, original_response=True)
+            return Message.create(self, msg, interaction_token=interaction_token or interaction.token, original_response=original_response)
+        return wrap_to_async(Message, self, msg, interaction_token=interaction_token or interaction.token, original_response=original_response)
 
     def create_followup_message(self,
                                 interaction: typing.Union[int, str, Snowflake, Interaction] = None,

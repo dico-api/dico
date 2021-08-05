@@ -13,12 +13,15 @@ class HTTPRequestBase(ABC):
           they are all changed to `request_...` to prevent confusion with cache get methods.
 
         - Part of interaction methods are merged to one, since those are listed as separate endpoint but only the difference is the ID.
+
+    .. warning::
+        This module isn't intended to be directly used. It is recommended to request via APIClient.
     """
 
     BASE_URL = "https://discord.com/api/v9"
 
     @abstractmethod
-    def request(self, route: str, meth: str, body: dict = None, *, is_json: bool = False, reason_header: str = None, retry: int = 3, **kwargs):
+    def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = 3, **kwargs):
         """
         This function should wrap :meth:`._request` with rate limit handling.
         :return:
@@ -393,7 +396,7 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "DELETE")
 
-    def bulk_delete_messages(self, channel_id, message_ids: typing.List[str]):
+    def bulk_delete_messages(self, channel_id, message_ids: typing.List[typing.Union[int, str]]):
         """
         Sends bulk delete message request.
 
@@ -965,9 +968,76 @@ class HTTPRequestBase(ABC):
         Sends get global or guild application commands request.
 
         :param application_id: ID of the application.
-        :param guild_id: ID of the guild.
+        :param guild_id: ID of the guild. Set to None for global.
         """
         return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "GET")
+
+    def create_application_command(self, application_id, name: str, description: str, options: typing.List[dict] = None, default_permission: bool = None, guild_id=None):
+        """
+        Sends create global or guild application command request.
+
+        :param application_id: ID of the application.
+        :param name: Name of the command.
+        :param description: Description of the command.
+        :param options: Options of the command.
+        :param default_permission: Whether the command is enabled as a default.
+        :param guild_id: ID of the guild. Set to None for global.
+        """
+        body = {"name": name, "description": description}
+        if options:
+            body["options"] = options
+        if default_permission is not None:
+            body["default_permission"] = default_permission
+        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "POST", body, is_json=True)
+
+    def request_application_command(self, application_id, command_id, guild_id=None):
+        """
+        Sends get global or guild application command request.
+
+        :param application_id: ID of the application.
+        :param command_id: ID of the command to request.
+        :param guild_id: ID of the guild. Set to None for global.
+        """
+        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands")+f"/{command_id}", "GET")
+
+    def edit_application_command(self, application_id, command_id, name: str = None, description: str = None, options: typing.List[dict] = None, default_permission: bool = None, guild_id=None):
+        """
+        Sends edit global or guild application command request.
+
+        :param application_id: ID of the application.
+        :param command_id: ID of the command to edit.
+        :param name: Name of the command.
+        :param description: Description of the command.
+        :param options: Options of the command.
+        :param default_permission: Whether the command is enabled as a default.
+        :param guild_id: ID of the guild. Set to None for global.
+        """
+        body = {"name": name, "description": description}
+        if options:
+            body["options"] = options
+        if default_permission is not None:
+            body["default_permission"] = default_permission
+        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands")+f"/{command_id}", "PATCH", body, is_json=True)
+
+    def delete_application_command(self, application_id, command_id, guild_id=None):
+        """
+        Sends delete global or guild application command request.
+
+        :param application_id: ID of the application.
+        :param command_id: ID of the command to request.
+        :param guild_id: ID of the guild. Set to None for global.
+        """
+        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands")+f"/{command_id}", "DELETE")
+
+    def bulk_overwrite_application_commands(self, application_id, commands: typing.List[dict], guild_id=None):
+        """
+        Sends delete global or guild application command request.
+
+        :param application_id: ID of the application.
+        :param commands: List of commands to overwrite.
+        :param guild_id: ID of the guild. Set to None for global.
+        """
+        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "PUT", commands, is_json=True)
 
     def create_interaction_response(self, interaction_id, interaction_token, interaction_response: dict):
         """
@@ -979,14 +1049,15 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/interactions/{interaction_id}/{interaction_token}/callback", "POST", interaction_response, is_json=True)
 
-    def request_original_interaction_response(self, application_id, interaction_token):
+    def request_interaction_response(self, application_id, interaction_token, message_id="@original"):
         """
         Sends get original interaction response request.
 
         :param application_id: ID of the application.
         :param interaction_token: Token of the interaction.
+        :param message_id: ID of the message to request.
         """
-        return self.request_webhook_message(application_id, interaction_token, "@original")
+        return self.request_webhook_message(application_id, interaction_token, message_id)
 
     def create_followup_message(self,
                                 application_id,
@@ -1067,7 +1138,7 @@ class HTTPRequestBase(ABC):
 
     @classmethod
     @abstractmethod
-    def create(cls, token, *args, **kwargs):
+    def create(cls, token, *args, **kwargs) -> "HTTPRequestBase":
         """
         Creates new HTTP request client.
 
