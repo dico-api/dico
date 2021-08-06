@@ -23,6 +23,10 @@ class ApplicationCommand:
         self.default_permission = default_permission
         self.__command_creation = bool(resp)
 
+    def __int__(self):
+        if self.id:
+            return int(self.id)
+
     def to_dict(self):
         resp = {"name": self.name, "description": self.description, "options": [x.to_dict() for x in self.options], "default_permission": self.default_permission}
         if self.__command_creation:
@@ -66,6 +70,7 @@ class ApplicationCommandOption:
     def create(cls, resp):
         resp["choices"] = [ApplicationCommandOptionChoice.create(x) for x in resp.get("choices", [])]
         resp["options"] = [cls.create(x) for x in resp.get("options", [])]
+        resp["option_type"] = resp.pop("type")
         return cls(**resp)
 
 
@@ -82,7 +87,7 @@ class ApplicationCommandOptionType(TypeBase):
 
 
 class ApplicationCommandOptionChoice:
-    def __init__(self, name: str, value: typing.Union[str, int, float]):
+    def __init__(self, name: str, value: typing.Union[str, int, float], **kw):
         self.name = name
         self.value = value
 
@@ -106,7 +111,8 @@ class ApplicationCommandPermissions:
     def __init__(self,
                  target: typing.Union[int, Role, User],
                  permission_type: typing.Union[int, "ApplicationCommandPermissionType"],
-                 permission: bool):
+                 permission: bool,
+                 **kw):
         self.id = Snowflake.ensure_snowflake(int(target))
         self.type = ApplicationCommandPermissionType(int(permission_type))
         self.permission = permission
@@ -116,6 +122,8 @@ class ApplicationCommandPermissions:
 
     @classmethod
     def create(cls, resp):
+        resp["target"] = resp.pop("id")
+        resp["permission_type"] = resp.pop("type")
         return cls(**resp)
 
 

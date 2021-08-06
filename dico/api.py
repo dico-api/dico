@@ -5,7 +5,8 @@ import datetime
 from .base.http import HTTPRequestBase
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
-    ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption
+    ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
+    ApplicationCommandPermissions
 from .utils import from_emoji, wrap_to_async
 
 
@@ -705,7 +706,7 @@ class APIClient:
                                  application_id: typing.Union[int, str, Snowflake] = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
-        command_id = command.id if isinstance(command, ApplicationCommand) else int(command)
+        command_id = int(command)
         options = [x if isinstance(x, dict) else x.to_dict() for x in options or []]
         resp = self.http.edit_application_command(int(application_id or self.application_id), command_id, name, description, options, default_permission, int(guild) if guild else guild)
         if isinstance(resp, dict):
@@ -719,7 +720,7 @@ class APIClient:
                                    application_id: typing.Union[int, str, Snowflake] = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
-        command_id = command.id if isinstance(command, ApplicationCommand) else int(command)
+        command_id = int(command)
         return self.http.delete_application_command(int(application_id or self.application_id), command_id, int(guild))
 
     def bulk_overwrite_application_commands(self,
@@ -883,7 +884,52 @@ class APIClient:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
             raise TypeError("you must pass interaction_token if interaction is not dico.Interaction object.")
-        return self.http.delete_interaction_response(application_id or self.application_id, interaction_token or interaction.token, int(message) if message != "@original" else message)
+        return self.http.delete_interaction_response(int(application_id or self.application_id), interaction_token or interaction.token, int(message) if message != "@original" else message)
+
+    def request_guild_application_command_permissions(self, guild: typing.Union[int, str, Snowflake, Guild], *, application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        resp = self.http.request_guild_application_command_permissions(int(application_id or self.application_id), int(guild))
+        if isinstance(resp, list):
+            return [GuildApplicationCommandPermissions(x) for x in resp]
+        return wrap_to_async(GuildApplicationCommandPermissions, None, resp, as_create=False)
+
+    def request_application_command_permissions(self,
+                                                guild: typing.Union[int, str, Snowflake, Guild],
+                                                command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                                *, application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        resp = self.http.request_application_command_permissions(int(application_id or self.application_id), int(guild), int(command))
+        if isinstance(resp, dict):
+            return GuildApplicationCommandPermissions(resp)
+        return wrap_to_async(GuildApplicationCommandPermissions, None, resp, as_create=False)
+
+    def edit_application_command_permissions(self,
+                                             guild: typing.Union[int, str, Snowflake, Guild],
+                                             command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                             *permissions: typing.Union[dict, ApplicationCommandPermissions],
+                                             application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        permissions = [x if isinstance(x, dict) else x.to_dict() for x in permissions]
+        resp = self.http.edit_application_command_permissions(int(application_id or self.application_id), int(guild), int(command), permissions)
+        if isinstance(resp, dict):
+            return GuildApplicationCommandPermissions(resp)
+        return wrap_to_async(GuildApplicationCommandPermissions, None, resp, as_create=False)
+
+    def batch_edit_application_command_permissions(self,
+                                                   guild: typing.Union[int, str, Snowflake, Guild],
+                                                   permissions_dict: typing.Dict[typing.Union[int, str, Snowflake, ApplicationCommand],
+                                                                                 typing.List[typing.Union[dict, ApplicationCommandPermissions]]],
+                                                   *, application_id: typing.Union[int, str, Snowflake] = None):
+        if not application_id and not self.application_id:
+            raise TypeError("you must pass application_id if it is not set in client instance.")
+        permissions_dicts = [{"id": str(int(k)), "permissions": [x if isinstance(x, dict) else x.to_dict() for x in v]} for k, v in permissions_dict.items()]
+        resp = self.http.batch_edit_application_command_permissions(int(application_id or self.application_id), int(guild), permissions_dicts)
+        if isinstance(resp, list):
+            return [GuildApplicationCommandPermissions(x) for x in resp]
+        return wrap_to_async(GuildApplicationCommandPermissions, None, resp, as_create=False)
 
     # Misc
 

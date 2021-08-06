@@ -39,6 +39,7 @@ async def on_message_create(message):
 
 client.run()
 ```
+More examples are in [here](https://github.com/eunwoo1104/dico/tree/master/examples).
 
 ## Requirements
 - Python 3.7+

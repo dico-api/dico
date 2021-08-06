@@ -1125,6 +1125,49 @@ class HTTPRequestBase(ABC):
         """
         return self.delete_webhook_message(application_id, interaction_token, message_id)
 
+    def request_guild_application_command_permissions(self, application_id, guild_id):
+        """
+        Sends get guild application command permissions request.
+
+        :param application_id: ID of the application.
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/permissions", "GET")
+
+    def request_application_command_permissions(self, application_id, guild_id, command_id):
+        """
+        Sends get application command permissions request.
+
+        :param application_id: ID of the application.
+        :param guild_id: ID of the guild.
+        :param command_id: ID of the command to get.
+        """
+        return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions", "GET")
+
+    def edit_application_command_permissions(self, application_id, guild_id, command_id, permissions: typing.List[dict]):
+        """
+        Sends edit application command permissions request.
+
+        :param application_id: ID of the application.
+        :param guild_id: ID of the guild.
+        :param command_id: ID of the command to edit.
+        :param permissions: List of permissions to edit
+        :return:
+        """
+        body = {"permissions": permissions}
+        return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions", "PUT", body, is_json=True)
+
+    def batch_edit_application_command_permissions(self, application_id, guild_id, permissions: typing.List[dict]):
+        """
+        Sends batch edit application command permissions request.
+
+        :param application_id: ID of the application.
+        :param guild_id: ID of the guild.
+        :param permissions: List of dict of command ID and permissions to edit
+        :return:
+        """
+        return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/permissions", "PUT", permissions, is_json=True)
+
     # Misc
 
     @abstractmethod
