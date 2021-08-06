@@ -9,6 +9,15 @@ class WebsocketClosed(DicoException):
     """Websocket is closed, so this action could not be performed."""
 
 
+class DownloadFailed(DicoException):
+    """Downloading something has failed."""
+    def __init__(self, url, code, resp):
+        self.url = url
+        self.code = code
+        self.resp = resp
+        super().__init__(f"Download failed with {self.code}: {self.url}")
+
+
 class HTTPError(DicoException):
     """Special exception class for HTTP."""
     def __init__(self, route, code, resp):
