@@ -1012,8 +1012,12 @@ class HTTPRequestBase(ABC):
         :param default_permission: Whether the command is enabled as a default.
         :param guild_id: ID of the guild. Set to None for global.
         """
-        body = {"name": name, "description": description}
-        if options:
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if description is not None:
+            body["description"] = description
+        if options is not None:
             body["options"] = options
         if default_permission is not None:
             body["default_permission"] = default_permission

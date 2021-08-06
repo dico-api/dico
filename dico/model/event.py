@@ -1,3 +1,4 @@
+import typing
 import datetime
 from .channel import Channel, Message, ThreadMember
 from .emoji import Emoji
@@ -7,7 +8,7 @@ from .permission import Role
 from .snowflake import Snowflake
 from .user import User
 from .voice import VoiceState
-from .interactions import Interaction
+from .interactions import Interaction, ApplicationCommand, ApplicationCommandOption
 from ..base.model import EventBase
 
 
@@ -22,19 +23,21 @@ class Ready(EventBase):
         self.application = resp["application"]
 
 
-class ApplicationCommandCreate(EventBase):
-    def __init__(self, client, resp: dict):
-        super().__init__(client, resp)
+class ApplicationCommandCreate(ApplicationCommand):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client = kwargs.get("client")
+        self.guild_id = Snowflake.optional(kwargs.get("guild_id"))
+
+    @classmethod
+    def create(cls, client, resp):  # noqa
+        resp["client"] = client
+        resp["options"] = [ApplicationCommandOption.create(x) for x in resp.get("options", [])]
+        return cls(**resp)
 
 
-class ApplicationCommandUpdate(EventBase):
-    def __init__(self, client, resp: dict):
-        super().__init__(client, resp)
-
-
-class ApplicationCommandDelete(EventBase):
-    def __init__(self, client, resp: dict):
-        super().__init__(client, resp)
+ApplicationCommandUpdate = ApplicationCommandCreate
+ApplicationCommandDelete = ApplicationCommandCreate
 
 
 ChannelCreate = Channel

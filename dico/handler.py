@@ -19,6 +19,9 @@ class EventHandler:
     def process_response(self, name, resp):
         model_dict = {
             "READY": Ready,
+            "APPLICATION_COMMAND_CREATE": ApplicationCommandCreate,
+            "APPLICATION_COMMAND_UPDATE": ApplicationCommandUpdate,
+            "APPLICATION_COMMAND_DELETE": ApplicationCommandDelete,
             "CHANNEL_CREATE": ChannelCreate,
             "CHANNEL_UPDATE": ChannelUpdate,
             "CHANNEL_DELETE": ChannelDelete,
