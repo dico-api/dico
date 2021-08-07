@@ -10,6 +10,7 @@ from ...base.model import TypeBase, FlagBase
 
 class Interaction:
     def __init__(self, client, resp):
+        self.raw = resp
         self.client = client
         self.id = Snowflake(resp["id"])
         self.application_id = Snowflake(resp["application_id"])

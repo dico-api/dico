@@ -59,6 +59,9 @@ class WebSocketClient:
                         self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
                     break
+                if not resp:
+                    self.logger.warning("Empty response detected, ignoring.")
+                    continue
                 self.logger.debug(f"Received `{gateway.Opcodes.as_string(resp.op)}` payload"
                                   f"{f' with event name `{resp.t}`' if resp.op == gateway.Opcodes.DISPATCH else ''}.")
                 if resp.s:
