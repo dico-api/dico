@@ -5,6 +5,9 @@ import typing
 import pathlib
 import inspect
 import traceback
+"""
+from .model import ChannelTypes, Snowflake
+"""
 
 
 async def safe_call(coro, additional_message: typing.Optional[str] = None):
@@ -99,3 +102,20 @@ def to_image_data(image: typing.Union[io.FileIO, typing.BinaryIO, pathlib.Path, 
         img = image.read()
     img = base64.b64encode(img)
     return f"data:image/{img_type};base64,{img.decode()}"
+
+
+"""
+def create_partial_channel(name: str,
+                           channel_type: typing.Union[ChannelTypes, int],
+                           temporary_id: typing.Union[Snowflake, str, int] = None,
+                           parent_id: typing.Union[Snowflake, str, int] = None):
+    channel = {"name": name, "type": int(channel_type)}
+    if temporary_id is not None:
+        channel["id"] = str(int(temporary_id))
+    if parent_id is not None:
+        channel["parent_id"] = str(int(parent_id))
+    return channel
+
+
+def create_new_guild_role()
+"""

@@ -710,6 +710,177 @@ class HTTPRequestBase(ABC):
 
     # Guild Requests
 
+    def create_guild(self,
+                     name: str,
+                     icon: str = None,
+                     verification_level: int = None,
+                     default_message_notifications: int = None,
+                     explicit_content_filter: int = None,
+                     roles: typing.List[dict] = None,
+                     channels: typing.List[dict] = None,
+                     afk_channel_id: str = None,
+                     afk_timeout: int = None,
+                     system_channel_id: str = None,
+                     system_channel_flags: int = None):
+        """
+        Sends create guild request.
+
+        .. note::
+            Param ``region`` is not supported since it is deprecated.
+
+        :param name: Name of the guild.
+        :param icon: Icon data of the guild to create.
+        :param verification_level: Verification level of the guild to create.
+        :param default_message_notifications: Default message notification level of the guild to create.
+        :param explicit_content_filter: Explicit content filter level of the guild to create.
+        :param roles: Roles of the guild to create.
+        :param channels: Channels of the guild to create.
+        :param afk_channel_id: AFK channel ID of the guild to create.
+        :param afk_timeout: AFK timeout of the guild to create.
+        :param system_channel_id: System channel ID of the guild to create.
+        :param system_channel_flags: System channel flags of the guild to create.
+        """
+        body = {"name": name}
+        if icon is not None:
+            body["icon"] = icon
+        if verification_level is not None:
+            body["verification_level"] = verification_level
+        if default_message_notifications is not None:
+            body["default_message_notifications"] = default_message_notifications
+        if explicit_content_filter is not None:
+            body["explicit_content_filter"] = explicit_content_filter
+        if roles is not None:
+            body["roles"] = roles
+        if channels is not None:
+            body["channels"] = channels
+        if afk_channel_id is not None:
+            body["afk_channel_id"] = afk_channel_id
+        if afk_timeout is not None:
+            body["afk_timeout"] = afk_timeout
+        if system_channel_id is not None:
+            body["system_channel_id"] = system_channel_id
+        if system_channel_flags is not None:
+            body["system_channel_flags"] = system_channel_flags
+        return self.request("/guilds", "POST", body, is_json=True)
+
+    def request_guild(self, guild_id, with_counts: bool = False):
+        """
+        Sends get guild request.
+
+        :param guild_id: ID of the guild to request.
+        :param with_counts: Whether to return member and presence count.
+        """
+        return self.request(f"/guilds/{guild_id}", "GET", params={"with_counts": with_counts})
+
+    def request_guild_preview(self, guild_id):
+        """
+        Sends get guild request.
+
+        :param guild_id: ID of the guild to request.
+        """
+        return self.request(f"/guilds/{guild_id}/preview", "GET")
+
+    def modify_guild(self,
+                     guild_id,
+                     name: str = None,
+                     verification_level: int = None,
+                     default_message_notifications: int = None,
+                     explicit_content_filter: int = None,
+                     afk_channel_id: str = None,
+                     afk_timeout: int = None,
+                     icon: str = None,
+                     owner_id: str = None,
+                     splash: str = None,
+                     discovery_splash: str = None,
+                     banner: str = None,
+                     system_channel_id: str = None,
+                     system_channel_flags: int = None,
+                     rules_channel_id: str = None,
+                     public_updates_channel_id: str = None,
+                     preferred_locale: str = None,
+                     features: typing.List[str] = None,
+                     description: str = None):
+        """
+        Sends create guild request.
+
+        .. note::
+            Param ``region`` is not supported since it is deprecated.
+
+        :param guild_id: ID of the guild to modify.
+        :param name: Name of the guild.
+        :param verification_level: Verification level.
+        :param default_message_notifications: Default message notification level.
+        :param explicit_content_filter: Explicit content filter level.
+        :param afk_channel_id: AFK channel ID.
+        :param afk_timeout: AFK timeout.
+        :param icon: Icon image data.
+        :param owner_id: ID of the owner. Bot must be owner of the guild.
+        :param splash: Splash image data.
+        :param discovery_splash: Discovery splash image data.
+        :param banner: Banner image data.
+        :param system_channel_id: System channel ID.
+        :param system_channel_flags: System channel flags.
+        :param rules_channel_id: Rules channel ID.
+        :param public_updates_channel_id: Discord community notes receive channel ID.
+        :param preferred_locale: Preferred locale of the guild.
+        :param features: Enabled guild features list.
+        :param description: Description of the guild.
+        """
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if verification_level is not None:
+            body["verification_level"] = verification_level
+        if default_message_notifications is not None:
+            body["default_message_notifications"] = default_message_notifications
+        if explicit_content_filter is not None:
+            body["explicit_content_filter"] = explicit_content_filter
+        if afk_channel_id is not None:
+            body["afk_channel_id"] = afk_channel_id
+        if afk_timeout is not None:
+            body["afk_timeout"] = afk_timeout
+        if icon is not None:
+            body["icon"] = icon
+        if owner_id is not None:
+            body["owner_id"] = owner_id
+        if splash is not None:
+            body["splash"] = splash
+        if discovery_splash is not None:
+            body["discovery_splash"] = discovery_splash
+        if banner is not None:
+            body["banner"] = banner
+        if system_channel_id is not None:
+            body["system_channel_id"] = system_channel_id
+        if system_channel_flags is not None:
+            body["system_channel_flags"] = system_channel_flags
+        if rules_channel_id is not None:
+            body["rules_channel_id"] = rules_channel_id
+        if public_updates_channel_id is not None:
+            body["public_updates_channel_id"] = public_updates_channel_id
+        if preferred_locale is not None:
+            body["preferred_locale"] = preferred_locale
+        if features is not None:
+            body["features"] = features
+        if description is not None:
+            body["description"] = description
+        return self.request(f"/guilds/{guild_id}", "PATCH", body, is_json=True)
+
+    def delete_guild(self, guild_id):
+        """
+        Sends delete guild request. Bot must be owner of the guild.
+
+        :param guild_id: ID of the guild to delete.
+        """
+        return self.request(f"/guilds/{guild_id}", "DELETE")
+
+    def request_guild_channels(self, guild_id):
+        """
+        Sends get guild channels request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/channels", "GET")
+
     def remove_guild_member(self, guild_id, user_id):
         """
         Sends remove guild member request.

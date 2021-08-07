@@ -6,7 +6,8 @@ from .base.http import HTTPRequestBase
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
-    ApplicationCommandPermissions
+    ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
+    SystemChannelFlags, GuildPreview
 from .utils import from_emoji, wrap_to_async
 
 
@@ -463,6 +464,127 @@ class APIClient:
         return self.http.delete_guild_emoji(int(guild), int(emoji))
 
     # Guild
+
+    def create_guild(self,
+                     name: str,
+                     icon: str = None,
+                     verification_level: typing.Union[int, VerificationLevel] = None,
+                     default_message_notifications: typing.Union[int, DefaultMessageNotificationLevel] = None,
+                     explicit_content_filter: typing.Union[int, ExplicitContentFilterLevel] = None,
+                     roles: typing.List[dict] = None,  # TODO: role and channel generator
+                     channels: typing.List[dict] = None,
+                     afk_channel_id: typing.Union[int, str, Snowflake] = None,
+                     afk_timeout: int = None,
+                     system_channel_id: typing.Union[int, str, Snowflake] = None,
+                     system_channel_flags: typing.Union[int, SystemChannelFlags] = None):
+        kwargs = {"name": name}
+        if icon is not None:
+            kwargs["icon"] = icon
+        if verification_level is not None:
+            kwargs["verification_level"] = int(verification_level)
+        if default_message_notifications is not None:
+            kwargs["default_message_notifications"] = int(default_message_notifications)
+        if explicit_content_filter is not None:
+            kwargs["explicit_content_filter"] = int(explicit_content_filter)
+        if roles is not None:
+            kwargs["roles"] = roles
+        if channels is not None:
+            kwargs["channels"] = channels
+        if afk_channel_id is not None:
+            kwargs["afk_channel_id"] = str(int(afk_channel_id))
+        if afk_timeout is not None:
+            kwargs["afk_timeout"] = afk_timeout
+        if system_channel_id is not None:
+            kwargs["system_channel_id"] = str(int(system_channel_id))
+        if system_channel_flags is not None:
+            kwargs["system_channel_flags"] = int(system_channel_flags)
+        resp = self.http.create_guild(**kwargs)
+        if isinstance(resp, dict):
+            return Guild.create(self, resp)
+        return wrap_to_async(Guild, self, resp)
+
+    def request_guild(self, guild: typing.Union[int, str, Snowflake, Guild], with_counts: bool = False):
+        resp = self.http.request_guild(int(guild), with_counts)
+        if isinstance(resp, dict):
+            return Guild.create(self, resp)
+        return wrap_to_async(Guild, self, resp)
+
+    def request_guild_preview(self, guild: typing.Union[int, str, Snowflake, Guild]):
+        resp = self.http.request_guild_preview(int(guild))
+        if isinstance(resp, dict):
+            return GuildPreview(self, resp)
+        return wrap_to_async(GuildPreview, self, resp)
+
+    def modify_guild(self,
+                     guild: typing.Union[int, str, Snowflake, Guild],
+                     name: str = None,
+                     verification_level: typing.Union[int, VerificationLevel] = None,
+                     default_message_notifications: typing.Union[int, DefaultMessageNotificationLevel] = None,
+                     explicit_content_filter: typing.Union[int, ExplicitContentFilterLevel] = None,
+                     afk_channel: typing.Union[int, str, Snowflake, Channel] = None,
+                     afk_timeout: int = None,
+                     icon: str = None,
+                     owner: typing.Union[int, str, Snowflake, User] = None,
+                     splash: str = None,
+                     discovery_splash: str = None,
+                     banner: str = None,
+                     system_channel: typing.Union[int, str, Snowflake, Channel] = None,
+                     system_channel_flags: typing.Union[int, SystemChannelFlags] = None,
+                     rules_channel: typing.Union[int, str, Snowflake, Channel] = None,
+                     public_updates_channel: typing.Union[int, str, Snowflake, Channel] = None,
+                     preferred_locale: str = None,
+                     features: typing.List[str] = None,
+                     description: str = None):
+        kwargs = {}
+        if name is not None:
+            kwargs["name"] = name
+        if verification_level is not None:
+            kwargs["verification_level"] = int(verification_level)
+        if default_message_notifications is not None:
+            kwargs["default_message_notifications"] = int(default_message_notifications)
+        if explicit_content_filter is not None:
+            kwargs["explicit_content_filter"] = int(explicit_content_filter)
+        if afk_channel is not None:
+            kwargs["afk_channel_id"] = str(int(afk_channel))
+        if afk_timeout is not None:
+            kwargs["afk_timeout"] = afk_timeout
+        if icon is not None:
+            kwargs["icon"] = icon
+        if owner is not None:
+            kwargs["owner_id"] = str(int(owner))
+        if splash is not None:
+            kwargs["splash"] = splash
+        if discovery_splash is not None:
+            kwargs["discovery_splash"] = discovery_splash
+        if banner is not None:
+            kwargs["banner"] = banner
+        if system_channel is not None:
+            kwargs["system_channel_id"] = str(int(system_channel))
+        if system_channel_flags is not None:
+            kwargs["system_channel_flags"] = int(system_channel_flags)
+        if rules_channel is not None:
+            kwargs["rules_channel_id"] = str(int(rules_channel))
+        if public_updates_channel is not None:
+            kwargs["public_updates_channel_id"] = str(int(public_updates_channel))
+        if preferred_locale is not None:
+            kwargs["preferred_locale"] = preferred_locale
+        if features is not None:
+            kwargs["features"] = features
+        if description is not None:
+            kwargs["description"] = description
+        resp = self.http.modify_guild(int(guild), **kwargs)
+        if isinstance(resp, dict):
+            return Guild.create(self, resp)
+        return wrap_to_async(Guild, self, resp)
+
+    def delete_guild(self, guild: typing.Union[int, str, Snowflake, Guild]):
+        return self.http.delete_guild(int(guild))
+
+    def request_guild_channels(self, guild: typing.Union[int, str, Snowflake, Guild]):
+        channels = self.http.request_guild_channels(int(guild))
+        if isinstance(channels, list):
+            return [Channel.create(self, x) for x in channels]
+        return wrap_to_async(Channel, self, channels)
 
     def remove_guild_member(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
         return self.http.remove_guild_member(int(guild), int(user))
