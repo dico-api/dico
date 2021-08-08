@@ -196,8 +196,9 @@ class Message(DiscordObjectBase):
         self.edited_timestamp = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
         self.tts = resp["tts"]
         self.mention_everyone = resp["mention_everyone"]
-        self.mentions = resp["mentions"]
-        self.mention_roles = [Role(self.client, x) for x in resp["mention_roles"]]
+        self.mentions = [GuildMember.create(self.client, x["member"], user=User.create(self.client, x), guild_id=self.guild_id)
+                         if "member" in x else User.create(self.client, x) for x in resp["mentions"]]
+        self.mention_roles = [Snowflake(x) for x in resp["mention_roles"]]
         self.mention_channels = [ChannelMention(x) for x in resp.get("mention_channels", [])]
         self.attachments = [Attachment(self.client, x) for x in resp["attachments"] or []]
         self.embeds = [Embed.create(x) for x in resp["embeds"] or []]
