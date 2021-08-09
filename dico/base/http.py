@@ -1016,6 +1016,7 @@ class HTTPRequestBase(ABC):
                         tts: bool = False,
                         embeds: typing.List[dict] = None,
                         allowed_mentions: dict = None,
+                        components: typing.List[dict] = None,
                         flags: int = None):
         """
         Sends execute webhook request.
@@ -1030,8 +1031,9 @@ class HTTPRequestBase(ABC):
         :param tts: Whether this message is TTS.
         :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
-        :return: Message object dict.
+        :param components: Components of the message.
         :param flags: Flags of the message.
+        :return: Message object dict.
         """
         if not (content or embeds):
             raise ValueError("either content or embeds must be passed.")
@@ -1048,6 +1050,8 @@ class HTTPRequestBase(ABC):
             body["embeds"] = embeds
         if allowed_mentions is not None:
             body["allowed_mentions"] = allowed_mentions
+        if components is not None:
+            body["components"] = components
         if flags is not None:
             body["flags"] = flags
         params = {}
@@ -1070,6 +1074,7 @@ class HTTPRequestBase(ABC):
                                    files: typing.List[io.FileIO] = None,
                                    embeds: typing.List[dict] = None,
                                    allowed_mentions: dict = None,
+                                   components: typing.List[dict] = None,
                                    flags: int = None):
         """
         Sends execute webhook request with files.
@@ -1085,6 +1090,7 @@ class HTTPRequestBase(ABC):
         :param files: Files of the message.
         :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
+        :param components: Components of the message.
         :param flags: Flags of the message.
         """
         pass
@@ -1108,7 +1114,8 @@ class HTTPRequestBase(ABC):
                              embeds: typing.List[dict] = None,
                              files: typing.List[io.FileIO] = None,
                              allowed_mentions: dict = None,
-                             attachments: typing.List[dict] = None):
+                             attachments: typing.List[dict] = None,
+                             components: typing.List[dict] = None):
         """
         Sends edit webhook message request.
         :param webhook_id: ID of the webhook.
@@ -1119,6 +1126,7 @@ class HTTPRequestBase(ABC):
         :param files: Files of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param attachments: Attachments to keep.
+        :param components: Components of the message.
         """
         pass
 
@@ -1244,6 +1252,7 @@ class HTTPRequestBase(ABC):
                                 files: typing.List[io.FileIO] = None,
                                 embeds: typing.List[dict] = None,
                                 allowed_mentions: dict = None,
+                                components: typing.List[dict] = None,
                                 flags: int = None):
         """
         Sends create followup message request.
@@ -1257,10 +1266,11 @@ class HTTPRequestBase(ABC):
         :param files: Files of the message.
         :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
+        :param components: Components of the message.
         :param flags: Flags of the message.
         """
-        return self.execute_webhook_with_files(application_id, interaction_token, None, None, content, username, avatar_url, tts, files, embeds, allowed_mentions, flags) if files \
-            else self.execute_webhook(application_id, interaction_token, None, None, content, username, avatar_url, tts, embeds, allowed_mentions, flags)
+        return self.execute_webhook_with_files(application_id, interaction_token, None, None, content, username, avatar_url, tts, files, embeds, allowed_mentions, components, flags) if files \
+            else self.execute_webhook(application_id, interaction_token, None, None, content, username, avatar_url, tts, embeds, allowed_mentions, components, flags)
 
     def edit_interaction_response(self,
                                   application_id,
@@ -1270,7 +1280,8 @@ class HTTPRequestBase(ABC):
                                   embeds: typing.List[dict] = None,
                                   files: typing.List[io.FileIO] = None,
                                   allowed_mentions: dict = None,
-                                  attachments: typing.List[dict] = None):
+                                  attachments: typing.List[dict] = None,
+                                  components: typing.List[dict] = None):
         """
         Sends edit interaction response request.
 
@@ -1282,8 +1293,9 @@ class HTTPRequestBase(ABC):
         :param files: Files of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param attachments: Attachments to keep.
+        :param components: Components of the message.
         """
-        return self.edit_webhook_message(application_id, interaction_token, message_id, content, embeds, files, allowed_mentions, attachments)
+        return self.edit_webhook_message(application_id, interaction_token, message_id, content, embeds, files, allowed_mentions, attachments, components)
 
     @property
     def edit_followup_message(self):

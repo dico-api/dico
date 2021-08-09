@@ -152,6 +152,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                    files: typing.List[io.FileIO] = None,
                                    embeds: typing.List[dict] = None,
                                    allowed_mentions: dict = None,
+                                   components: typing.List[dict] = None,
                                    flags: int = None):
         if not (content or embeds or files):
             raise ValueError("either content or embeds or files must be passed.")
@@ -169,6 +170,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["embeds"] = embeds
         if allowed_mentions is not None:
             payload_json["allowed_mentions"] = allowed_mentions
+        if components is not None:
+            payload_json["components"] = components
         if flags is not None:
             payload_json["flags"] = flags
         params = {}
@@ -192,7 +195,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
                              embeds: typing.List[dict] = None,
                              files: typing.List[io.FileIO] = None,
                              allowed_mentions: dict = None,
-                             attachments: typing.List[dict] = None):
+                             attachments: typing.List[dict] = None,
+                             components: typing.List[dict] = None):
         payload_json = {}
         form = aiohttp.FormData()
         if content is not None:
@@ -203,6 +207,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["allowed_mentions"] = allowed_mentions
         if attachments is not None:
             payload_json["attachments"] = attachments
+        if components is not None:
+            payload_json["components"] = components
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
         if files:
             for x in range(len(files)):

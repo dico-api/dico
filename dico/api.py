@@ -661,7 +661,8 @@ class APIClient:
                         files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                         embed: typing.Union[Embed, dict] = None,
                         embeds: typing.List[typing.Union[Embed, dict]] = None,
-                        allowed_mentions: typing.Union[AllowedMentions, dict] = None):
+                        allowed_mentions: typing.Union[AllowedMentions, dict] = None,
+                        components: typing.List[typing.Union[dict, Component]] = None):
         if webhook_token is None and not isinstance(webhook, Webhook):
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         if thread and isinstance(thread, Channel) and not thread.is_thread_channel():
@@ -680,7 +681,9 @@ class APIClient:
         if embed:
             embeds = [embed]
         if embeds:
-            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+            embeds = [x.to_dict() if not isinstance(x, dict) else x for x in embeds]
+        if components:
+            components = [x.to_dict() if not isinstance(x, dict) else x for x in components]
         params = {"webhook_id": int(webhook),
                   "webhook_token": webhook_token if not isinstance(webhook, Webhook) else webhook.token,
                   "wait": wait,
@@ -690,7 +693,8 @@ class APIClient:
                   "avatar_url": avatar_url,
                   "tts": tts,
                   "embeds": embeds,
-                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions)}
+                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
+                  "components": components}
         if files:
             params["files"] = files
         try:
@@ -725,7 +729,8 @@ class APIClient:
                              file: typing.Union[io.FileIO, pathlib.Path, str] = None,
                              files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
                              allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                             attachments: typing.List[typing.Union[Attachment, dict]] = None):
+                             attachments: typing.List[typing.Union[Attachment, dict]] = None,
+                             components: typing.List[typing.Union[dict, Component]] = None):
         if not isinstance(webhook, Webhook) and not webhook_token:
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         if file and files:
@@ -742,7 +747,9 @@ class APIClient:
         if embed:
             embeds = [embed]
         if embeds:
-            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+            embeds = [x.to_dict() if not isinstance(x, dict) else x for x in embeds]
+        if components:
+            components = [x.to_dict() if not isinstance(x, dict) else x for x in components]
         _att = []
         if attachments:
             for x in attachments:
@@ -756,7 +763,8 @@ class APIClient:
                   "embeds": embeds,
                   "files": files,
                   "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
-                  "attachments": _att}
+                  "attachments": _att,
+                  "components": components}
         try:
             msg = self.http.edit_webhook_message(**params)
             if isinstance(msg, dict):
@@ -896,6 +904,7 @@ class APIClient:
                                 embed: typing.Union[Embed, dict] = None,
                                 embeds: typing.List[typing.Union[Embed, dict]] = None,
                                 allowed_mentions: typing.Union[AllowedMentions, dict] = None,
+                                components: typing.List[typing.Union[dict, Component]] = None,
                                 ephemeral: bool = False):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
@@ -915,7 +924,9 @@ class APIClient:
         if embed:
             embeds = [embed]
         if embeds:
-            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+            embeds = [x.to_dict() if not isinstance(x, dict) else x for x in embeds]
+        if components:
+            components = [x.to_dict() if not isinstance(x, dict) else x for x in components]
         params = {"application_id": application_id or self.application_id,
                   "interaction_token": interaction_token or interaction.token,
                   "content": content,
@@ -923,7 +934,8 @@ class APIClient:
                   "avatar_url": avatar_url,
                   "tts": tts,
                   "embeds": embeds,
-                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions)}
+                  "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
+                  "components": components}
         if files:
             params["files"] = files
         if ephemeral:
@@ -949,7 +961,8 @@ class APIClient:
                                   embed: typing.Union[Embed, dict] = None,
                                   embeds: typing.List[typing.Union[Embed, dict]] = None,
                                   allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                                  attachments: typing.List[typing.Union[Attachment, dict]] = None):
+                                  attachments: typing.List[typing.Union[Attachment, dict]] = None,
+                                  components: typing.List[typing.Union[dict, Component]] = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
@@ -968,7 +981,9 @@ class APIClient:
         if embed:
             embeds = [embed]
         if embeds:
-            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+            embeds = [x.to_dict() if not isinstance(x, dict) else x for x in embeds]
+        if components:
+            components = [x.to_dict() if not isinstance(x, dict) else x for x in components]
         _att = []
         if attachments:
             for x in attachments:
@@ -982,7 +997,8 @@ class APIClient:
                   "embeds": embeds,
                   "files": files,
                   "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
-                  "attachments": _att}
+                  "attachments": _att,
+                  "components": components}
         try:
             msg = self.http.edit_interaction_response(**params)
             if isinstance(msg, dict):
