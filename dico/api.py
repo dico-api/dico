@@ -598,7 +598,7 @@ class APIClient:
                              user_limit: int = None,
                              rate_limit_per_user: int = None,
                              position: int = None,
-                             permission_overwrites: typing.List[dict, Overwrite] = None,
+                             permission_overwrites: typing.Union[dict, Overwrite] = None,
                              parent: typing.Union[int, str, Snowflake, Channel] = None,
                              nsfw: bool = None):
         if isinstance(parent, Channel) and not parent.type.guild_category:
