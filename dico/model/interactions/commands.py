@@ -144,10 +144,10 @@ class ApplicationCommandPermissionType(TypeBase):
 
 class ApplicationCommandInteractionDataResolved:
     def __init__(self, client, resp: dict):
-        self.users = [User.create(client, x) for x in resp.get("users", {}).values()]
-        self.members = [GuildMember.create(client, x) for x in resp.get("members", {}).values()]
-        self.roles = [Role.create(client, x) for x in resp.get("roles", {}).values()]
-        self.channels = [Channel.create(client, x) for x in resp.get("channels", {}).values()]
+        self.users = {Snowflake(k): User.create(client, v) for k, v in resp.get("users", {}).items()}
+        self.members = {Snowflake(k): GuildMember.create(client, v) for k, v in resp.get("members", {}).items()}
+        self.roles = {Snowflake(k): Role.create(client, v) for k, v in resp.get("roles", {}).items()}
+        self.channels = {Snowflake(k): Channel.create(client, v) for k, v in resp.get("channels", {}).items()}
 
 
 class ApplicationCommandInteractionDataOption:
