@@ -7,7 +7,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
-    SystemChannelFlags, GuildPreview
+    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember
 from .utils import from_emoji, wrap_to_async
 
 
@@ -467,6 +467,7 @@ class APIClient:
 
     def create_guild(self,
                      name: str,
+                     *,
                      icon: str = None,
                      verification_level: typing.Union[int, VerificationLevel] = None,
                      default_message_notifications: typing.Union[int, DefaultMessageNotificationLevel] = None,
@@ -517,6 +518,7 @@ class APIClient:
 
     def modify_guild(self,
                      guild: typing.Union[int, str, Snowflake, Guild],
+                     *,
                      name: str = None,
                      verification_level: typing.Union[int, VerificationLevel] = None,
                      default_message_notifications: typing.Union[int, DefaultMessageNotificationLevel] = None,
@@ -585,6 +587,67 @@ class APIClient:
         if isinstance(channels, list):
             return [Channel.create(self, x) for x in channels]
         return wrap_to_async(Channel, self, channels)
+
+    def create_guild_channel(self,
+                             guild: typing.Union[int, str, Snowflake, Guild],
+                             name: str,
+                             *,
+                             channel_type: typing.Union[int, ChannelTypes] = None,
+                             topic: str = None,
+                             bitrate: int = None,
+                             user_limit: int = None,
+                             rate_limit_per_user: int = None,
+                             position: int = None,
+                             permission_overwrites: typing.List[dict, Overwrite] = None,
+                             parent: typing.Union[int, str, Snowflake, Channel] = None,
+                             nsfw: bool = None):
+        if isinstance(parent, Channel) and not parent.type.guild_category:
+            raise TypeError("parent must be category channel.")
+        kwargs = {"name": name}
+        if channel_type is not None:
+            kwargs["channel_type"] = int(channel_type)
+        if topic is not None:
+            kwargs["topic"] = topic
+        if bitrate is not None:
+            kwargs["bitrate"] = bitrate
+        if user_limit is not None:
+            kwargs["user_limit"] = user_limit
+        if rate_limit_per_user is not None:
+            kwargs["rate_limit_per_user"] = rate_limit_per_user
+        if position is not None:
+            kwargs["position"] = position
+        if permission_overwrites is not None:
+            kwargs["permission_overwrites"] = permission_overwrites.to_dict() if isinstance(permission_overwrites, Overwrite) else permission_overwrites
+        if parent is not None:
+            kwargs["parent_id"] = str(int(parent))
+        if nsfw is not None:
+            kwargs["nsfw"] = nsfw
+        resp = self.http.create_guild_channel(int(guild), **kwargs)
+        if isinstance(resp, dict):
+            return Channel.create(self, resp)
+        return wrap_to_async(Channel, self, resp)
+
+    def modify_guild_channel_positions(self, guild: typing.Union[int, str, Snowflake, Guild], *params: dict):
+        # You can get params by using Channel.to_position_param(...)
+        return self.http.modify_guild_channel_positions(int(guild), [*params])
+
+    def list_active_threads_as_guild(self, guild: typing.Union[int, str, Snowflake, Guild]):
+        resp = self.http.list_active_threads_as_guild(int(guild))
+        if isinstance(resp, dict):
+            return ListThreadsResponse(self, resp)
+        return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
+
+    def request_guild_member(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
+        resp = self.http.request_guild_member(int(guild), int(user))
+        if isinstance(resp, dict):
+            return GuildMember.create(self, resp, guild_id=int(guild))
+        return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
+
+    def list_guild_members(self, guild: typing.Union[int, str, Snowflake, Guild], limit: int = None, after: str = None):
+        resp = self.http.list_guild_members(int(guild), limit, after)
+        if isinstance(resp, list):
+            return [GuildMember.create(self, x, guild_id=int(guild)) for x in resp]
+        return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
     def remove_guild_member(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
         return self.http.remove_guild_member(int(guild), int(user))

@@ -80,6 +80,37 @@ class Guild(DiscordObjectBase):
         if self.banner:
             return cdn_url("banners/{guild_id}", image_hash=self.banner, extension=extension, size=size, guild_id=self.id)
 
+    def request_preview(self):
+        return self.client.request_guild_preview(self)
+
+    def delete(self):
+        return self.client.delete_guild(self)
+
+    def modify(self, **kwargs):
+        return self.client.modify_guild(self, **kwargs)
+
+    @property
+    def edit(self):
+        return self.modify
+    
+    def request_channels(self):
+        return self.client.request_guild_channels(self)
+
+    def create_channel(self, name: str, **kwargs):
+        return self.client.create_guild_channel(self, name, **kwargs)
+
+    def modify_channel_positions(self, *params: dict):
+        return self.client.modify_guild_channel_positions(self, *params)
+
+    def list_active_threads(self):
+        return self.client.list_active_threads_as_guild(self)
+
+    def request_member(self, user: typing.Union[int, str, Snowflake, User]):
+        return self.client.request_guild_member(self, user)
+
+    def list_members(self, limit: int = None, after: str = None):
+        return self.client.list_guild_members(self, limit, after)
+
     def remove_guild_member(self, user: typing.Union[int, str, Snowflake, User]):
         return self.client.remove_guild_member(self, user)
 

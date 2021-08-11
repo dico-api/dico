@@ -18,7 +18,7 @@ class Channel(DiscordObjectBase):
         self.type = ChannelTypes(resp["type"])
         self.guild_id = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
         self.position = resp.get("position")
-        self.permission_overwrites = [Overwrite(x) for x in resp.get("permission_overwrites", [])]
+        self.permission_overwrites = [Overwrite.create(x) for x in resp.get("permission_overwrites", [])]
         self.name = resp.get("name")
         self.topic = resp.get("topic")
         self.nsfw = resp.get("nsfw")
@@ -144,6 +144,17 @@ class Channel(DiscordObjectBase):
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to archive.")
         return self.modify(archived=True, locked=locked)
+
+    def to_position_param(self, position: int = None, lock_permissions: bool = None, parent: typing.Union[int, str, Snowflake, "Channel"] = None):
+        if isinstance(parent, Channel) and not parent.type.guild_category:
+            raise TypeError("parent must be category channel.")
+        param = {
+            "id": str(self.id),
+            "position": position,
+            "lock_permissions": lock_permissions,
+            "parent_id": str(int(parent))
+        }
+        return param
 
     @property
     def mention(self):
@@ -395,11 +406,18 @@ class Reaction:
 
 
 class Overwrite(CopyableObject):
-    def __init__(self, resp):
-        self.id = Snowflake(resp["id"])
-        self.type = resp["type"]
-        self.allow = PermissionFlags.from_value(int(resp["allow"]))
-        self.deny = PermissionFlags.from_value(int(resp["deny"]))
+    def __init__(self,
+                 user: typing.Union[str, int, Snowflake, User] = None,
+                 role: typing.Union[str, int, Snowflake, Role] = None,
+                 allow: typing.Union[int, PermissionFlags] = 0,
+                 deny: typing.Union[int, PermissionFlags] = 0,
+                 **kw):
+        if user is None and role is None:
+            raise TypeError("you must pass user or role.")
+        self.id = Snowflake.ensure_snowflake(int(user or role))
+        self.type = 0 if role else 1
+        self.allow = PermissionFlags.from_value(int(allow))
+        self.deny = PermissionFlags.from_value(int(deny))
 
     def to_dict(self):
         return {"id": str(self.id), "type": self.type, "allow": str(int(self.allow)), "deny": str(int(self.deny))}
@@ -410,14 +428,14 @@ class Overwrite(CopyableObject):
             self.deny.__setattr__(k, not v)
 
     @classmethod
-    def create(cls,
-               user: typing.Union[str, int, Snowflake, User] = None,
-               role: typing.Union[str, int, Snowflake, Role] = None,
-               allow: typing.Union[int, PermissionFlags] = 0,
-               deny: typing.Union[int, PermissionFlags] = 0):
-        if user is None and role is None:
-            raise TypeError("you must pass user or role.")
-        return cls(dict(id=int(user or role), type=0 if role else 1, allow=allow, deny=deny))
+    def create(cls, resp):
+        _id = resp.pop("id")
+        _type = resp.pop("type")
+        if _type == 1:
+            resp["user"] = _id
+        elif _type == 0:
+            resp["role"] = _id
+        return cls(**resp)
 
 
 class ThreadMetadata:
@@ -777,4 +795,4 @@ class ListThreadsResponse:
     def __init__(self, client, resp):
         self.threads = [Channel.create(client, x) for x in resp["threads"]]
         self.members = [ThreadMember(client, x) for x in resp["members"]]
-        self.has_more = resp["has_more"]
+        self.has_more = resp.get("has_more")

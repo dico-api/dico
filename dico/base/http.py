@@ -881,6 +881,88 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/channels", "GET")
 
+    def create_guild_channel(self,
+                             guild_id,
+                             name: str,
+                             channel_type: int = None,
+                             topic: str = None,
+                             bitrate: int = None,
+                             user_limit: int = None,
+                             rate_limit_per_user: int = None,
+                             position: int = None,
+                             permission_overwrites: typing.List[dict] = None,
+                             parent_id: str = None,
+                             nsfw: bool = None):
+        """
+        Sends create guild channel request.
+
+        :param guild_id: ID of the guild.
+        :param name: Name of the channel to create.
+        :param channel_type: Type of the channel.
+        :param topic: Topic of the channel.
+        :param bitrate: Bitrate of the channel.
+        :param user_limit: User limit of the channel.
+        :param rate_limit_per_user: Rate limit per user of the channel.
+        :param position: Position of the channel.
+        :param permission_overwrites: Permission overwrites of the channel.
+        :param parent_id: Parent ID of the channel.
+        :param nsfw: Whether this channel is NSFW.
+        """
+        body = {"name": name}
+        if channel_type is not None:
+            body["channel_type"] = channel_type
+        if topic is not None:
+            body["topic"] = topic
+        if bitrate is not None:
+            body["bitrate"] = bitrate
+        if user_limit is not None:
+            body["user_limit"] = user_limit
+        if rate_limit_per_user is not None:
+            body["rate_limit_per_user"] = rate_limit_per_user
+        if position is not None:
+            body["position"] = position
+        if permission_overwrites is not None:
+            body["permission_overwrites"] = permission_overwrites
+        if parent_id is not None:
+            body["parent_id"] = parent_id
+        if nsfw is not None:
+            body["nsfw"] = nsfw
+        return self.request(f"/guilds/{guild_id}/channels", "POST", body, is_json=True)
+
+    def modify_guild_channel_positions(self, guild_id, params: typing.List[dict]):
+        """
+        Sends modify guild channel positions request.
+
+        :param guild_id: ID of the guild.
+        :param params: List of channel params to modify.
+        """
+        return self.request(f"/guilds/{guild_id}/channels", "PATCH", params, is_json=True)
+
+    def list_active_threads_as_guild(self, guild_id):
+        """
+        Sends list active threads request but with guild id.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/threads/active", "GET")
+
+    def request_guild_member(self, guild_id, user_id):
+        """
+        Sends get guild member request.
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user to request.
+        """
+        return self.request(f"/guilds/{guild_id}/members/{user_id}", "GET")
+
+    def list_guild_members(self, guild_id, limit: int = None, after: str = None):
+        params = {}
+        if limit is not None:
+            params["limit"] = limit
+        if after is not None:
+            params["after"] = after
+        return self.request(f"/guilds/{guild_id}/members", "GET", params=params)
+
     def remove_guild_member(self, guild_id, user_id):
         """
         Sends remove guild member request.
