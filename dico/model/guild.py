@@ -92,7 +92,7 @@ class Guild(DiscordObjectBase):
     @property
     def edit(self):
         return self.modify
-    
+
     def request_channels(self):
         return self.client.request_guild_channels(self)
 

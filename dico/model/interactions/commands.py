@@ -16,6 +16,7 @@ class ApplicationCommand:
                  default_permission: bool = True,
                  **resp):
         self.id = Snowflake.optional(resp.get("id"))
+        self.type = ApplicationCommandTypes(resp.get("type", 1)) if resp else None
         self.application_id = Snowflake.optional(resp.get("application_id"))
         self.name = name
         self.description = description
@@ -39,6 +40,12 @@ class ApplicationCommand:
     def create(cls, resp):
         resp["options"] = [ApplicationCommandOption.create(x) for x in resp.get("options", [])]
         return cls(**resp)
+
+
+class ApplicationCommandTypes(TypeBase):
+    CHAT_INPUT = 1
+    USER = 2
+    MESSAGE = 3
 
 
 class ApplicationCommandOption:
@@ -84,6 +91,7 @@ class ApplicationCommandOptionType(TypeBase):
     CHANNEL = 7
     ROLE = 8
     MENTIONABLE = 9
+    NUMBER = 10
 
 
 class ApplicationCommandOptionChoice:

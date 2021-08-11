@@ -1,5 +1,5 @@
 import typing
-from .slashcommands import ApplicationCommandInteractionDataResolved, ApplicationCommandInteractionDataOption
+from .commands import ApplicationCommandInteractionDataResolved, ApplicationCommandInteractionDataOption
 from .components import Component, ComponentTypes
 from ..channel import Embed, AllowedMentions
 from ..guild import GuildMember
