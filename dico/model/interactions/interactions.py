@@ -68,6 +68,7 @@ class ResolvedData:
         self.messages = {Snowflake(k): Message.create(client, v) for k, v in resp.get("messages", {}).items()}
 
     def get(self, value: typing.Union[int, str, Snowflake]):
+        value = Snowflake.ensure_snowflake(value)
         for x in [self.members, self.users, self.roles, self.channels, self.messages]:
             if value in x:
                 return x.get(value)
