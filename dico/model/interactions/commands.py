@@ -30,7 +30,7 @@ class ApplicationCommand:
             return int(self.id)
 
     def to_dict(self):
-        resp = {"name": self.name, "description": self.description, "options": [x.to_dict() for x in self.options], "default_permission": self.default_permission}
+        resp = {"name": self.name, "description": self.description, "options": [x.to_dict() for x in self.options], "default_permission": self.default_permission, "type": int(self.type)}
         if self.__command_creation:
             return resp
         resp["id"] = str(self.id)
