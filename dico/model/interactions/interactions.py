@@ -1,8 +1,9 @@
 import typing
-from .commands import ApplicationCommandInteractionDataResolved, ApplicationCommandInteractionDataOption
+from .commands import ApplicationCommandInteractionDataOption
 from .components import Component, ComponentTypes
-from ..channel import Embed, AllowedMentions
+from ..channel import Channel, Message, Embed, AllowedMentions
 from ..guild import GuildMember
+from ..permission import Role
 from ..snowflake import Snowflake
 from ..user import User
 from ...base.model import TypeBase, FlagBase
@@ -14,8 +15,8 @@ class Interaction:
         self.client = client
         self.id = Snowflake(resp["id"])
         self.application_id = Snowflake(resp["application_id"])
-        self.type = InteractionType(resp["type"])
-        self.data = ApplicationCommandInteractionData(client, resp.get("data")) if "data" in resp else resp.get("data")
+        self.type = InteractionRequestType(resp["type"])
+        self.data = InteractionData(client, resp.get("data")) if "data" in resp else resp.get("data")
         self.guild_id = Snowflake(resp.get("guild_id"))
         self.channel_id = Snowflake(resp.get("channel_id"))
         self.__member = resp.get("member")
@@ -39,22 +40,55 @@ class Interaction:
         return cls(client, resp)
 
 
-class InteractionType(TypeBase):
+class InteractionRequestType(TypeBase):
     PING = 1
     APPLICATION_COMMAND = 2
     MESSAGE_COMPONENT = 3
 
 
-class ApplicationCommandInteractionData:
+class InteractionData:
     def __init__(self, client, resp: dict):
         self.id = Snowflake.optional(resp.get("id"))
         self.name = resp.get("name")
         self.__resolved = resp.get("resolved")
-        self.resolved = ApplicationCommandInteractionDataResolved(client, resp.get("resolved")) if self.__resolved else self.__resolved
+        self.resolved = ResolvedData(client, resp.get("resolved")) if self.__resolved else self.__resolved
         self.options = [ApplicationCommandInteractionDataOption(x) for x in resp.get("options", [])]
         self.custom_id = resp.get("custom_id")
         self.component_type = ComponentTypes(resp.get("component_type")) if resp.get("component_type") else None
         self.values = resp.get("values", [])
+        self.target_id = Snowflake.optional(resp.get("target_id"))
+
+
+class ResolvedData:
+    def __init__(self, client, resp: dict):
+        self.users = {Snowflake(k): User.create(client, v) for k, v in resp.get("users", {}).items()}
+        self.members = {Snowflake(k): GuildMember.create(client, v, user=self.users.get(k)) for k, v in resp.get("members", {}).items()}
+        self.roles = {Snowflake(k): Role.create(client, v) for k, v in resp.get("roles", {}).items()}
+        self.channels = {Snowflake(k): Channel.create(client, v) for k, v in resp.get("channels", {}).items()}
+        self.messages = {Snowflake(k): Message.create(client, v) for k, v in resp.get("messages", {}).items()}
+
+    def get(self, value: typing.Union[int, str, Snowflake]):
+        for x in [self.members, self.users, self.roles, self.channels, self.messages]:
+            if value in x:
+                return x.get(value)
+        return value
+
+
+class MessageInteraction:
+    def __init__(self, client, resp):
+        self.id = Snowflake(resp["id"])
+        self.type = InteractionRequestType(resp["type"])
+        self.name = resp["name"]
+        self.user = User.create(client, resp["user"])
+
+
+class InteractionResponse:
+    def __init__(self, callback_type: typing.Union[int, "InteractionCallbackType"], data: typing.Union[dict, "InteractionApplicationCommandCallbackData"]):
+        self.type = callback_type
+        self.data = data
+
+    def to_dict(self):
+        return {"type": int(self.type), "data": self.data if isinstance(self.data, dict) else self.data.to_dict()}
 
 
 class InteractionCallbackType(TypeBase):
@@ -65,17 +99,13 @@ class InteractionCallbackType(TypeBase):
     UPDATE_MESSAGE = 7
 
 
-class InteractionApplicationCommandCallbackDataFlags(FlagBase):
-    EPHEMERAL = 1 << 6
-
-
 class InteractionApplicationCommandCallbackData:
     def __init__(self, *,
                  tts: bool = None,
                  content: str = None,
                  embeds: typing.List[Embed] = None,
                  allowed_mentions: AllowedMentions = None,
-                 flags: typing.Union[InteractionApplicationCommandCallbackDataFlags, int] = None,
+                 flags: typing.Union["InteractionApplicationCommandCallbackDataFlags", int] = None,
                  components: typing.List[typing.Union[dict, Component]] = None):
         self.tts = tts
         self.content = content
@@ -101,18 +131,5 @@ class InteractionApplicationCommandCallbackData:
         return ret
 
 
-class InteractionResponse:
-    def __init__(self, callback_type: typing.Union[int, InteractionCallbackType], data: typing.Union[dict, InteractionApplicationCommandCallbackData]):
-        self.type = callback_type
-        self.data = data
-
-    def to_dict(self):
-        return {"type": int(self.type), "data": self.data if isinstance(self.data, dict) else self.data.to_dict()}
-
-
-class MessageInteraction:
-    def __init__(self, client, resp):
-        self.id = Snowflake(resp["id"])
-        self.type = InteractionType(resp["type"])
-        self.name = resp["name"]
-        self.user = User.create(client, resp["user"])
+class InteractionApplicationCommandCallbackDataFlags(FlagBase):
+    EPHEMERAL = 1 << 6

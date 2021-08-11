@@ -1,7 +1,4 @@
 import typing
-
-from ..channel import Channel
-from ..guild import GuildMember
 from ..permission import Role
 from ..snowflake import Snowflake
 from ..user import User
@@ -140,14 +137,6 @@ class ApplicationCommandPermissions:
 class ApplicationCommandPermissionType(TypeBase):
     ROLE = 1
     USER = 2
-
-
-class ApplicationCommandInteractionDataResolved:
-    def __init__(self, client, resp: dict):
-        self.users = {Snowflake(k): User.create(client, v) for k, v in resp.get("users", {}).items()}
-        self.members = {Snowflake(k): GuildMember.create(client, v) for k, v in resp.get("members", {}).items()}
-        self.roles = {Snowflake(k): Role.create(client, v) for k, v in resp.get("roles", {}).items()}
-        self.channels = {Snowflake(k): Channel.create(client, v) for k, v in resp.get("channels", {}).items()}
 
 
 class ApplicationCommandInteractionDataOption:

@@ -100,6 +100,7 @@ class SelectMenu(Component):
                  placeholder: str = None,
                  min_values: int = None,
                  max_values: int = None,
+                 disabled: bool = None,
                  **_):  # Dummy.
         super().__init__(ComponentTypes.SELECT_MENU)
         self.custom_id = custom_id
@@ -107,6 +108,7 @@ class SelectMenu(Component):
         self.placeholder = placeholder
         self.min_values = min_values
         self.max_values = max_values
+        self.disabled = disabled
 
     def to_dict(self):
         ret = {"type": self.type.value}
@@ -120,6 +122,8 @@ class SelectMenu(Component):
             ret["min_values"] = self.min_values
         if self.max_values is not None:
             ret["max_values"] = self.max_values
+        if self.disabled is not None:
+            ret["disabled"] = self.disabled
         return ret
 
     @classmethod
