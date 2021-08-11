@@ -12,11 +12,12 @@ class ApplicationCommand:
     def __init__(self,
                  name: str,
                  description: str,
+                 command_type: typing.Union[int, "ApplicationCommandTypes"] = 1,
                  options: typing.List["ApplicationCommandOption"] = None,
                  default_permission: bool = True,
                  **resp):
         self.id = Snowflake.optional(resp.get("id"))
-        self.type = ApplicationCommandTypes(resp.get("type", 1)) if resp else None
+        self.type = ApplicationCommandTypes(int(command_type))
         self.application_id = Snowflake.optional(resp.get("application_id"))
         self.name = name
         self.description = description
@@ -39,6 +40,7 @@ class ApplicationCommand:
     @classmethod
     def create(cls, resp):
         resp["options"] = [ApplicationCommandOption.create(x) for x in resp.get("options", [])]
+        resp["type"] = resp.get("type", 1)
         return cls(**resp)
 
 
