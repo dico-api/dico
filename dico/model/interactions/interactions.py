@@ -62,7 +62,8 @@ class InteractionData:
 class ResolvedData:
     def __init__(self, client, resp: dict):
         self.users = {Snowflake(k): User.create(client, v) for k, v in resp.get("users", {}).items()}
-        self.members = {Snowflake(k): GuildMember.create(client, v, user=self.users.get(k)) for k, v in resp.get("members", {}).items()}
+        self.__users = {x: Snowflake(x) for x in resp.get("users", {})}
+        self.members = {Snowflake(k): GuildMember.create(client, v, user=self.users.get(self.__users.get(k))) for k, v in resp.get("members", {}).items()}
         self.roles = {Snowflake(k): Role.create(client, v) for k, v in resp.get("roles", {}).items()}
         self.channels = {Snowflake(k): Channel.create(client, v) for k, v in resp.get("channels", {}).items()}
         self.messages = {Snowflake(k): Message.create(client, v) for k, v in resp.get("messages", {}).items()}
