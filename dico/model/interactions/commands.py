@@ -20,7 +20,7 @@ class ApplicationCommand:
         self.description = description
         self.options = options or []
         self.default_permission = default_permission
-        self.__command_creation = bool(resp)
+        self.__command_creation = not resp
 
     def __int__(self):
         if self.id:
@@ -64,7 +64,7 @@ class ApplicationCommandOption:
         self.options = options or []
 
     def to_dict(self):
-        ret = {"type": self.type, "name": self.name, "description": self.description, "required": self.required,
+        ret = {"type": int(self.type), "name": self.name, "description": self.description, "required": self.required,
                "choices": [x.to_dict() for x in self.choices], "options": [x.to_dict() for x in self.options]}
         if not ret["options"]:
             del ret["options"]
