@@ -232,7 +232,7 @@ class Message(DiscordObjectBase):
         self.__interaction = resp.get("interaction")
         self.interaction = MessageInteraction(self.client, self.__interaction) if self.__interaction else self.__interaction
         self.__thread = resp.get("thread")
-        self.thread = Channel.create(self.client, self.__thread, guild_id=self.guild_id) if self.__thread else self.__thread
+        self.thread = Channel.create(self.client, self.__thread, guild_id=self.guild_id, ensure_cache_type="channel") if self.__thread else self.__thread
         self.components = [Component.auto_detect(x) for x in resp.get("components", [])]
 
     def reply(self, content=None, **kwargs):
@@ -475,6 +475,11 @@ class ThreadMember:
     def optional(cls, client, resp):
         if resp:
             return cls(client, resp)
+
+    @classmethod
+    def create(cls, *args):
+        """This is just a placeholder to prevent AttributeError."""
+        return cls(*args)
 
 
 class Embed(CopyableObject):
