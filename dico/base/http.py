@@ -59,7 +59,8 @@ class HTTPRequestBase(ABC):
                              permission_overwrites: typing.List[dict] = None,
                              parent_id: str = None,
                              rtc_region: str = None,
-                             video_quality_mode: int = None):
+                             video_quality_mode: int = None,
+                             reason: str = None):
         """
         Sends modify channel request, for guild channel.
 
@@ -76,6 +77,7 @@ class HTTPRequestBase(ABC):
         :param parent_id: Parent category ID.
         :param rtc_region: Voice region ID.
         :param video_quality_mode: Video quality of the channel.
+        :param reason: Reason of the action.
         """
         body = {}
         if name is not None:
@@ -102,22 +104,23 @@ class HTTPRequestBase(ABC):
             body["rtc_region"] = rtc_region
         if video_quality_mode is not None:
             body["video_quality_mode"] = video_quality_mode
-        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
 
-    def modify_group_dm_channel(self, channel_id, name: str = None, icon: bin = None):
+    def modify_group_dm_channel(self, channel_id, name: str = None, icon: bin = None, reason: str = None):
         """
         Sends modify channel request, for group DM.
 
         :param channel_id: Channel ID to request.
         :param name: Name to change.
         :param icon: base64 encoded icon.
+        :param reason: Reason of the action.
         """
         body = {}
         if name is not None:
             body["name"] = name
         if icon is not None:
             body["icon"] = icon
-        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
 
     def modify_thread_channel(self,
                               channel_id,
@@ -125,7 +128,8 @@ class HTTPRequestBase(ABC):
                               archived: bool = None,
                               auto_archive_duration: int = None,
                               locked: bool = None,
-                              rate_limit_per_user: int = None):
+                              rate_limit_per_user: int = None,
+                              reason: str = None):
         """
         Sends modify channel request, for thread channel.
 
@@ -135,6 +139,7 @@ class HTTPRequestBase(ABC):
         :param auto_archive_duration: Duration to automatically archive the channel.
         :param locked: Whether to lock the thread.
         :param rate_limit_per_user: Rate limit seconds of the thread.
+        :param reason: Reason of the action.
         """
         body = {}
         if name is not None:
@@ -147,15 +152,21 @@ class HTTPRequestBase(ABC):
             body["locked"] = locked
         if rate_limit_per_user is not None:
             body["rate_limit_per_user"] = rate_limit_per_user
-        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True)
+        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
 
-    def delete_channel(self, channel_id):
+    def delete_channel(self, channel_id, reason: str = None):
         """
         Sends channel delete/close request.
 
         :param channel_id: Channel ID to request.
+        :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}", "DELETE")
+        return self.request(f"/channels/{channel_id}", "DELETE", reason_header=reason)
+
+    @property
+    def close_channel(self):
+        """Alias of :meth:`.delete_channel`."""
+        return self.delete_channel
 
     def request_channel_messages(self, channel_id, around=None, before=None, after=None, limit: int=None):
         """
@@ -387,26 +398,28 @@ class HTTPRequestBase(ABC):
         """
         pass
 
-    def delete_message(self, channel_id, message_id):
+    def delete_message(self, channel_id, message_id, reason: str = None):
         """
         Sends delete message request.
 
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to edit.
+        :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}", "DELETE")
+        return self.request(f"/channels/{channel_id}/messages/{message_id}", "DELETE", reason_header=reason)
 
-    def bulk_delete_messages(self, channel_id, message_ids: typing.List[typing.Union[int, str]]):
+    def bulk_delete_messages(self, channel_id, message_ids: typing.List[typing.Union[int, str]], reason: str = None):
         """
         Sends bulk delete message request.
 
         :param channel_id: ID of the channel.
         :param message_ids: List of the message IDs to delete.
+        :param reason: Reason of the action.
         """
         body = {"messages": list(map(str, message_ids))}
-        return self.request(f"/channels/{channel_id}/messages/bulk-delete", "POST", body, is_json=True)
+        return self.request(f"/channels/{channel_id}/messages/bulk-delete", "POST", body, is_json=True, reason_header=reason)
 
-    def edit_channel_permissions(self, channel_id, overwrite_id, allow, deny, overwrite_type):
+    def edit_channel_permissions(self, channel_id, overwrite_id, allow: str, deny: str, overwrite_type: int, reason: str = None):
         """
         Sends edit channel permissions request.
 
@@ -415,9 +428,10 @@ class HTTPRequestBase(ABC):
         :param allow: What permissions to allow.
         :param deny: What permissions to deny.
         :param overwrite_type: Type of the overwrite target. Set to 0 for Role, and 1 for Member.
+        :param reason: Reason of the action.
         """
         body = {"allow": allow, "deny": deny, "type": overwrite_type}
-        return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "PUT", body, is_json=True)
+        return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "PUT", body, is_json=True, reason_header=reason)
 
     def request_channel_invites(self, channel_id):
         """
@@ -435,7 +449,8 @@ class HTTPRequestBase(ABC):
                               unique: bool = None,
                               target_type: int = None,
                               target_user_id: str = None,
-                              target_application_id: str = None):
+                              target_application_id: str = None,
+                              reason: str = None):
         """
         Sends create channel invite request.
 
@@ -447,6 +462,7 @@ class HTTPRequestBase(ABC):
         :param target_type: Type of the invite.
         :param target_user_id: User ID to target to.
         :param target_application_id: Application ID to target to.
+        :param reason: Reason of the action.
         """
         body = {}
         if max_age is not None:
@@ -463,16 +479,17 @@ class HTTPRequestBase(ABC):
             body["target_user_id"] = target_user_id
         if target_application_id is not None:
             body["target_application_id"] = target_application_id
-        return self.request(f"/channels/{channel_id}/invites", "POST", body, is_json=True)
+        return self.request(f"/channels/{channel_id}/invites", "POST", body, is_json=True, reason_header=reason)
 
-    def delete_channel_permission(self, channel_id, overwrite_id):
+    def delete_channel_permission(self, channel_id, overwrite_id, reason: str = None):
         """
         Sends delete channel permissions request.
 
         :param channel_id: ID of the channel.
         :param overwrite_id: ID of the target user/role.
+        :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "DELETE")
+        return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "DELETE", reason_header=reason)
 
     def follow_news_channel(self, channel_id, webhook_channel_id):
         """
@@ -499,23 +516,25 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/pins", "GET")
 
-    def pin_message(self, channel_id, message_id):
+    def pin_message(self, channel_id, message_id, reason: str = None):
         """
         Sends pin message request.
 
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to pin.
+        :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}/pins/{message_id}", "PUT")
+        return self.request(f"/channels/{channel_id}/pins/{message_id}", "PUT", reason_header=reason)
 
-    def unpin_message(self, channel_id, message_id):
+    def unpin_message(self, channel_id, message_id, reason: str = None):
         """
         Sends unpin message request.
 
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to unpin.
+        :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}/pins/{message_id}", "DELETE")
+        return self.request(f"/channels/{channel_id}/pins/{message_id}", "DELETE", reason_header=reason)
 
     def group_dm_add_recipient(self, channel_id, user_id, access_token: str, nick: str):
         """
@@ -538,7 +557,7 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/recipients/{user_id}", "DELETE")
 
-    def start_thread_with_message(self, channel_id, message_id, name: str, auto_archive_duration: int):
+    def start_thread_with_message(self, channel_id, message_id, name: str, auto_archive_duration: int, reason: str = None):
         """
         Sends start thread with message request.
 
@@ -546,20 +565,22 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to create thread.
         :param name: Name of the thread channel.
         :param auto_archive_duration: Duration in minute to automatically close after recent activity.
+        :param reason: Reason of the action.
         """
         body = {"name": name, "auto_archive_duration": auto_archive_duration}
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/threads", "POST", body, is_json=True)
+        return self.request(f"/channels/{channel_id}/messages/{message_id}/threads", "POST", body, is_json=True, reason_header=reason)
 
-    def start_thread_without_message(self, channel_id, name: str, auto_archive_duration: int):
+    def start_thread_without_message(self, channel_id, name: str, auto_archive_duration: int, reason: str = None):
         """
         Sends start thread without message request.
 
         :param channel_id: ID of the channel to create thread.
         :param name: Name of the thread channel.
         :param auto_archive_duration: Duration in minute to automatically close after recent activity.
+        :param reason: Reason of the action.
         """
         body = {"name": name, "auto_archive_duration": auto_archive_duration}
-        return self.request(f"/channels/{channel_id}/threads", "POST", body, is_json=True)
+        return self.request(f"/channels/{channel_id}/threads", "POST", body, is_json=True, reason_header=reason)
 
     def join_thread(self, channel_id):
         """
@@ -675,7 +696,7 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "GET")
 
-    def create_guild_emoji(self, guild_id, name: str, image: str, roles: typing.List[str]):
+    def create_guild_emoji(self, guild_id, name: str, image: str, roles: typing.List[str], reason: str = None):
         """
         Sends create guild emoji request.
 
@@ -683,11 +704,12 @@ class HTTPRequestBase(ABC):
         :param name: Name of the emoji.
         :param image: Image data of the emoji.
         :param roles: Roles that are allowed to use this emoji.
+        :param reason: Reason of the action.
         """
         body = {"name": name, "image": image, "roles": roles}
-        return self.request(f"/guilds/{guild_id}/emojis", "POST", body, is_json=True)
+        return self.request(f"/guilds/{guild_id}/emojis", "POST", body, is_json=True, reason_header=reason)
 
-    def modify_guild_emoji(self, guild_id, emoji_id, name: str, roles: typing.List[str]):
+    def modify_guild_emoji(self, guild_id, emoji_id, name: str, roles: typing.List[str], reason: str = None):
         """
         Sends modify guild emoji request.
 
@@ -695,18 +717,20 @@ class HTTPRequestBase(ABC):
         :param emoji_id: ID of the emoji.
         :param name: Name of the emoji to change.
         :param roles: Roles to change.
+        :param reason: Reason of the action.
         """
         body = {"name": name, "roles": roles}
-        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "PATCH", body, is_json=True)
+        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "PATCH", body, is_json=True, reason_header=reason)
 
-    def delete_guild_emoji(self, guild_id, emoji_id):
+    def delete_guild_emoji(self, guild_id, emoji_id, reason: str = None):
         """
         Sends delete guild emoji request.
 
         :param guild_id: ID of the guild.
         :param emoji_id: ID of the emoji to delete.
+        :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "DELETE")
+        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "DELETE", reason_header=reason)
 
     # Guild Requests
 
@@ -799,7 +823,8 @@ class HTTPRequestBase(ABC):
                      public_updates_channel_id: str = None,
                      preferred_locale: str = None,
                      features: typing.List[str] = None,
-                     description: str = None):
+                     description: str = None,
+                     reason: str = None):
         """
         Sends create guild request.
 
@@ -825,6 +850,7 @@ class HTTPRequestBase(ABC):
         :param preferred_locale: Preferred locale of the guild.
         :param features: Enabled guild features list.
         :param description: Description of the guild.
+        :param reason: Reason of the action.
         """
         body = {}
         if name is not None:
@@ -863,7 +889,7 @@ class HTTPRequestBase(ABC):
             body["features"] = features
         if description is not None:
             body["description"] = description
-        return self.request(f"/guilds/{guild_id}", "PATCH", body, is_json=True)
+        return self.request(f"/guilds/{guild_id}", "PATCH", body, is_json=True, reason_header=reason)
 
     def delete_guild(self, guild_id):
         """
@@ -892,7 +918,8 @@ class HTTPRequestBase(ABC):
                              position: int = None,
                              permission_overwrites: typing.List[dict] = None,
                              parent_id: str = None,
-                             nsfw: bool = None):
+                             nsfw: bool = None,
+                             reason: str = None):
         """
         Sends create guild channel request.
 
@@ -907,6 +934,7 @@ class HTTPRequestBase(ABC):
         :param permission_overwrites: Permission overwrites of the channel.
         :param parent_id: Parent ID of the channel.
         :param nsfw: Whether this channel is NSFW.
+        :param reason: Reason of the action.
         """
         body = {"name": name}
         if channel_type is not None:
@@ -927,16 +955,17 @@ class HTTPRequestBase(ABC):
             body["parent_id"] = parent_id
         if nsfw is not None:
             body["nsfw"] = nsfw
-        return self.request(f"/guilds/{guild_id}/channels", "POST", body, is_json=True)
+        return self.request(f"/guilds/{guild_id}/channels", "POST", body, is_json=True, reason_header=reason)
 
-    def modify_guild_channel_positions(self, guild_id, params: typing.List[dict]):
+    def modify_guild_channel_positions(self, guild_id, params: typing.List[dict], reason: str = None):
         """
         Sends modify guild channel positions request.
 
         :param guild_id: ID of the guild.
         :param params: List of channel params to modify.
+        :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/channels", "PATCH", params, is_json=True)
+        return self.request(f"/guilds/{guild_id}/channels", "PATCH", params, is_json=True, reason_header=reason)
 
     def list_active_threads_as_guild(self, guild_id):
         """
@@ -1009,7 +1038,7 @@ class HTTPRequestBase(ABC):
             body["deaf"] = deaf
         return self.request(f"/guilds/{guild_id}/members/{user_id}", "PUT", body, is_json=True)
 
-    def modify_guild_member(self, guild_id, user_id, nick: str = None, roles: typing.List[str] = None, mute: bool = None, deaf: bool = None, channel_id: str = None):
+    def modify_guild_member(self, guild_id, user_id, nick: str = None, roles: typing.List[str] = None, mute: bool = None, deaf: bool = None, channel_id: str = None, reason: str = None):
         """
         Sends modify guild member request.
 
@@ -1023,6 +1052,7 @@ class HTTPRequestBase(ABC):
         :param mute: Whether to mute this user in voice channel.
         :param deaf: Whether to deaf this user in voice channel.
         :param channel_id: Voice channel to move.
+        :param reason: Reason of the action.
         """
         body = {}
         if nick is not None:
@@ -1035,7 +1065,7 @@ class HTTPRequestBase(ABC):
             body["deaf"] = deaf
         if channel_id is not None:
             body["channel_id"] = channel_id
-        return self.request(f"/guilds/{guild_id}/members/{user_id}", "PATCH", body, is_json=True)
+        return self.request(f"/guilds/{guild_id}/members/{user_id}", "PATCH", body, is_json=True, reason_header=reason)
 
     def remove_guild_member(self, guild_id, user_id):
         """

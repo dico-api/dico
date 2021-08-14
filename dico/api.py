@@ -62,19 +62,20 @@ class APIClient:
                              permission_overwrites: typing.List[Overwrite] = None,
                              parent: typing.Union[int, str, Snowflake, Channel] = None,
                              rtc_region: str = None,
-                             video_quality_mode: int = None):
+                             video_quality_mode: int = None,
+                             reason: str = None):
         if permission_overwrites:
             permission_overwrites = [x.to_dict() for x in permission_overwrites]
         if parent:
             parent = int(parent)
         channel = self.http.modify_guild_channel(int(channel), name, channel_type, position, topic, nsfw, rate_limit_per_user,
-                                                 bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode)
+                                                 bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode, reason=reason)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
-    def modify_group_dm_channel(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, icon: bin = None):
-        channel = self.http.modify_group_dm_channel(int(channel), name, icon)
+    def modify_group_dm_channel(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, icon: bin = None, reason: str = None):
+        channel = self.http.modify_group_dm_channel(int(channel), name, icon, reason=reason)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
@@ -85,14 +86,15 @@ class APIClient:
                               archived: bool = None,
                               auto_archive_duration: int = None,
                               locked: bool = None,
-                              rate_limit_per_user: int = None):
-        channel = self.http.modify_thread_channel(int(channel), name, archived, auto_archive_duration, locked, rate_limit_per_user)
+                              rate_limit_per_user: int = None,
+                              reason: str = None):
+        channel = self.http.modify_thread_channel(int(channel), name, archived, auto_archive_duration, locked, rate_limit_per_user, reason=reason)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
-    def delete_channel(self, channel: typing.Union[int, str, Snowflake, Channel]):
-        return self.http.delete_channel(int(channel))
+    def delete_channel(self, channel: typing.Union[int, str, Snowflake, Channel], reason: str = None):
+        return self.http.delete_channel(int(channel), reason=reason)
 
     def request_channel_messages(self,
                                  channel: typing.Union[int, str, Snowflake, Channel], *,
@@ -295,15 +297,16 @@ class APIClient:
 
     def delete_message(self,
                        channel: typing.Union[int, str, Snowflake, Channel],
-                       message: typing.Union[int, str, Snowflake, Message]):
-        return self.http.delete_message(int(channel), int(message))
+                       message: typing.Union[int, str, Snowflake, Message],
+                       reason: str = None):
+        return self.http.delete_message(int(channel), int(message), reason=reason)
 
-    def bulk_delete_messages(self, channel: typing.Union[int, str, Snowflake, Channel], messages: typing.List[typing.Union[int, str, Snowflake, Message]]):
-        return self.http.bulk_delete_messages(int(channel), list(map(int, messages)))
+    def bulk_delete_messages(self, channel: typing.Union[int, str, Snowflake, Channel], messages: typing.List[typing.Union[int, str, Snowflake, Message]], reason: str = None):
+        return self.http.bulk_delete_messages(int(channel), list(map(int, messages)), reason=reason)
 
-    def edit_channel_permissions(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite):
+    def edit_channel_permissions(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite, reason: str = None):
         ow_dict = overwrite.to_dict()
-        return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"])
+        return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"], reason=reason)
 
     def request_channel_invites(self, channel: typing.Union[int, str, Snowflake, Channel]):
         invites = self.http.request_channel_invites(int(channel))
@@ -320,16 +323,17 @@ class APIClient:
                               unique: bool = None,
                               target_type: int = None,
                               target_user: typing.Union[int, str, Snowflake, User] = None,
-                              target_application: typing.Union[int, str, Snowflake, Application] = None):
+                              target_application: typing.Union[int, str, Snowflake, Application] = None,
+                              reason: str = None):
         invite = self.http.create_channel_invite(int(channel), max_age, max_uses, temporary, unique, target_type,
                                                  int(target_user) if target_user is not None else target_user,
-                                                 int(target_application) if target_application is not None else target_application)
+                                                 int(target_application) if target_application is not None else target_application, reason=reason)
         if isinstance(invite, dict):
             return Invite(self, invite)
         return wrap_to_async(Invite, self, invite, as_create=False)
 
-    def delete_channel_permission(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite):
-        return self.http.delete_channel_permission(int(channel), int(overwrite.id))
+    def delete_channel_permission(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite, reason: str = None):
+        return self.http.delete_channel_permission(int(channel), int(overwrite.id), reason=reason)
 
     def follow_news_channel(self, channel: typing.Union[int, str, Snowflake, Channel], target_channel: typing.Union[int, str, Snowflake, Channel]):
         fc = self.http.follow_news_channel(int(channel), str(target_channel))
@@ -346,11 +350,11 @@ class APIClient:
             return [Message.create(self, x) for x in msgs]
         return wrap_to_async(Message, self, msgs)
 
-    def pin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
-        return self.http.pin_message(int(channel), int(message))
+    def pin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message], reason: str = None):
+        return self.http.pin_message(int(channel), int(message), reason=reason)
 
-    def unpin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
-        return self.http.unpin_message(int(channel), int(message))
+    def unpin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message], reason: str = None):
+        return self.http.unpin_message(int(channel), int(message), reason=reason)
 
     def group_dm_add_recipient(self,
                                channel: typing.Union[int, str, Snowflake, Channel],
@@ -369,9 +373,10 @@ class APIClient:
                      message: typing.Union[int, str, Snowflake, Message] = None,
                      *,
                      name: str,
-                     auto_archive_duration: int):
-        channel = self.http.start_thread_with_message(int(channel), int(message), name, auto_archive_duration) if message else \
-            self.http.start_thread_without_message(int(channel), name, auto_archive_duration)
+                     auto_archive_duration: int,
+                     reason: str = None):
+        channel = self.http.start_thread_with_message(int(channel), int(message), name, auto_archive_duration, reason=reason) if message else \
+            self.http.start_thread_without_message(int(channel), name, auto_archive_duration, reason=reason)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
@@ -444,8 +449,13 @@ class APIClient:
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
-    def create_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], name: str, image: str, roles: typing.List[typing.Union[str, int, Snowflake, Role]] = None):
-        resp = self.http.create_guild_emoji(int(guild), name, image, [str(int(x)) for x in roles or []])
+    def create_guild_emoji(self,
+                           guild: typing.Union[int, str, Snowflake, Guild],
+                           name: str,
+                           image: str,
+                           roles: typing.List[typing.Union[str, int, Snowflake, Role]] = None,
+                           reason: str = None):
+        resp = self.http.create_guild_emoji(int(guild), name, image, [str(int(x)) for x in roles or []], reason=reason)
         if isinstance(resp, dict):
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
@@ -454,14 +464,15 @@ class APIClient:
                            guild: typing.Union[int, str, Snowflake, Guild],
                            emoji: typing.Union[int, str, Snowflake, Emoji],
                            name: str,
-                           roles: typing.List[typing.Union[str, int, Snowflake, Role]]):
-        resp = self.http.modify_guild_emoji(int(guild), int(emoji), name, [str(int(x)) for x in roles])
+                           roles: typing.List[typing.Union[str, int, Snowflake, Role]],
+                           reason: str = None):
+        resp = self.http.modify_guild_emoji(int(guild), int(emoji), name, [str(int(x)) for x in roles], reason=reason)
         if isinstance(resp, dict):
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
-    def delete_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], emoji: typing.Union[int, str, Snowflake, Emoji]):
-        return self.http.delete_guild_emoji(int(guild), int(emoji))
+    def delete_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], emoji: typing.Union[int, str, Snowflake, Emoji], reason: str = None):
+        return self.http.delete_guild_emoji(int(guild), int(emoji), reason=reason)
 
     # Guild
 
@@ -536,7 +547,8 @@ class APIClient:
                      public_updates_channel: typing.Union[int, str, Snowflake, Channel] = None,
                      preferred_locale: str = None,
                      features: typing.List[str] = None,
-                     description: str = None):
+                     description: str = None,
+                     reason: str = None):
         kwargs = {}
         if name is not None:
             kwargs["name"] = name
@@ -574,7 +586,7 @@ class APIClient:
             kwargs["features"] = features
         if description is not None:
             kwargs["description"] = description
-        resp = self.http.modify_guild(int(guild), **kwargs)
+        resp = self.http.modify_guild(int(guild), **kwargs, reason=reason)
         if isinstance(resp, dict):
             return Guild.create(self, resp)
         return wrap_to_async(Guild, self, resp)
@@ -600,7 +612,8 @@ class APIClient:
                              position: int = None,
                              permission_overwrites: typing.Union[dict, Overwrite] = None,
                              parent: typing.Union[int, str, Snowflake, Channel] = None,
-                             nsfw: bool = None):
+                             nsfw: bool = None,
+                             reason: str = None):
         if isinstance(parent, Channel) and not parent.type.guild_category:
             raise TypeError("parent must be category channel.")
         kwargs = {"name": name}
@@ -622,14 +635,14 @@ class APIClient:
             kwargs["parent_id"] = str(int(parent))
         if nsfw is not None:
             kwargs["nsfw"] = nsfw
-        resp = self.http.create_guild_channel(int(guild), **kwargs)
+        resp = self.http.create_guild_channel(int(guild), **kwargs, reason=reason)
         if isinstance(resp, dict):
             return Channel.create(self, resp)
         return wrap_to_async(Channel, self, resp)
 
-    def modify_guild_channel_positions(self, guild: typing.Union[int, str, Snowflake, Guild], *params: dict):
+    def modify_guild_channel_positions(self, guild: typing.Union[int, str, Snowflake, Guild], *params: dict, reason: str = None):
         # You can get params by using Channel.to_position_param(...)
-        return self.http.modify_guild_channel_positions(int(guild), [*params])
+        return self.http.modify_guild_channel_positions(int(guild), [*params], reason=reason)
 
     def list_active_threads_as_guild(self, guild: typing.Union[int, str, Snowflake, Guild]):
         resp = self.http.list_active_threads_as_guild(int(guild))
@@ -647,6 +660,61 @@ class APIClient:
         resp = self.http.list_guild_members(int(guild), limit, after)
         if isinstance(resp, list):
             return [GuildMember.create(self, x, guild_id=int(guild)) for x in resp]
+        return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
+
+    def search_guild_members(self, guild: typing.Union[int, str, Snowflake, Guild], query: str, limit: int = None):
+        resp = self.http.search_guild_members(int(guild), query, limit)
+        if isinstance(resp, list):
+            return [GuildMember.create(self, x, guild_id=int(guild)) for x in resp]
+        return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
+
+    def add_guild_member(self,
+                         guild: typing.Union[int, str, Snowflake, Guild],
+                         user: typing.Union[int, str, Snowflake, User],
+                         access_token: str,
+                         nick: str = None,
+                         roles: typing.List[typing.Union[int, str, Snowflake, Role]] = None,
+                         mute: bool = None,
+                         deaf: bool = None):
+        kwargs = {"access_token": access_token}
+        if nick is not None:
+            kwargs["nick"] = nick
+        if roles is not None:
+            kwargs["roles"] = [str(int(x)) for x in roles]
+        if mute is not None:
+            kwargs["mute"] = mute
+        if deaf is not None:
+            kwargs["deaf"] = deaf
+        resp = self.http.add_guild_member(int(guild), int(user), **kwargs)
+        if isinstance(resp, dict):
+            return GuildMember.create(self, resp, guild_id=int(guild))
+        elif resp is None:
+            return resp
+        return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
+
+    def modify_guild_member(self,
+                            guild: typing.Union[int, str, Snowflake, Guild],
+                            user: typing.Union[int, str, Snowflake, User],
+                            nick: str = None,
+                            roles: typing.List[typing.Union[int, str, Snowflake, Role]] = None,
+                            mute: bool = None,
+                            deaf: bool = None,
+                            channel: typing.Union[int, str, Snowflake, Channel] = None,
+                            reason: str = None):
+        kwargs = {}
+        if nick is not None:
+            kwargs["nick"] = nick
+        if roles is not None:
+            kwargs["roles"] = [str(int(x)) for x in roles]
+        if mute is not None:
+            kwargs["mute"] = mute
+        if deaf is not None:
+            kwargs["deaf"] = deaf
+        if channel is not None:
+            kwargs["channel_id"] = int(channel)
+        resp = self.http.modify_guild_member(int(guild), int(user), **kwargs, reason=reason)
+        if isinstance(resp, dict):
+            return GuildMember.create(self, resp, guild_id=int(guild))
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
     def remove_guild_member(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
