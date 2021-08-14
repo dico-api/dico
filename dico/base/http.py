@@ -956,12 +956,86 @@ class HTTPRequestBase(ABC):
         return self.request(f"/guilds/{guild_id}/members/{user_id}", "GET")
 
     def list_guild_members(self, guild_id, limit: int = None, after: str = None):
+        """
+        Sends list guild members request.
+
+        :param guild_id: ID of the guild.
+        :param limit: Limit of the member count to get.
+        :param after: The highest user ID in the previous page.
+        """
         params = {}
         if limit is not None:
             params["limit"] = limit
         if after is not None:
             params["after"] = after
         return self.request(f"/guilds/{guild_id}/members", "GET", params=params)
+
+    def search_guild_members(self, guild_id, query: str, limit: int = None):
+        """
+        Sends search guild members request.
+
+        :param guild_id: ID of the guild.
+        :param query: Query matching to usernames or nicknames to search.
+        :param limit: Limit of the member count to get.
+        """
+        params = {"query": query}
+        if limit is not None:
+            params["limit"] = limit
+        return self.request(f"/guilds/{guild_id}/members/search", "GET", params=params)
+
+    def add_guild_member(self, guild_id, user_id, access_token: str, nick: str = None, roles: typing.List[str] = None, mute: bool = None, deaf: bool = None):
+        """
+        Sends add guild member request.
+
+        .. note::
+            This requires OAuth2 access token with ``guilds.join`` scope.
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user to add.
+        :param access_token: OAuth2 access token with ``guilds.join`` scope.
+        :param nick: Nickname to set.
+        :param roles: Roles to add. Using this will bypass membership screening.
+        :param mute: Whether to mute this user in voice channel.
+        :param deaf: Whether to deaf this user in voice channel.
+        """
+        body = {"access_token": access_token}
+        if nick is not None:
+            body["nick"] = nick
+        if roles is not None:
+            body["roles"] = roles
+        if mute is not None:
+            body["mute"] = mute
+        if deaf is not None:
+            body["deaf"] = deaf
+        return self.request(f"/guilds/{guild_id}/members/{user_id}", "PUT", body, is_json=True)
+
+    def modify_guild_member(self, guild_id, user_id, nick: str = None, roles: typing.List[str] = None, mute: bool = None, deaf: bool = None, channel_id: str = None):
+        """
+        Sends modify guild member request.
+
+        .. note::
+           Since this API request supports nullable params, if you want to set items null, then set the item param with empty data. (``[]``, ``""``, etc.)
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user to edit.
+        :param nick: Nickname to change.
+        :param roles: Roles to assign.
+        :param mute: Whether to mute this user in voice channel.
+        :param deaf: Whether to deaf this user in voice channel.
+        :param channel_id: Voice channel to move.
+        """
+        body = {}
+        if nick is not None:
+            body["nick"] = nick
+        if roles is not None:
+            body["roles"] = roles
+        if mute is not None:
+            body["mute"] = mute
+        if deaf is not None:
+            body["deaf"] = deaf
+        if channel_id is not None:
+            body["channel_id"] = channel_id
+        return self.request(f"/guilds/{guild_id}/members/{user_id}", "PATCH", body, is_json=True)
 
     def remove_guild_member(self, guild_id, user_id):
         """
