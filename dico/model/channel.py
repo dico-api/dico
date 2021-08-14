@@ -277,7 +277,7 @@ class Message(DiscordObjectBase):
         return self.client.unpin_message(self.channel_id, self.id)
 
     def start_thread(self, *, name: str, auto_archive_duration: int):
-        return self.client.start_thread(self.channel_id, name=name, auto_archive_duration=auto_archive_duration)
+        return self.client.start_thread(self.channel_id, self, name=name, auto_archive_duration=auto_archive_duration)
 
     @property
     def guild(self):
