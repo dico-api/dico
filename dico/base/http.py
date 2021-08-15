@@ -4,6 +4,18 @@ import datetime
 from abc import ABC, abstractmethod
 
 
+class __EmptyObject:
+    """An empty object. Can be used as an alternative of ``None``."""
+    def __bool__(self):
+        return False
+
+    def __len__(self):
+        return 0
+
+
+EmptyObject = __EmptyObject()
+
+
 class HTTPRequestBase(ABC):
     """
     This abstract class includes all API request methods.
@@ -337,12 +349,12 @@ class HTTPRequestBase(ABC):
     def edit_message(self,
                      channel_id,
                      message_id,
-                     content: str = None,
-                     embeds: typing.List[dict] = None,
-                     flags: int = None,
-                     allowed_mentions: dict = None,
-                     attachments: typing.List[dict] = None,
-                     components: typing.List[dict] = None):
+                     content: str = EmptyObject,
+                     embeds: typing.List[dict] = EmptyObject,
+                     flags: int = EmptyObject,
+                     allowed_mentions: dict = EmptyObject,
+                     attachments: typing.List[dict] = EmptyObject,
+                     components: typing.List[dict] = EmptyObject):
         """
         Sends edit message request.
 
@@ -357,17 +369,17 @@ class HTTPRequestBase(ABC):
         :return: Message object dict.
         """
         body = {}
-        if content is not None:
+        if content is not EmptyObject:
             body["content"] = content
-        if embeds is not None:
+        if embeds is not EmptyObject:
             body["embeds"] = embeds
-        if flags is not None:
+        if flags is not EmptyObject:
             body["flags"] = flags
-        if allowed_mentions is not None:
+        if allowed_mentions is not EmptyObject:
             body["allowed_mentions"] = allowed_mentions
-        if attachments is not None:
+        if attachments is not EmptyObject:
             body["attachments"] = attachments
-        if components is not None:
+        if components is not EmptyObject:
             body["components"] = components
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", body, is_json=True)
 
@@ -375,13 +387,13 @@ class HTTPRequestBase(ABC):
     def edit_message_with_files(self,
                                 channel_id,
                                 message_id,
-                                content: str = None,
-                                embeds: typing.List[dict] = None,
-                                flags: int = None,
-                                files: typing.List[io.FileIO] = None,
-                                allowed_mentions: dict = None,
-                                attachments: typing.List[dict] = None,
-                                components: typing.List[dict] = None):
+                                content: str = EmptyObject,
+                                embeds: typing.List[dict] = EmptyObject,
+                                flags: int = EmptyObject,
+                                files: typing.List[io.FileIO] = EmptyObject,
+                                allowed_mentions: dict = EmptyObject,
+                                attachments: typing.List[dict] = EmptyObject,
+                                components: typing.List[dict] = EmptyObject):
         """
         Sends edit message request with files.
 
@@ -1038,12 +1050,20 @@ class HTTPRequestBase(ABC):
             body["deaf"] = deaf
         return self.request(f"/guilds/{guild_id}/members/{user_id}", "PUT", body, is_json=True)
 
-    def modify_guild_member(self, guild_id, user_id, nick: str = None, roles: typing.List[str] = None, mute: bool = None, deaf: bool = None, channel_id: str = None, reason: str = None):
+    def modify_guild_member(self,
+                            guild_id,
+                            user_id,
+                            nick: str = EmptyObject,
+                            roles: typing.List[str] = EmptyObject,
+                            mute: bool = EmptyObject,
+                            deaf: bool = EmptyObject,
+                            channel_id: str = EmptyObject,
+                            reason: str = EmptyObject):
         """
         Sends modify guild member request.
 
         .. note::
-           Since this API request supports nullable params, if you want to set items null, then set the item param with empty data. (``[]``, ``""``, etc.)
+           ``None`` can be used for all params.
 
         :param guild_id: ID of the guild.
         :param user_id: ID of the user to edit.
@@ -1055,17 +1075,19 @@ class HTTPRequestBase(ABC):
         :param reason: Reason of the action.
         """
         body = {}
-        if nick is not None:
+        if nick is not EmptyObject:
             body["nick"] = nick
-        if roles is not None:
+        if roles is not EmptyObject:
             body["roles"] = roles
-        if mute is not None:
+        if mute is not EmptyObject:
             body["mute"] = mute
-        if deaf is not None:
+        if deaf is not EmptyObject:
             body["deaf"] = deaf
-        if channel_id is not None:
+        if channel_id is not EmptyObject:
             body["channel_id"] = channel_id
         return self.request(f"/guilds/{guild_id}/members/{user_id}", "PATCH", body, is_json=True, reason_header=reason)
+
+    # def modify_current
 
     def remove_guild_member(self, guild_id, user_id):
         """
@@ -1296,12 +1318,12 @@ class HTTPRequestBase(ABC):
                              webhook_id,
                              webhook_token,
                              message_id,
-                             content: str = None,
-                             embeds: typing.List[dict] = None,
-                             files: typing.List[io.FileIO] = None,
-                             allowed_mentions: dict = None,
-                             attachments: typing.List[dict] = None,
-                             components: typing.List[dict] = None):
+                             content: str = EmptyObject,
+                             embeds: typing.List[dict] = EmptyObject,
+                             files: typing.List[io.FileIO] = EmptyObject,
+                             allowed_mentions: dict = EmptyObject,
+                             attachments: typing.List[dict] = EmptyObject,
+                             components: typing.List[dict] = EmptyObject):
         """
         Sends edit webhook message request.
         :param webhook_id: ID of the webhook.
@@ -1462,12 +1484,12 @@ class HTTPRequestBase(ABC):
                                   application_id,
                                   interaction_token,
                                   message_id="@original",
-                                  content: str = None,
-                                  embeds: typing.List[dict] = None,
-                                  files: typing.List[io.FileIO] = None,
-                                  allowed_mentions: dict = None,
-                                  attachments: typing.List[dict] = None,
-                                  components: typing.List[dict] = None):
+                                  content: str = EmptyObject,
+                                  embeds: typing.List[dict] = EmptyObject,
+                                  files: typing.List[io.FileIO] = EmptyObject,
+                                  allowed_mentions: dict = EmptyObject,
+                                  attachments: typing.List[dict] = EmptyObject,
+                                  components: typing.List[dict] = EmptyObject):
         """
         Sends edit interaction response request.
 

@@ -2,7 +2,7 @@ import io
 import typing
 import pathlib
 import datetime
-from .base.http import HTTPRequestBase
+from .base.http import HTTPRequestBase, EmptyObject
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
@@ -241,29 +241,35 @@ class APIClient:
                      message: typing.Union[int, str, Snowflake, Message],
                      *,
                      content: str = None,
-                     embed: typing.Union[Embed, dict] = None,
-                     embeds: typing.List[typing.Union[Embed, dict]] = None,
-                     file: typing.Union[io.FileIO, pathlib.Path, str] = None,
-                     files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
-                     allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                     attachments: typing.List[typing.Union[Attachment, dict]] = None,
-                     component: typing.Union[dict, Component] = None,
-                     components: typing.List[typing.Union[dict, Component]] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
+                     embed: typing.Union[Embed, dict] = EmptyObject,
+                     embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
+                     file: typing.Union[io.FileIO, pathlib.Path, str] = EmptyObject,
+                     files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = EmptyObject,
+                     allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
+                     attachments: typing.List[typing.Union[Attachment, dict]] = EmptyObject,
+                     component: typing.Union[dict, Component] = EmptyObject,
+                     components: typing.List[typing.Union[dict, Component]] = EmptyObject) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
         if files and file:
             raise TypeError("you can't pass both file and files.")
-        if file:
-            files = [file]
-        if files:
-            for x in range(len(files)):
-                sel = files[x]
-                if not isinstance(sel, io.FileIO):
-                    files[x] = open(sel, "rb")
+        if file is None or files is None:
+            files = None
+        else:
+            if file:
+                files = [file]
+            if files:
+                for x in range(len(files)):
+                    sel = files[x]
+                    if not isinstance(sel, io.FileIO):
+                        files[x] = open(sel, "rb")
         if embed and embeds:
             raise TypeError("you can't pass both embed and embeds.")
-        if embed:
-            embeds = [embed]
-        if embeds:
-            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+        if embed is None or embeds is None:
+            embeds = None
+        else:
+            if embed:
+                embeds = [embed]
+            if embeds:
+                embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
         _att = []
         if attachments:
             for x in attachments:
@@ -272,15 +278,18 @@ class APIClient:
                 _att.append(x)
         if component and components:
             raise TypeError("you can't pass both component and components.")
-        if component:
-            components = [component]
-        if components:
-            components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
+        if component is None or components is None:
+            components = None
+        else:
+            if component:
+                components = [component]
+            if components:
+                components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
         params = {"channel_id": int(channel),
                   "message_id": int(message),
                   "content": content,
                   "embeds": embeds,
-                  "flags": None,
+                  "flags": EmptyObject,
                   "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
                   "attachments": _att,
                   "components": components}
@@ -854,33 +863,47 @@ class APIClient:
                              message: typing.Union[int, str, Snowflake, Message],
                              *,
                              webhook_token: str = None,
-                             content: str = None,
-                             embed: typing.Union[Embed, dict] = None,
-                             embeds: typing.List[typing.Union[Embed, dict]] = None,
-                             file: typing.Union[io.FileIO, pathlib.Path, str] = None,
-                             files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
-                             allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                             attachments: typing.List[typing.Union[Attachment, dict]] = None,
-                             components: typing.List[typing.Union[dict, Component]] = None):
+                             content: str = EmptyObject,
+                             embed: typing.Union[Embed, dict] = EmptyObject,
+                             embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
+                             file: typing.Union[io.FileIO, pathlib.Path, str] = EmptyObject,
+                             files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = EmptyObject,
+                             allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
+                             attachments: typing.List[typing.Union[Attachment, dict]] = EmptyObject,
+                             component: typing.Union[dict, Component] = EmptyObject,
+                             components: typing.List[typing.Union[dict, Component]] = EmptyObject):
         if not isinstance(webhook, Webhook) and not webhook_token:
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         if file and files:
             raise TypeError("you can't pass both file and files.")
         if embed and embeds:
             raise TypeError("you can't pass both embed and embeds.")
-        if file:
-            files = [file]
-        if files:
-            for x in range(len(files)):
-                sel = files[x]
-                if not isinstance(sel, io.FileIO):
-                    files[x] = open(sel, "rb")
-        if embed:
-            embeds = [embed]
-        if embeds:
-            embeds = [x.to_dict() if not isinstance(x, dict) else x for x in embeds]
-        if components:
-            components = [x.to_dict() if not isinstance(x, dict) else x for x in components]
+        if component and components:
+            raise TypeError("you can't pass both component and components.")
+        if file is None or files is None:
+            files = None
+        else:
+            if file:
+                files = [file]
+            if files:
+                for x in range(len(files)):
+                    sel = files[x]
+                    if not isinstance(sel, io.FileIO):
+                        files[x] = open(sel, "rb")
+        if embed is None or embeds is None:
+            embeds = None
+        else:
+            if embed:
+                embeds = [embed]
+            if embeds:
+                embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+        if component is None or components is None:
+            components = None
+        else:
+            if component:
+                components = [component]
+            if components:
+                components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
         _att = []
         if attachments:
             for x in attachments:
@@ -1086,14 +1109,15 @@ class APIClient:
                                   *,
                                   interaction_token: str = None,
                                   application_id: typing.Union[int, str, Snowflake] = None,
-                                  content: str = None,
-                                  file: typing.Union[io.FileIO, pathlib.Path, str] = None,
-                                  files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
-                                  embed: typing.Union[Embed, dict] = None,
-                                  embeds: typing.List[typing.Union[Embed, dict]] = None,
-                                  allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                                  attachments: typing.List[typing.Union[Attachment, dict]] = None,
-                                  components: typing.List[typing.Union[dict, Component]] = None):
+                                  content: str = EmptyObject,
+                                  file: typing.Union[io.FileIO, pathlib.Path, str] = EmptyObject,
+                                  files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = EmptyObject,
+                                  embed: typing.Union[Embed, dict] = EmptyObject,
+                                  embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
+                                  allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
+                                  attachments: typing.List[typing.Union[Attachment, dict]] = EmptyObject,
+                                  component: typing.Union[dict, Component] = EmptyObject,
+                                  components: typing.List[typing.Union[dict, Component]] = EmptyObject):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
@@ -1102,19 +1126,32 @@ class APIClient:
             raise TypeError("you can't pass both file and files.")
         if embed and embeds:
             raise TypeError("you can't pass both embed and embeds.")
-        if file:
-            files = [file]
-        if files:
-            for x in range(len(files)):
-                sel = files[x]
-                if not isinstance(sel, io.FileIO):
-                    files[x] = open(sel, "rb")
-        if embed:
-            embeds = [embed]
-        if embeds:
-            embeds = [x.to_dict() if not isinstance(x, dict) else x for x in embeds]
-        if components:
-            components = [x.to_dict() if not isinstance(x, dict) else x for x in components]
+        if component and components:
+            raise TypeError("you can't pass both component and components.")
+        if file is None or files is None:
+            files = None
+        else:
+            if file:
+                files = [file]
+            if files:
+                for x in range(len(files)):
+                    sel = files[x]
+                    if not isinstance(sel, io.FileIO):
+                        files[x] = open(sel, "rb")
+        if embed is None or embeds is None:
+            embeds = None
+        else:
+            if embed:
+                embeds = [embed]
+            if embeds:
+                embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+        if component is None or components is None:
+            components = None
+        else:
+            if component:
+                components = [component]
+            if components:
+                components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
         _att = []
         if attachments:
             for x in attachments:

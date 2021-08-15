@@ -5,7 +5,7 @@ import logging
 import asyncio
 import aiohttp
 from .. import exception
-from ..base.http import HTTPRequestBase
+from ..base.http import HTTPRequestBase, EmptyObject
 
 
 class AsyncHTTPRequest(HTTPRequestBase):
@@ -111,26 +111,26 @@ class AsyncHTTPRequest(HTTPRequestBase):
     def edit_message_with_files(self,
                                 channel_id,
                                 message_id,
-                                content: str = None,
-                                embeds: typing.List[dict] = None,
-                                flags: int = None,
-                                files: typing.List[io.FileIO] = None,
-                                allowed_mentions: dict = None,
-                                attachments: typing.List[dict] = None,
-                                components: typing.List[dict] = None):
+                                content: str = EmptyObject,
+                                embeds: typing.List[dict] = EmptyObject,
+                                flags: int = EmptyObject,
+                                files: typing.List[io.FileIO] = EmptyObject,
+                                allowed_mentions: dict = EmptyObject,
+                                attachments: typing.List[dict] = EmptyObject,
+                                components: typing.List[dict] = EmptyObject):
         payload_json = {}
         form = aiohttp.FormData()
-        if content is not None:
+        if content is not EmptyObject:
             payload_json["content"] = content
-        if embeds is not None:
+        if embeds is not EmptyObject:
             payload_json["embeds"] = embeds
-        if flags is not None:
+        if flags is not EmptyObject:
             payload_json["flags"] = flags
-        if allowed_mentions is not None:
+        if allowed_mentions is not EmptyObject:
             payload_json["allowed_mentions"] = allowed_mentions
-        if attachments is not None:
+        if attachments is not EmptyObject:
             payload_json["attachments"] = attachments
-        if components is not None:
+        if components is not EmptyObject:
             payload_json["components"] = components
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
         for x in range(len(files)):
@@ -191,23 +191,23 @@ class AsyncHTTPRequest(HTTPRequestBase):
                              webhook_id,
                              webhook_token,
                              message_id,
-                             content: str = None,
-                             embeds: typing.List[dict] = None,
-                             files: typing.List[io.FileIO] = None,
-                             allowed_mentions: dict = None,
-                             attachments: typing.List[dict] = None,
-                             components: typing.List[dict] = None):
+                             content: str = EmptyObject,
+                             embeds: typing.List[dict] = EmptyObject,
+                             files: typing.List[io.FileIO] = EmptyObject,
+                             allowed_mentions: dict = EmptyObject,
+                             attachments: typing.List[dict] = EmptyObject,
+                             components: typing.List[dict] = EmptyObject):
         payload_json = {}
         form = aiohttp.FormData()
-        if content is not None:
+        if content is not EmptyObject:
             payload_json["content"] = content
-        if embeds is not None:
+        if embeds is not EmptyObject:
             payload_json["embeds"] = embeds
-        if allowed_mentions is not None:
+        if allowed_mentions is not EmptyObject:
             payload_json["allowed_mentions"] = allowed_mentions
-        if attachments is not None:
+        if attachments is not EmptyObject:
             payload_json["attachments"] = attachments
-        if components is not None:
+        if components is not EmptyObject:
             payload_json["components"] = components
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
         if files:
