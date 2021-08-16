@@ -7,7 +7,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
-    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban
+    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags
 from .utils import from_emoji, wrap_to_async
 
 
@@ -786,6 +786,69 @@ class APIClient:
                          *,
                          reason: str = None):
         return self.remove_guild_ban(int(guild), int(user), reason=reason)
+
+    def request_guild_roles(self, guild: typing.Union[int, str, Snowflake, Guild]):
+        resp = self.http.request_guild_roles(int(guild))
+        if isinstance(resp, list):
+            return [Role.create(self, x, guild_id=int(guild)) for x in resp]
+        return wrap_to_async(Role, self, resp, guild_id=int(guild))
+
+    def create_guild_role(self,
+                          guild: typing.Union[int, str, Snowflake, Guild],
+                          *,
+                          name: str = None,
+                          permissions: typing.Union[int, str, PermissionFlags] = None,
+                          color: int = None,
+                          hoist: bool = None,
+                          mentionable: bool = None,
+                          reason: str = None):
+        kwargs = {}
+        if name is not None:
+            kwargs["name"] = name
+        if permissions is not None:
+            kwargs["permissions"] = str(int(permissions))
+        if color is not None:
+            kwargs["color"] = color
+        if hoist is not None:
+            kwargs["hoist"] = hoist
+        if mentionable is not None:
+            kwargs["mentionable"] = mentionable
+        resp = self.http.create_guild_role(int(guild), **kwargs, reason=reason)
+        if isinstance(resp, dict):
+            return Role.create(self, resp, guild_id=int(guild))
+        return wrap_to_async(Role, self, resp, guild_id=int(guild))
+
+    def modify_guild_role_positions(self, guild: typing.Union[int, str, Snowflake, Guild], *params: dict, reason: str = None):
+        # You can get params by using Role.to_position_param(...)
+        resp = self.http.modify_guild_role_positions(int(guild), [*params], reason=reason)
+        if isinstance(resp, list):
+            return [Role.create(self, x, guild_id=int(guild)) for x in resp]
+        return wrap_to_async(Role, self, resp, guild_id=int(guild))
+
+    def modify_guild_role(self,
+                          guild: typing.Union[int, str, Snowflake, Guild],
+                          role: typing.Union[int, str, Snowflake, Role],
+                          name: str = EmptyObject,
+                          permissions: typing.Union[int, str, PermissionFlags] = EmptyObject,
+                          color: int = EmptyObject,
+                          hoist: bool = EmptyObject,
+                          mentionable: bool = EmptyObject,
+                          reason: str = None):
+        kwargs = {}
+        if name is not EmptyObject:
+            kwargs["name"] = name
+        if permissions is not EmptyObject:
+            kwargs["permissions"] = permissions
+        if color is not EmptyObject:
+            kwargs["color"] = color
+        if hoist is not EmptyObject:
+            kwargs["hoist"] = hoist
+        if mentionable is not EmptyObject:
+            kwargs["mentionable"] = mentionable
+        resp = self.http.modify_guild_role(int(guild), int(role), **kwargs, reason=reason)
+        if isinstance(resp, dict):
+            return Role.create(self, resp, guild_id=int(guild))
+        return wrap_to_async(Role, self, resp, guild_id=int(guild))
 
     # Webhook
 

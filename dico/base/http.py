@@ -1172,6 +1172,83 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/bans/{user_id}", "DELETE", reason_header=reason)
 
+    def request_guild_roles(self, guild_id):
+        """
+        Sends get guild roles request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/roles", "GET")
+
+    def create_guild_role(self, guild_id, name: str = None, permissions: str = None, color: int = None, hoist: bool = None, mentionable: bool = None, reason: str = None):
+        """
+        Sends create guild role request.
+
+        :param guild_id: ID of the guild.
+        :param name: Name of the role.
+        :param permissions: Permissions of the role.
+        :param color: Color of the role.
+        :param hoist: Whether role should be displayed separately.
+        :param mentionable: Whether the role is mentionable.
+        :param reason: Reason of the action.
+        """
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if permissions is not None:
+            body["permissions"] = permissions
+        if color is not None:
+            body["color"] = color
+        if hoist is not None:
+            body["hoist"] = hoist
+        if mentionable is not None:
+            body["mentionable"] = mentionable
+        return self.request(f"/guilds/{guild_id}/roles", "POST", body, is_json=True, reason_header=reason)
+
+    def modify_guild_role_positions(self, guild_id, params: typing.List[dict], reason: str = None):
+        """
+        Sends modify guild role positions request.
+
+        :param guild_id: ID of the guild.
+        :param params: List of ``{"id": role ID, "position": position}``.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/guilds/{guild_id}/roles", "PATCH", params, is_json=True, reason_header=reason)
+
+    def modify_guild_role(self,
+                          guild_id,
+                          role_id,
+                          name: str = EmptyObject,
+                          permissions: str = EmptyObject,
+                          color: int = EmptyObject,
+                          hoist: bool = EmptyObject,
+                          mentionable: bool = EmptyObject,
+                          reason: str = None):
+        """
+        Sends modify guild role request.
+
+        :param guild_id: ID of the guild.
+        :param role_id: ID of the role to modify.
+        :param name: Name of the role.
+        :param permissions: Permissions of the role.
+        :param color: Color of the role.
+        :param hoist: Whether role should be displayed separately.
+        :param mentionable: Whether the role is mentionable.
+        :param reason: Reason of the action.
+        """
+        body = {}
+        if name is not EmptyObject:
+            body["name"] = name
+        if permissions is not EmptyObject:
+            body["permissions"] = permissions
+        if color is not EmptyObject:
+            body["color"] = color
+        if hoist is not EmptyObject:
+            body["hoist"] = hoist
+        if mentionable is not EmptyObject:
+            body["mentionable"] = mentionable
+        return self.request(f"/guilds/{guild_id}/roles/{role_id}", "PATCH", body, is_json=True, reason_header=reason)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

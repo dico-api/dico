@@ -39,6 +39,7 @@ class PermissionFlags(FlagBase):
     MANAGE_THREADS = 0x0400000000
     USE_PUBLIC_THREADS = 0x0800000000
     USE_PRIVATE_THREADS = 0x1000000000
+    USE_EXTERNAL_STICKERS = 0x2000000000
 
 
 class Role(DiscordObjectBase):
@@ -59,6 +60,12 @@ class Role(DiscordObjectBase):
     def guild(self):
         if self.client.has_cache:
             return self.client.get(self.guild_id, "guild")
+
+    def to_position_param(self, position: int = None):
+        body = {"id": str(self.id)}
+        if position is not None:
+            body["position"] = position
+        return body
 
 
 class RoleTags:
