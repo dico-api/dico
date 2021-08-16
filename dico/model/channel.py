@@ -43,15 +43,6 @@ class Channel(DiscordObjectBase):
         self.default_auto_archive_duration = resp.get("default_auto_archive_duration")
         self.permissions = resp.get("permissions")
 
-    def create_message(self, *args, **kwargs):
-        if not self.is_messageable():
-            raise TypeError("You can't send message in this type of channel.")
-        return self.client.create_message(self, *args, **kwargs)
-
-    @property
-    def send(self):
-        return self.create_message
-
     def modify(self, **kwargs):
         if self.type.group_dm:
             return self.client.modify_group_dm_channel(self.id, **kwargs)
@@ -66,11 +57,23 @@ class Channel(DiscordObjectBase):
     def edit(self):
         return self.modify
 
-    def bulk_delete_messages(self, *messages: typing.Union[int, str, Snowflake, "Message"]):
-        return self.client.bulk_delete_messages(self, messages)
+    def delete(self, *, reason: str = None):
+        return self.client.delete_channel(self, reason=reason)
 
-    def edit_permissions(self, overwrite):
-        return self.client.edit_channel_permissions(self, overwrite)
+    def create_message(self, *args, **kwargs):
+        if not self.is_messageable():
+            raise TypeError("You can't send message in this type of channel.")
+        return self.client.create_message(self, *args, **kwargs)
+
+    @property
+    def send(self):
+        return self.create_message
+
+    def bulk_delete_messages(self, *messages: typing.Union[int, str, Snowflake, "Message"], reason: str = None):
+        return self.client.bulk_delete_messages(self, *messages, reason=reason)
+
+    def edit_permissions(self, overwrite, *, reason: str = None):
+        return self.client.edit_channel_permissions(self, overwrite, reason=reason)
 
     def request_invites(self):
         return self.client.request_channel_invites(self)
@@ -78,8 +81,8 @@ class Channel(DiscordObjectBase):
     def create_invite(self, **kwargs):
         return self.client.create_channel_invite(self, **kwargs)
 
-    def delete_permissions(self, overwrite):
-        return self.client.delete_channel_permission(self, overwrite)
+    def delete_permissions(self, overwrite, *, reason: str = None):
+        return self.client.delete_channel_permission(self, overwrite, reason=reason)
 
     def follow(self, target_channel: typing.Union[int, str, Snowflake, "Channel"]):
         return self.client.follow_news_channel(self, target_channel)
@@ -100,8 +103,8 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to remove recipient.")
         return self.client.group_dm_remove_recipient(self, user)
 
-    def start_thread(self, message: typing.Union[int, str, Snowflake, "Message"] = None, *, name: str, auto_archive_duration: int):
-        return self.client.start_thread(self, message, name=name, auto_archive_duration=auto_archive_duration)
+    def start_thread(self, message: typing.Union[int, str, Snowflake, "Message"] = None, *, name: str, auto_archive_duration: int, reason: str = None):
+        return self.client.start_thread(self, message, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     def join_thread(self):
         if not self.is_thread_channel():
@@ -254,12 +257,12 @@ class Message(DiscordObjectBase):
             return self.client.edit_interaction_response(**kwargs)
         return self.client.edit_message(self.channel_id, self.id, **kwargs)
 
-    def delete(self):
+    def delete(self, *, reason: str = None):
         if self.__webhook_token:
             return self.client.delete_webhook_message(self.webhook_id, self, webhook_token=self.__webhook_token)
         elif self.__interaction_token:
             return self.client.delete_interaction_response(interaction_token=self.__interaction_token, message="@original" if self.__original_response else self)
-        return self.client.delete_message(self.channel_id, self.id)
+        return self.client.delete_message(self.channel_id, self.id, reason=reason)
 
     def crosspost(self):
         return self.client.crosspost_message(self.channel_id, self.id)
@@ -270,14 +273,14 @@ class Message(DiscordObjectBase):
     def delete_reaction(self, emoji: typing.Union[Emoji, str], user: typing.Union[int, str, Snowflake, User] = "@me"):
         return self.client.delete_reaction(self.channel_id, self.id, emoji, user)
 
-    def pin(self):
-        return self.client.pin_message(self.channel_id, self.id)
+    def pin(self, *, reason: str = None):
+        return self.client.pin_message(self.channel_id, self.id, reason=reason)
 
-    def unpin(self):
-        return self.client.unpin_message(self.channel_id, self.id)
+    def unpin(self, *, reason: str = None):
+        return self.client.unpin_message(self.channel_id, self.id, reason=reason)
 
-    def start_thread(self, *, name: str, auto_archive_duration: int):
-        return self.client.start_thread(self.channel_id, self, name=name, auto_archive_duration=auto_archive_duration)
+    def start_thread(self, *, name: str, auto_archive_duration: int, reason: str = None):
+        return self.client.start_thread(self.channel_id, self, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     @property
     def guild(self):

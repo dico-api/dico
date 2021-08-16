@@ -7,7 +7,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
-    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember
+    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban
 from .utils import from_emoji, wrap_to_async
 
 
@@ -93,7 +93,7 @@ class APIClient:
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
-    def delete_channel(self, channel: typing.Union[int, str, Snowflake, Channel], reason: str = None):
+    def delete_channel(self, channel: typing.Union[int, str, Snowflake, Channel], *, reason: str = None):
         return self.http.delete_channel(int(channel), reason=reason)
 
     def request_channel_messages(self,
@@ -307,13 +307,14 @@ class APIClient:
     def delete_message(self,
                        channel: typing.Union[int, str, Snowflake, Channel],
                        message: typing.Union[int, str, Snowflake, Message],
+                       *,
                        reason: str = None):
         return self.http.delete_message(int(channel), int(message), reason=reason)
 
-    def bulk_delete_messages(self, channel: typing.Union[int, str, Snowflake, Channel], messages: typing.List[typing.Union[int, str, Snowflake, Message]], reason: str = None):
+    def bulk_delete_messages(self, channel: typing.Union[int, str, Snowflake, Channel], *messages: typing.Union[int, str, Snowflake, Message], reason: str = None):
         return self.http.bulk_delete_messages(int(channel), list(map(int, messages)), reason=reason)
 
-    def edit_channel_permissions(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite, reason: str = None):
+    def edit_channel_permissions(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite, *, reason: str = None):
         ow_dict = overwrite.to_dict()
         return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"], reason=reason)
 
@@ -341,7 +342,7 @@ class APIClient:
             return Invite(self, invite)
         return wrap_to_async(Invite, self, invite, as_create=False)
 
-    def delete_channel_permission(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite, reason: str = None):
+    def delete_channel_permission(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite, *, reason: str = None):
         return self.http.delete_channel_permission(int(channel), int(overwrite.id), reason=reason)
 
     def follow_news_channel(self, channel: typing.Union[int, str, Snowflake, Channel], target_channel: typing.Union[int, str, Snowflake, Channel]):
@@ -359,10 +360,10 @@ class APIClient:
             return [Message.create(self, x) for x in msgs]
         return wrap_to_async(Message, self, msgs)
 
-    def pin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message], reason: str = None):
+    def pin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message], *, reason: str = None):
         return self.http.pin_message(int(channel), int(message), reason=reason)
 
-    def unpin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message], reason: str = None):
+    def unpin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message], *, reason: str = None):
         return self.http.unpin_message(int(channel), int(message), reason=reason)
 
     def group_dm_add_recipient(self,
@@ -460,6 +461,7 @@ class APIClient:
 
     def create_guild_emoji(self,
                            guild: typing.Union[int, str, Snowflake, Guild],
+                           *,
                            name: str,
                            image: str,
                            roles: typing.List[typing.Union[str, int, Snowflake, Role]] = None,
@@ -472,6 +474,7 @@ class APIClient:
     def modify_guild_emoji(self,
                            guild: typing.Union[int, str, Snowflake, Guild],
                            emoji: typing.Union[int, str, Snowflake, Emoji],
+                           *,
                            name: str,
                            roles: typing.List[typing.Union[str, int, Snowflake, Role]],
                            reason: str = None):
@@ -704,27 +707,47 @@ class APIClient:
     def modify_guild_member(self,
                             guild: typing.Union[int, str, Snowflake, Guild],
                             user: typing.Union[int, str, Snowflake, User],
-                            nick: str = None,
-                            roles: typing.List[typing.Union[int, str, Snowflake, Role]] = None,
-                            mute: bool = None,
-                            deaf: bool = None,
-                            channel: typing.Union[int, str, Snowflake, Channel] = None,
+                            nick: str = EmptyObject,
+                            roles: typing.List[typing.Union[int, str, Snowflake, Role]] = EmptyObject,
+                            mute: bool = EmptyObject,
+                            deaf: bool = EmptyObject,
+                            channel: typing.Union[int, str, Snowflake, Channel] = EmptyObject,
+                            *,
                             reason: str = None):
         kwargs = {}
-        if nick is not None:
+        if nick is not EmptyObject:
             kwargs["nick"] = nick
-        if roles is not None:
-            kwargs["roles"] = [str(int(x)) for x in roles]
-        if mute is not None:
+        if roles is not EmptyObject:
+            kwargs["roles"] = [str(int(x)) for x in roles] if roles else roles
+        if mute is not EmptyObject:
             kwargs["mute"] = mute
-        if deaf is not None:
+        if deaf is not EmptyObject:
             kwargs["deaf"] = deaf
-        if channel is not None:
-            kwargs["channel_id"] = int(channel)
+        if channel is not EmptyObject:
+            kwargs["channel_id"] = int(channel) if channel else channel
         resp = self.http.modify_guild_member(int(guild), int(user), **kwargs, reason=reason)
         if isinstance(resp, dict):
             return GuildMember.create(self, resp, guild_id=int(guild))
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
+
+    def modify_current_user_nick(self, guild: typing.Union[int, str, Snowflake, Guild], nick: typing.Union[str, None] = EmptyObject, *, reason: str = None):
+        return self.http.modify_current_user_nick(int(guild), nick, reason=reason)
+
+    def add_guild_member_role(self,
+                              guild: typing.Union[int, str, Snowflake, Guild],
+                              user: typing.Union[int, str, Snowflake, User],
+                              role: typing.Union[int, str, Snowflake, Role],
+                              *,
+                              reason: str = None):
+        return self.http.add_guild_member_role(int(guild), int(user), int(role), reason=reason)
+
+    def remove_guild_member_role(self,
+                                 guild: typing.Union[int, str, Snowflake, Guild],
+                                 user: typing.Union[int, str, Snowflake, User],
+                                 role: typing.Union[int, str, Snowflake, Role],
+                                 *,
+                                 reason: str = None):
+        return self.http.remove_guild_member_role(int(guild), int(user), int(role), reason=reason)
 
     def remove_guild_member(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
         return self.http.remove_guild_member(int(guild), int(user))
@@ -732,6 +755,18 @@ class APIClient:
     @property
     def kick(self):
         return self.remove_guild_member
+
+    def request_guild_bans(self, guild: typing.Union[int, str, Snowflake, Guild]):
+        resp = self.http.request_guild_bans(int(guild))
+        if isinstance(resp, list):
+            return [Ban(self, x) for x in resp]
+        return wrap_to_async(Ban, self, resp, as_create=False)
+
+    def request_guild_ban(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
+        resp = self.http.request_guild_ban(int(guild), int(user))
+        if isinstance(resp, dict):
+            return Ban(self, resp)
+        return wrap_to_async(Ban, self, resp, as_create=False)
 
     def create_guild_ban(self,
                          guild: typing.Union[int, str, Snowflake, Guild],
@@ -744,6 +779,13 @@ class APIClient:
     @property
     def ban(self):
         return self.create_guild_ban
+
+    def remove_guild_ban(self,
+                         guild: typing.Union[int, str, Snowflake, Guild],
+                         user: typing.Union[int, str, Snowflake, User],
+                         *,
+                         reason: str = None):
+        return self.remove_guild_ban(int(guild), int(user), reason=reason)
 
     # Webhook
 

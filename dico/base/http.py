@@ -180,7 +180,7 @@ class HTTPRequestBase(ABC):
         """Alias of :meth:`.delete_channel`."""
         return self.delete_channel
 
-    def request_channel_messages(self, channel_id, around=None, before=None, after=None, limit: int=None):
+    def request_channel_messages(self, channel_id, around=None, before=None, after=None, limit: int = None):
         """
         Sends channel messages get request.
 
@@ -1058,7 +1058,7 @@ class HTTPRequestBase(ABC):
                             mute: bool = EmptyObject,
                             deaf: bool = EmptyObject,
                             channel_id: str = EmptyObject,
-                            reason: str = EmptyObject):
+                            reason: str = None):
         """
         Sends modify guild member request.
 
@@ -1087,7 +1087,40 @@ class HTTPRequestBase(ABC):
             body["channel_id"] = channel_id
         return self.request(f"/guilds/{guild_id}/members/{user_id}", "PATCH", body, is_json=True, reason_header=reason)
 
-    # def modify_current
+    def modify_current_user_nick(self, guild_id, nick: typing.Union[str, None] = EmptyObject, reason: str = None):
+        """
+        Sends modify current user nick request.
+
+        :param guild_id: ID of the guild.
+        :param nick: Nickname to change.
+        :param reason: Reason of the action.
+        """
+        body = {}
+        if nick is not EmptyObject:
+            body["nick"] = nick
+        return self.request(f"/guilds/{guild_id}/members/@me/nick", "PATCH", body, is_json=True, reason_header=reason)
+
+    def add_guild_member_role(self, guild_id, user_id, role_id, reason: str = None):
+        """
+        Sends add guild member role request.
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user.
+        :param role_id: ID of the role to add.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}", "PUT", reason_header=reason)
+
+    def remove_guild_member_role(self, guild_id, user_id, role_id, reason: str = None):
+        """
+        Sends remove guild member role request.
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user.
+        :param role_id: ID of the role to remove.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}", "DELETE", reason_header=reason)
 
     def remove_guild_member(self, guild_id, user_id):
         """
@@ -1098,6 +1131,23 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/members/{user_id}", "DELETE")
 
+    def request_guild_bans(self, guild_id):
+        """
+        Sends get guild bans request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/bans", "GET")
+
+    def request_guild_ban(self, guild_id, user_id):
+        """
+        Sends get guild ban request.
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user.
+        """
+        return self.request(f"/guilds/{guild_id}/bans/{user_id}", "GET")
+
     def create_guild_ban(self, guild_id, user_id, delete_message_days: int = None, reason: str = None):
         """
         Sends create guild ban request.
@@ -1105,14 +1155,22 @@ class HTTPRequestBase(ABC):
         :param guild_id: ID of the guild.
         :param user_id: ID of the user to ban.
         :param delete_message_days: Days of message sent by banned user to delete.
-        :param reason: Reason for banning user.
+        :param reason: Reason of the action.
         """
         body = {}
         if delete_message_days is not None:
             body["delete_message_days"] = delete_message_days
-        if reason is not None:
-            body["reason"] = reason
-        return self.request(f"/guilds/{guild_id}/bans/{user_id}", "PUT", body, is_json=True)
+        return self.request(f"/guilds/{guild_id}/bans/{user_id}", "PUT", body, is_json=True, reason_header=reason)
+
+    def remove_guild_ban(self, guild_id, user_id, reason: str = None):
+        """
+        Sends remove guild ban request.
+
+        :param guild_id: ID of the guild.
+        :param user_id: ID of the user tom remove ban.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/guilds/{guild_id}/bans/{user_id}", "DELETE", reason_header=reason)
 
     # Webhook Requests
 

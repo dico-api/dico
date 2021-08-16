@@ -99,8 +99,8 @@ class Guild(DiscordObjectBase):
     def create_channel(self, name: str, **kwargs):
         return self.client.create_guild_channel(self, name, **kwargs)
 
-    def modify_channel_positions(self, *params: dict):
-        return self.client.modify_guild_channel_positions(self, *params)
+    def modify_channel_positions(self, *params: dict, reason: str = None):
+        return self.client.modify_guild_channel_positions(self, *params, reason=reason)
 
     def list_active_threads(self):
         return self.client.list_active_threads_as_guild(self)
@@ -259,3 +259,15 @@ class GuildMember:
         if cache and client.has_cache and ret.guild_id and ret.user:
             client.cache.get_guild_container(ret.guild_id).add(ret.user.id, "member", ret)
         return ret
+
+
+# TODO: Integration
+
+
+class Ban:
+    def __init__(self, client, resp):
+        self.reason = resp["reason"]
+        self.user = User.create(client, resp["user"])
+
+
+# TODO: Welcome Screen
