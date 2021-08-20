@@ -1249,6 +1249,16 @@ class HTTPRequestBase(ABC):
             body["mentionable"] = mentionable
         return self.request(f"/guilds/{guild_id}/roles/{role_id}", "PATCH", body, is_json=True, reason_header=reason)
 
+    def delete_guild_role(self, guild_id, role_id, reason: str = None):
+        """
+        Sends delete guild role request.
+
+        :param guild_id: ID of the guild.
+        :param role_id: ID of the role to delete.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/guilds/{guild_id}/roles/{role_id}", "DELETE", reason_header=reason)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

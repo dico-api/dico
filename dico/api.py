@@ -850,6 +850,9 @@ class APIClient:
             return Role.create(self, resp, guild_id=int(guild))
         return wrap_to_async(Role, self, resp, guild_id=int(guild))
 
+    def delete_guild_role(self, guild: typing.Union[int, str, Snowflake, Guild], role: typing.Union[int, str, Snowflake, Role], *, reason: str = None):
+        return self.http.delete_guild_role(int(guild), int(role), reason=reason)
+
     # Webhook
 
     def create_webhook(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, avatar: str = None):
