@@ -1,6 +1,7 @@
 from .channel import *
 from .emoji import *
 from .event import *
+from .extras import *
 from .gateway import *
 from .guild import *
 from .invite import *

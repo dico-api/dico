@@ -10,6 +10,8 @@ from ...base.model import TypeBase, FlagBase
 
 
 class Interaction:
+    TYPING = typing.Union[int, str, Snowflake, "Interaction"]
+
     def __init__(self, client, resp):
         self.raw = resp
         self.client = client

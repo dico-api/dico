@@ -7,7 +7,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
-    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, PruneCountResponse
+    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, PruneCountResponse, FILE_TYPE
 from .utils import from_emoji, wrap_to_async
 
 
@@ -34,7 +34,7 @@ class APIClient:
                  *,
                  base: typing.Type[HTTPRequestBase],
                  default_allowed_mentions: AllowedMentions = None,
-                 application_id: typing.Union[int, str, Snowflake] = None,
+                 application_id: Snowflake.TYPING = None,
                  **http_options):
         self.http = base.create(token, **http_options)
         self.default_allowed_mentions = default_allowed_mentions
@@ -42,14 +42,14 @@ class APIClient:
 
     # Channel
 
-    def request_channel(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def request_channel(self, channel: Channel.TYPING):
         channel = self.http.request_channel(int(channel))
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
     def modify_guild_channel(self,
-                             channel: typing.Union[int, str, Snowflake, Channel],
+                             channel: Channel.TYPING,
                              *,
                              name: str = None,
                              channel_type: int = None,
@@ -60,7 +60,7 @@ class APIClient:
                              bitrate: int = None,
                              user_limit: int = None,
                              permission_overwrites: typing.List[Overwrite] = None,
-                             parent: typing.Union[int, str, Snowflake, Channel] = None,
+                             parent: Channel.TYPING = None,
                              rtc_region: str = None,
                              video_quality_mode: int = None,
                              reason: str = None):
@@ -74,14 +74,14 @@ class APIClient:
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
-    def modify_group_dm_channel(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, icon: bin = None, reason: str = None):
+    def modify_group_dm_channel(self, channel: Channel.TYPING, *, name: str = None, icon: bin = None, reason: str = None):
         channel = self.http.modify_group_dm_channel(int(channel), name, icon, reason=reason)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
     def modify_thread_channel(self,
-                              channel: typing.Union[int, str, Snowflake, Channel], *,
+                              channel: Channel.TYPING, *,
                               name: str = None,
                               archived: bool = None,
                               auto_archive_duration: int = None,
@@ -93,14 +93,14 @@ class APIClient:
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
-    def delete_channel(self, channel: typing.Union[int, str, Snowflake, Channel], *, reason: str = None):
+    def delete_channel(self, channel: Channel.TYPING, *, reason: str = None):
         return self.http.delete_channel(int(channel), reason=reason)
 
     def request_channel_messages(self,
-                                 channel: typing.Union[int, str, Snowflake, Channel], *,
-                                 around: typing.Union[int, str, Snowflake, Message] = None,
-                                 before: typing.Union[int, str, Snowflake, Message] = None,
-                                 after: typing.Union[int, str, Snowflake, Message] = None,
+                                 channel: Channel.TYPING, *,
+                                 around: Message.TYPING = None,
+                                 before: Message.TYPING = None,
+                                 after: Message.TYPING = None,
                                  limit: int = 50):
         messages = self.http.request_channel_messages(int(channel), around and str(int(around)), before and str(int(before)), after and str(int(after)), limit)
         # This looks unnecessary, but this is to ensure they are all numbers.
@@ -108,25 +108,25 @@ class APIClient:
             messages = [Message.create(self, x) for x in messages]
         return wrap_to_async(Message, self, messages)
 
-    def request_channel_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
+    def request_channel_message(self, channel: Channel.TYPING, message: Message.TYPING):
         message = self.http.request_channel_message(int(channel), int(message))
         if isinstance(message, dict):
             message = Message.create(self, channel)
         return wrap_to_async(Message, self, message)
 
     def create_message(self,
-                       channel: typing.Union[int, str, Snowflake, Channel],
+                       channel: Channel.TYPING,
                        content: str = None,
                        *,
                        embed: typing.Union[Embed, dict] = None,
                        embeds: typing.List[typing.Union[Embed, dict]] = None,
-                       file: typing.Union[io.FileIO, pathlib.Path, str] = None,
-                       files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
+                       file: FILE_TYPE = None,
+                       files: typing.List[FILE_TYPE] = None,
                        tts: bool = False,
                        allowed_mentions: typing.Union[AllowedMentions, dict] = None,
                        message_reference: typing.Union[Message, MessageReference, dict] = None,
                        component: typing.Union[dict, Component] = None,
-                       components: typing.List[typing.Union[dict, Component]] = None) -> typing.Union[Message, typing.Coroutine[dict, Message, dict]]:
+                       components: typing.List[typing.Union[dict, Component]] = None):
         """
         Sends message create request to API.
 
@@ -196,55 +196,55 @@ class APIClient:
                 [x.close() for x in files if not x.closed]
 
     def crosspost_message(self,
-                          channel: typing.Union[int, str, Snowflake, Channel],
-                          message: typing.Union[int, str, Snowflake, Message]):
+                          channel: Channel.TYPING,
+                          message: Message.TYPING):
         msg = self.http.crosspost_message(int(channel), int(message))
         if isinstance(msg, dict):
             return Message.create(self, msg)
         return wrap_to_async(Message, self, msg)
 
     def create_reaction(self,
-                        channel: typing.Union[int, str, Snowflake, Channel],
-                        message: typing.Union[int, str, Snowflake, Message],
+                        channel: Channel.TYPING,
+                        message: Message.TYPING,
                         emoji: typing.Union[str, Emoji]):
         return self.http.create_reaction(int(channel), int(message), from_emoji(emoji))
 
     def delete_reaction(self,
-                        channel: typing.Union[int, str, Snowflake, Channel],
-                        message: typing.Union[int, str, Snowflake, Message],
+                        channel: Channel.TYPING,
+                        message: Message.TYPING,
                         emoji: typing.Union[str, Emoji],
-                        user: typing.Union[int, str, Snowflake, User] = "@me"):
+                        user: User.TYPING = "@me"):
         return self.http.delete_reaction(int(channel), int(message), from_emoji(emoji), int(user) if user != "@me" else user)
 
     def request_reactions(self,
-                          channel: typing.Union[int, str, Snowflake, Channel],
-                          message: typing.Union[int, str, Snowflake, Message],
+                          channel: Channel.TYPING,
+                          message: Message.TYPING,
                           emoji: typing.Union[str, Emoji],
-                          after: typing.Union[int, str, Snowflake, User] = None,
+                          after: User.TYPING = None,
                           limit: int = None):
         users = self.http.request_reactions(int(channel), int(message), from_emoji(emoji), int(after), limit)
         if isinstance(users, list):
             return [User.create(self, x) for x in users]
         return wrap_to_async(User, self, users)
 
-    def delete_all_reactions(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message]):
+    def delete_all_reactions(self, channel: Channel.TYPING, message: Message.TYPING):
         return self.http.delete_all_reactions(int(channel), int(message))
 
     def delete_all_reactions_emoji(self,
-                                   channel: typing.Union[int, str, Snowflake, Channel],
-                                   message: typing.Union[int, str, Snowflake, Message],
+                                   channel: Channel.TYPING,
+                                   message: Message.TYPING,
                                    emoji: typing.Union[str, Emoji]):
         return self.http.delete_all_reactions_emoji(int(channel), int(message), from_emoji(emoji))
 
     def edit_message(self,
-                     channel: typing.Union[int, str, Snowflake, Channel],
-                     message: typing.Union[int, str, Snowflake, Message],
+                     channel: Channel.TYPING,
+                     message: Message.TYPING,
                      *,
                      content: str = None,
                      embed: typing.Union[Embed, dict] = EmptyObject,
                      embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
-                     file: typing.Union[io.FileIO, pathlib.Path, str] = EmptyObject,
-                     files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = EmptyObject,
+                     file: FILE_TYPE = EmptyObject,
+                     files: typing.List[FILE_TYPE] = EmptyObject,
                      allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
                      attachments: typing.List[typing.Union[Attachment, dict]] = EmptyObject,
                      component: typing.Union[dict, Component] = EmptyObject,
@@ -305,35 +305,35 @@ class APIClient:
                 [x.close() for x in files]
 
     def delete_message(self,
-                       channel: typing.Union[int, str, Snowflake, Channel],
-                       message: typing.Union[int, str, Snowflake, Message],
+                       channel: Channel.TYPING,
+                       message: Message.TYPING,
                        *,
                        reason: str = None):
         return self.http.delete_message(int(channel), int(message), reason=reason)
 
-    def bulk_delete_messages(self, channel: typing.Union[int, str, Snowflake, Channel], *messages: typing.Union[int, str, Snowflake, Message], reason: str = None):
+    def bulk_delete_messages(self, channel: Channel.TYPING, *messages: Message.TYPING, reason: str = None):
         return self.http.bulk_delete_messages(int(channel), list(map(int, messages)), reason=reason)
 
-    def edit_channel_permissions(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite, *, reason: str = None):
+    def edit_channel_permissions(self, channel: Channel.TYPING, overwrite: Overwrite, *, reason: str = None):
         ow_dict = overwrite.to_dict()
         return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"], reason=reason)
 
-    def request_channel_invites(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def request_channel_invites(self, channel: Channel.TYPING):
         invites = self.http.request_channel_invites(int(channel))
         if isinstance(invites, list):
             return [Invite(self, x) for x in invites]
         return wrap_to_async(Invite, self, invites, as_create=False)
 
     def create_channel_invite(self,
-                              channel: typing.Union[int, str, Snowflake, Channel],
+                              channel: Channel.TYPING,
                               *,
                               max_age: int = None,
                               max_uses: int = None,
                               temporary: bool = None,
                               unique: bool = None,
                               target_type: int = None,
-                              target_user: typing.Union[int, str, Snowflake, User] = None,
-                              target_application: typing.Union[int, str, Snowflake, Application] = None,
+                              target_user: User.TYPING = None,
+                              target_application: Application.TYPING = None,
                               reason: str = None):
         invite = self.http.create_channel_invite(int(channel), max_age, max_uses, temporary, unique, target_type,
                                                  int(target_user) if target_user is not None else target_user,
@@ -342,45 +342,45 @@ class APIClient:
             return Invite(self, invite)
         return wrap_to_async(Invite, self, invite, as_create=False)
 
-    def delete_channel_permission(self, channel: typing.Union[int, str, Snowflake, Channel], overwrite: Overwrite, *, reason: str = None):
+    def delete_channel_permission(self, channel: Channel.TYPING, overwrite: Overwrite, *, reason: str = None):
         return self.http.delete_channel_permission(int(channel), int(overwrite.id), reason=reason)
 
-    def follow_news_channel(self, channel: typing.Union[int, str, Snowflake, Channel], target_channel: typing.Union[int, str, Snowflake, Channel]):
+    def follow_news_channel(self, channel: Channel.TYPING, target_channel: Channel.TYPING):
         fc = self.http.follow_news_channel(int(channel), str(target_channel))
         if isinstance(fc, dict):
             return FollowedChannel(self, fc)
         return wrap_to_async(FollowedChannel, self, fc, as_create=False)
 
-    def trigger_typing_indicator(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def trigger_typing_indicator(self, channel: Channel.TYPING):
         return self.http.trigger_typing_indicator(int(channel))
 
-    def request_pinned_messages(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def request_pinned_messages(self, channel: Channel.TYPING):
         msgs = self.http.request_pinned_messages(int(channel))
         if isinstance(msgs, list):
             return [Message.create(self, x) for x in msgs]
         return wrap_to_async(Message, self, msgs)
 
-    def pin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message], *, reason: str = None):
+    def pin_message(self, channel: Channel.TYPING, message: Message.TYPING, *, reason: str = None):
         return self.http.pin_message(int(channel), int(message), reason=reason)
 
-    def unpin_message(self, channel: typing.Union[int, str, Snowflake, Channel], message: typing.Union[int, str, Snowflake, Message], *, reason: str = None):
+    def unpin_message(self, channel: Channel.TYPING, message: Message.TYPING, *, reason: str = None):
         return self.http.unpin_message(int(channel), int(message), reason=reason)
 
     def group_dm_add_recipient(self,
-                               channel: typing.Union[int, str, Snowflake, Channel],
-                               user: typing.Union[int, str, Snowflake, User],
+                               channel: Channel.TYPING,
+                               user: User.TYPING,
                                access_token: str,
                                nick: str):
         return self.http.group_dm_add_recipient(int(channel), int(user), access_token, nick)
 
     def group_dm_remove_recipient(self,
-                                  channel: typing.Union[int, str, Snowflake, Channel],
-                                  user: typing.Union[int, str, Snowflake, User]):
+                                  channel: Channel.TYPING,
+                                  user: User.TYPING):
         return self.http.group_dm_remove_recipient(int(channel), int(user))
 
     def start_thread(self,
-                     channel: typing.Union[int, str, Snowflake, Channel],
-                     message: typing.Union[int, str, Snowflake, Message] = None,
+                     channel: Channel.TYPING,
+                     message: Message.TYPING = None,
                      *,
                      name: str,
                      auto_archive_duration: int,
@@ -391,32 +391,32 @@ class APIClient:
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
-    def join_thread(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def join_thread(self, channel: Channel.TYPING):
         return self.http.join_thread(int(channel))
 
-    def add_thread_member(self, channel: typing.Union[int, str, Snowflake, Channel], user: typing.Union[int, str, Snowflake, User]):
+    def add_thread_member(self, channel: Channel.TYPING, user: User.TYPING):
         return self.http.add_thread_member(int(channel), int(user))
 
-    def leave_thread(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def leave_thread(self, channel: Channel.TYPING):
         return self.http.leave_thread(int(channel))
 
-    def remove_thread_member(self, channel: typing.Union[int, str, Snowflake, Channel], user: typing.Union[int, str, Snowflake, User]):
+    def remove_thread_member(self, channel: Channel.TYPING, user: User.TYPING):
         return self.http.remove_thread_member(int(channel), int(user))
 
-    def list_thread_members(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def list_thread_members(self, channel: Channel.TYPING):
         members = self.http.list_thread_members(int(channel))
         if isinstance(members, list):
             return [ThreadMember(self, x) for x in members]
         return wrap_to_async(ThreadMember, self, members, as_create=False)
 
-    def list_active_threads(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def list_active_threads(self, channel: Channel.TYPING):
         resp = self.http.list_active_threads(int(channel))
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
         return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
 
     def list_public_archived_threads(self,
-                                     channel: typing.Union[int, str, Snowflake, Channel],
+                                     channel: Channel.TYPING,
                                      *,
                                      before: typing.Union[str, datetime.datetime] = None,
                                      limit: int = None):
@@ -426,7 +426,7 @@ class APIClient:
         return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
 
     def list_private_archived_threads(self,
-                                      channel: typing.Union[int, str, Snowflake, Channel],
+                                      channel: Channel.TYPING,
                                       *,
                                       before: typing.Union[str, datetime.datetime] = None,
                                       limit: int = None):
@@ -436,7 +436,7 @@ class APIClient:
         return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
 
     def list_joined_private_archived_threads(self,
-                                             channel: typing.Union[int, str, Snowflake, Channel],
+                                             channel: Channel.TYPING,
                                              *,
                                              before: typing.Union[str, datetime.datetime] = None,
                                              limit: int = None):
@@ -447,24 +447,24 @@ class APIClient:
 
     # Emoji
 
-    def list_guild_emojis(self, guild: typing.Union[int, str, Snowflake, Guild]):
+    def list_guild_emojis(self, guild: Guild.TYPING):
         resp = self.http.list_guild_emojis(int(guild))
         if isinstance(resp, list):
             return [Emoji(self, x) for x in resp]
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
-    def request_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], emoji: typing.Union[int, str, Snowflake, Emoji]):
+    def request_guild_emoji(self, guild: Guild.TYPING, emoji: Emoji.TYPING):
         resp = self.http.request_guild_emoji(int(guild), int(emoji))
         if isinstance(resp, dict):
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
     def create_guild_emoji(self,
-                           guild: typing.Union[int, str, Snowflake, Guild],
+                           guild: Guild.TYPING,
                            *,
                            name: str,
                            image: str,
-                           roles: typing.List[typing.Union[str, int, Snowflake, Role]] = None,
+                           roles: typing.List[Role.TYPING] = None,
                            reason: str = None):
         resp = self.http.create_guild_emoji(int(guild), name, image, [str(int(x)) for x in roles or []], reason=reason)
         if isinstance(resp, dict):
@@ -472,18 +472,18 @@ class APIClient:
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
     def modify_guild_emoji(self,
-                           guild: typing.Union[int, str, Snowflake, Guild],
-                           emoji: typing.Union[int, str, Snowflake, Emoji],
+                           guild: Guild.TYPING,
+                           emoji: Emoji.TYPING,
                            *,
                            name: str,
-                           roles: typing.List[typing.Union[str, int, Snowflake, Role]],
+                           roles: typing.List[Role.TYPING],
                            reason: str = None):
         resp = self.http.modify_guild_emoji(int(guild), int(emoji), name, [str(int(x)) for x in roles], reason=reason)
         if isinstance(resp, dict):
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
-    def delete_guild_emoji(self, guild: typing.Union[int, str, Snowflake, Guild], emoji: typing.Union[int, str, Snowflake, Emoji], reason: str = None):
+    def delete_guild_emoji(self, guild: Guild.TYPING, emoji: Emoji.TYPING, reason: str = None):
         return self.http.delete_guild_emoji(int(guild), int(emoji), reason=reason)
 
     # Guild
@@ -497,9 +497,9 @@ class APIClient:
                      explicit_content_filter: typing.Union[int, ExplicitContentFilterLevel] = None,
                      roles: typing.List[dict] = None,  # TODO: role and channel generator
                      channels: typing.List[dict] = None,
-                     afk_channel_id: typing.Union[int, str, Snowflake] = None,
+                     afk_channel_id: Snowflake.TYPING = None,
                      afk_timeout: int = None,
-                     system_channel_id: typing.Union[int, str, Snowflake] = None,
+                     system_channel_id: Snowflake.TYPING = None,
                      system_channel_flags: typing.Union[int, SystemChannelFlags] = None):
         kwargs = {"name": name}
         if icon is not None:
@@ -527,36 +527,36 @@ class APIClient:
             return Guild.create(self, resp)
         return wrap_to_async(Guild, self, resp)
 
-    def request_guild(self, guild: typing.Union[int, str, Snowflake, Guild], with_counts: bool = False):
+    def request_guild(self, guild: Guild.TYPING, with_counts: bool = False):
         resp = self.http.request_guild(int(guild), with_counts)
         if isinstance(resp, dict):
             return Guild.create(self, resp)
         return wrap_to_async(Guild, self, resp)
 
-    def request_guild_preview(self, guild: typing.Union[int, str, Snowflake, Guild]):
+    def request_guild_preview(self, guild: Guild.TYPING):
         resp = self.http.request_guild_preview(int(guild))
         if isinstance(resp, dict):
             return GuildPreview(self, resp)
         return wrap_to_async(GuildPreview, self, resp)
 
     def modify_guild(self,
-                     guild: typing.Union[int, str, Snowflake, Guild],
+                     guild: Guild.TYPING,
                      *,
                      name: str = None,
                      verification_level: typing.Union[int, VerificationLevel] = None,
                      default_message_notifications: typing.Union[int, DefaultMessageNotificationLevel] = None,
                      explicit_content_filter: typing.Union[int, ExplicitContentFilterLevel] = None,
-                     afk_channel: typing.Union[int, str, Snowflake, Channel] = None,
+                     afk_channel: Channel.TYPING = None,
                      afk_timeout: int = None,
                      icon: str = None,
-                     owner: typing.Union[int, str, Snowflake, User] = None,
+                     owner: User.TYPING = None,
                      splash: str = None,
                      discovery_splash: str = None,
                      banner: str = None,
-                     system_channel: typing.Union[int, str, Snowflake, Channel] = None,
+                     system_channel: Channel.TYPING = None,
                      system_channel_flags: typing.Union[int, SystemChannelFlags] = None,
-                     rules_channel: typing.Union[int, str, Snowflake, Channel] = None,
-                     public_updates_channel: typing.Union[int, str, Snowflake, Channel] = None,
+                     rules_channel: Channel.TYPING = None,
+                     public_updates_channel: Channel.TYPING = None,
                      preferred_locale: str = None,
                      features: typing.List[str] = None,
                      description: str = None,
@@ -603,17 +603,17 @@ class APIClient:
             return Guild.create(self, resp)
         return wrap_to_async(Guild, self, resp)
 
-    def delete_guild(self, guild: typing.Union[int, str, Snowflake, Guild]):
+    def delete_guild(self, guild: Guild.TYPING):
         return self.http.delete_guild(int(guild))
 
-    def request_guild_channels(self, guild: typing.Union[int, str, Snowflake, Guild]):
+    def request_guild_channels(self, guild: Guild.TYPING):
         channels = self.http.request_guild_channels(int(guild))
         if isinstance(channels, list):
             return [Channel.create(self, x) for x in channels]
         return wrap_to_async(Channel, self, channels)
 
     def create_guild_channel(self,
-                             guild: typing.Union[int, str, Snowflake, Guild],
+                             guild: Guild.TYPING,
                              name: str,
                              *,
                              channel_type: typing.Union[int, ChannelTypes] = None,
@@ -623,7 +623,7 @@ class APIClient:
                              rate_limit_per_user: int = None,
                              position: int = None,
                              permission_overwrites: typing.Union[dict, Overwrite] = None,
-                             parent: typing.Union[int, str, Snowflake, Channel] = None,
+                             parent: Channel.TYPING = None,
                              nsfw: bool = None,
                              reason: str = None):
         if isinstance(parent, Channel) and not parent.type.guild_category:
@@ -652,40 +652,40 @@ class APIClient:
             return Channel.create(self, resp)
         return wrap_to_async(Channel, self, resp)
 
-    def modify_guild_channel_positions(self, guild: typing.Union[int, str, Snowflake, Guild], *params: dict, reason: str = None):
+    def modify_guild_channel_positions(self, guild: Guild.TYPING, *params: dict, reason: str = None):
         # You can get params by using Channel.to_position_param(...)
         return self.http.modify_guild_channel_positions(int(guild), [*params], reason=reason)
 
-    def list_active_threads_as_guild(self, guild: typing.Union[int, str, Snowflake, Guild]):
+    def list_active_threads_as_guild(self, guild: Guild.TYPING):
         resp = self.http.list_active_threads_as_guild(int(guild))
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
         return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
 
-    def request_guild_member(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
+    def request_guild_member(self, guild: Guild.TYPING, user: User.TYPING):
         resp = self.http.request_guild_member(int(guild), int(user))
         if isinstance(resp, dict):
             return GuildMember.create(self, resp, guild_id=int(guild))
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
-    def list_guild_members(self, guild: typing.Union[int, str, Snowflake, Guild], limit: int = None, after: str = None):
+    def list_guild_members(self, guild: Guild.TYPING, limit: int = None, after: str = None):
         resp = self.http.list_guild_members(int(guild), limit, after)
         if isinstance(resp, list):
             return [GuildMember.create(self, x, guild_id=int(guild)) for x in resp]
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
-    def search_guild_members(self, guild: typing.Union[int, str, Snowflake, Guild], query: str, limit: int = None):
+    def search_guild_members(self, guild: Guild.TYPING, query: str, limit: int = None):
         resp = self.http.search_guild_members(int(guild), query, limit)
         if isinstance(resp, list):
             return [GuildMember.create(self, x, guild_id=int(guild)) for x in resp]
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
     def add_guild_member(self,
-                         guild: typing.Union[int, str, Snowflake, Guild],
-                         user: typing.Union[int, str, Snowflake, User],
+                         guild: Guild.TYPING,
+                         user: User.TYPING,
                          access_token: str,
                          nick: str = None,
-                         roles: typing.List[typing.Union[int, str, Snowflake, Role]] = None,
+                         roles: typing.List[Role.TYPING] = None,
                          mute: bool = None,
                          deaf: bool = None):
         kwargs = {"access_token": access_token}
@@ -705,13 +705,13 @@ class APIClient:
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
     def modify_guild_member(self,
-                            guild: typing.Union[int, str, Snowflake, Guild],
-                            user: typing.Union[int, str, Snowflake, User],
+                            guild: Guild.TYPING,
+                            user: User.TYPING,
                             nick: str = EmptyObject,
-                            roles: typing.List[typing.Union[int, str, Snowflake, Role]] = EmptyObject,
+                            roles: typing.List[Role.TYPING] = EmptyObject,
                             mute: bool = EmptyObject,
                             deaf: bool = EmptyObject,
-                            channel: typing.Union[int, str, Snowflake, Channel] = EmptyObject,
+                            channel: Channel.TYPING = EmptyObject,
                             *,
                             reason: str = None):
         kwargs = {}
@@ -730,47 +730,47 @@ class APIClient:
             return GuildMember.create(self, resp, guild_id=int(guild))
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
-    def modify_current_user_nick(self, guild: typing.Union[int, str, Snowflake, Guild], nick: typing.Union[str, None] = EmptyObject, *, reason: str = None):
+    def modify_current_user_nick(self, guild: Guild.TYPING, nick: typing.Union[str, None] = EmptyObject, *, reason: str = None):
         return self.http.modify_current_user_nick(int(guild), nick, reason=reason)
 
     def add_guild_member_role(self,
-                              guild: typing.Union[int, str, Snowflake, Guild],
-                              user: typing.Union[int, str, Snowflake, User],
-                              role: typing.Union[int, str, Snowflake, Role],
+                              guild: Guild.TYPING,
+                              user: User.TYPING,
+                              role: Role.TYPING,
                               *,
                               reason: str = None):
         return self.http.add_guild_member_role(int(guild), int(user), int(role), reason=reason)
 
     def remove_guild_member_role(self,
-                                 guild: typing.Union[int, str, Snowflake, Guild],
-                                 user: typing.Union[int, str, Snowflake, User],
-                                 role: typing.Union[int, str, Snowflake, Role],
+                                 guild: Guild.TYPING,
+                                 user: User.TYPING,
+                                 role: Role.TYPING,
                                  *,
                                  reason: str = None):
         return self.http.remove_guild_member_role(int(guild), int(user), int(role), reason=reason)
 
-    def remove_guild_member(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
+    def remove_guild_member(self, guild: Guild.TYPING, user: User.TYPING):
         return self.http.remove_guild_member(int(guild), int(user))
 
     @property
     def kick(self):
         return self.remove_guild_member
 
-    def request_guild_bans(self, guild: typing.Union[int, str, Snowflake, Guild]):
+    def request_guild_bans(self, guild: Guild.TYPING):
         resp = self.http.request_guild_bans(int(guild))
         if isinstance(resp, list):
             return [Ban(self, x) for x in resp]
         return wrap_to_async(Ban, self, resp, as_create=False)
 
-    def request_guild_ban(self, guild: typing.Union[int, str, Snowflake, Guild], user: typing.Union[int, str, Snowflake, User]):
+    def request_guild_ban(self, guild: Guild.TYPING, user: User.TYPING):
         resp = self.http.request_guild_ban(int(guild), int(user))
         if isinstance(resp, dict):
             return Ban(self, resp)
         return wrap_to_async(Ban, self, resp, as_create=False)
 
     def create_guild_ban(self,
-                         guild: typing.Union[int, str, Snowflake, Guild],
-                         user: typing.Union[int, str, Snowflake, User],
+                         guild: Guild.TYPING,
+                         user: User.TYPING,
                          *,
                          delete_message_days: int = None,
                          reason: str = None):
@@ -781,20 +781,20 @@ class APIClient:
         return self.create_guild_ban
 
     def remove_guild_ban(self,
-                         guild: typing.Union[int, str, Snowflake, Guild],
-                         user: typing.Union[int, str, Snowflake, User],
+                         guild: Guild.TYPING,
+                         user: User.TYPING,
                          *,
                          reason: str = None):
         return self.remove_guild_ban(int(guild), int(user), reason=reason)
 
-    def request_guild_roles(self, guild: typing.Union[int, str, Snowflake, Guild]):
+    def request_guild_roles(self, guild: Guild.TYPING):
         resp = self.http.request_guild_roles(int(guild))
         if isinstance(resp, list):
             return [Role.create(self, x, guild_id=int(guild)) for x in resp]
         return wrap_to_async(Role, self, resp, guild_id=int(guild))
 
     def create_guild_role(self,
-                          guild: typing.Union[int, str, Snowflake, Guild],
+                          guild: Guild.TYPING,
                           *,
                           name: str = None,
                           permissions: typing.Union[int, str, PermissionFlags] = None,
@@ -818,7 +818,7 @@ class APIClient:
             return Role.create(self, resp, guild_id=int(guild))
         return wrap_to_async(Role, self, resp, guild_id=int(guild))
 
-    def modify_guild_role_positions(self, guild: typing.Union[int, str, Snowflake, Guild], *params: dict, reason: str = None):
+    def modify_guild_role_positions(self, guild: Guild.TYPING, *params: dict, reason: str = None):
         # You can get params by using Role.to_position_param(...)
         resp = self.http.modify_guild_role_positions(int(guild), [*params], reason=reason)
         if isinstance(resp, list):
@@ -826,8 +826,8 @@ class APIClient:
         return wrap_to_async(Role, self, resp, guild_id=int(guild))
 
     def modify_guild_role(self,
-                          guild: typing.Union[int, str, Snowflake, Guild],
-                          role: typing.Union[int, str, Snowflake, Role],
+                          guild: Guild.TYPING,
+                          role: Role.TYPING,
                           name: str = EmptyObject,
                           permissions: typing.Union[int, str, PermissionFlags] = EmptyObject,
                           color: int = EmptyObject,
@@ -850,10 +850,10 @@ class APIClient:
             return Role.create(self, resp, guild_id=int(guild))
         return wrap_to_async(Role, self, resp, guild_id=int(guild))
 
-    def delete_guild_role(self, guild: typing.Union[int, str, Snowflake, Guild], role: typing.Union[int, str, Snowflake, Role], *, reason: str = None):
+    def delete_guild_role(self, guild: Guild.TYPING, role: Role.TYPING, *, reason: str = None):
         return self.http.delete_guild_role(int(guild), int(role), reason=reason)
 
-    def request_guild_prune_count(self, guild: typing.Union[int, str, Snowflake, Guild], *, days: int = None, include_roles: typing.List[typing.Union[int, str, Snowflake, Role]] = None):
+    def request_guild_prune_count(self, guild: Guild.TYPING, *, days: int = None, include_roles: typing.List[Role.TYPING] = None):
         if include_roles is not None:
             include_roles = [*map(str, include_roles)]
         resp = self.http.request_guild_prune_count(int(guild), days, include_roles)
@@ -863,58 +863,58 @@ class APIClient:
 
     # Webhook
 
-    def create_webhook(self, channel: typing.Union[int, str, Snowflake, Channel], *, name: str = None, avatar: str = None):
+    def create_webhook(self, channel: Channel.TYPING, *, name: str = None, avatar: str = None):
         hook = self.http.create_webhook(int(channel), name, avatar)
         if isinstance(hook, dict):
             return Webhook(self, hook)
         return wrap_to_async(Webhook, self, hook, as_create=False)
 
-    def request_channel_webhooks(self, channel: typing.Union[int, str, Snowflake, Channel]):
+    def request_channel_webhooks(self, channel: Channel.TYPING):
         hooks = self.http.request_channel_webhooks(int(channel))
         if isinstance(hooks, list):
             return [Webhook(self, x) for x in hooks]
         return wrap_to_async(Webhook, self, hooks, as_create=False)
 
-    def request_guild_webhooks(self, guild: typing.Union[int, str, Snowflake, Guild]):
+    def request_guild_webhooks(self, guild: Guild.TYPING):
         hooks = self.http.request_guild_webhooks(int(guild))
         if isinstance(hooks, list):
             return [Webhook(self, x) for x in hooks]
         return wrap_to_async(Webhook, self, hooks, as_create=False)
 
-    def request_webhook(self, webhook: typing.Union[int, str, Snowflake, Webhook], webhook_token: str = None):  # Requesting webhook using webhook, seems legit.
+    def request_webhook(self, webhook: Webhook.TYPING, webhook_token: str = None):  # Requesting webhook using webhook, seems legit.
         hook = self.http.request_webhook(int(webhook)) if not webhook_token else self.http.request_webhook_with_token(int(webhook), webhook_token)
         if isinstance(hook, dict):
             return Webhook(self, hook)
         return wrap_to_async(Webhook, self, hook, as_create=False)
 
     def modify_webhook(self,
-                       webhook: typing.Union[int, str, Snowflake, Webhook],
+                       webhook: Webhook.TYPING,
                        *,
                        webhook_token: str = None,
                        name: str = None,
                        avatar: str = None,
-                       channel: typing.Union[int, str, Snowflake, Channel] = None):
+                       channel: Channel.TYPING = None):
         hook = self.http.modify_webhook(int(webhook), name, avatar, str(int(channel)) if channel is not None else channel) if not webhook_token \
             else self.http.modify_webhook_with_token(int(webhook), webhook_token, name, avatar)
         if isinstance(hook, dict):
             return Webhook(self, hook)
         return wrap_to_async(Webhook, self, hook, as_create=False)
 
-    def delete_webhook(self, webhook: typing.Union[int, str, Snowflake, Webhook], webhook_token: str = None):
+    def delete_webhook(self, webhook: Webhook.TYPING, webhook_token: str = None):
         return self.http.delete_webhook(int(webhook)) if not webhook_token else self.http.delete_webhook_with_token(int(webhook), webhook_token)
 
     def execute_webhook(self,
-                        webhook: typing.Union[int, str, Snowflake, Webhook],
+                        webhook: Webhook.TYPING,
                         *,
                         webhook_token: str = None,
                         wait: bool = None,
-                        thread: typing.Union[int, str, Snowflake, Channel] = None,
+                        thread: Channel.TYPING = None,
                         content: str = None,
                         username: str = None,
                         avatar_url: str = None,
                         tts: bool = False,
-                        file: typing.Union[io.FileIO, pathlib.Path, str] = None,
-                        files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
+                        file: FILE_TYPE = None,
+                        files: typing.List[FILE_TYPE] = None,
                         embed: typing.Union[Embed, dict] = None,
                         embeds: typing.List[typing.Union[Embed, dict]] = None,
                         allowed_mentions: typing.Union[AllowedMentions, dict] = None,
@@ -963,8 +963,8 @@ class APIClient:
                 [x.close() for x in files if not x.closed]
 
     def request_webhook_message(self,
-                                webhook: typing.Union[int, str, Snowflake, Webhook],
-                                message: typing.Union[int, str, Snowflake, Message],
+                                webhook: Webhook.TYPING,
+                                message: Message.TYPING,
                                 *,
                                 webhook_token: str = None):
         if not isinstance(webhook, Webhook) and not webhook_token:
@@ -975,15 +975,15 @@ class APIClient:
         return wrap_to_async(Message, self, msg, webhook_token=webhook_token or webhook.token)
 
     def edit_webhook_message(self,
-                             webhook: typing.Union[int, str, Snowflake, Webhook],
-                             message: typing.Union[int, str, Snowflake, Message],
+                             webhook: Webhook.TYPING,
+                             message: Message.TYPING,
                              *,
                              webhook_token: str = None,
                              content: str = EmptyObject,
                              embed: typing.Union[Embed, dict] = EmptyObject,
                              embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
-                             file: typing.Union[io.FileIO, pathlib.Path, str] = EmptyObject,
-                             files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = EmptyObject,
+                             file: FILE_TYPE = EmptyObject,
+                             files: typing.List[FILE_TYPE] = EmptyObject,
                              allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
                              attachments: typing.List[typing.Union[Attachment, dict]] = EmptyObject,
                              component: typing.Union[dict, Component] = EmptyObject,
@@ -1045,8 +1045,8 @@ class APIClient:
                 [x.close() for x in files if not x.closed]
 
     def delete_webhook_message(self,
-                               webhook: typing.Union[int, str, Snowflake, Webhook],
-                               message: typing.Union[int, str, Snowflake, Message],
+                               webhook: Webhook.TYPING,
+                               message: Message.TYPING,
                                *,
                                webhook_token: str = None):
         if not isinstance(webhook, Webhook) and not webhook_token:
@@ -1056,9 +1056,9 @@ class APIClient:
     # Interaction
 
     def request_application_commands(self,
-                                     guild: typing.Union[int, str, Snowflake, Guild] = None,
+                                     guild: Guild.TYPING = None,
                                      *,
-                                     application_id: typing.Union[int, str, Snowflake] = None):
+                                     application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         app_commands = self.http.request_application_commands(int(application_id or self.application_id), int(guild) if guild else guild)
@@ -1067,13 +1067,13 @@ class APIClient:
         return wrap_to_async(ApplicationCommand, None, app_commands)
 
     def create_application_command(self,
-                                   guild: typing.Union[int, str, Snowflake, Guild] = None,
+                                   guild: Guild.TYPING = None,
                                    *,
                                    name: str,
                                    description: str,
                                    options: typing.List[typing.Union[ApplicationCommandOption, dict]] = None,
                                    default_permission: bool = None,
-                                   application_id: typing.Union[int, str, Snowflake] = None):
+                                   application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         options = [x if isinstance(x, dict) else x.to_dict() for x in options or []]
@@ -1083,10 +1083,10 @@ class APIClient:
         return wrap_to_async(ApplicationCommand, None, resp)
 
     def request_application_command(self,
-                                    command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                    command: ApplicationCommand.TYPING,
                                     *,
-                                    guild: typing.Union[int, str, Snowflake, Guild] = None,
-                                    application_id: typing.Union[int, str, Snowflake] = None):
+                                    guild: Guild.TYPING = None,
+                                    application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         command_id = command.id if isinstance(command, ApplicationCommand) else int(command)
@@ -1096,14 +1096,14 @@ class APIClient:
         return wrap_to_async(ApplicationCommand, None, resp)
 
     def edit_application_command(self,
-                                 command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                 command: ApplicationCommand.TYPING,
                                  *,
                                  name: str = None,
                                  description: str = None,
                                  options: typing.List[typing.Union[ApplicationCommandOption, dict]] = None,
                                  default_permission: bool = None,
-                                 guild: typing.Union[int, str, Snowflake, Guild] = None,
-                                 application_id: typing.Union[int, str, Snowflake] = None):
+                                 guild: Guild.TYPING = None,
+                                 application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         command_id = int(command)
@@ -1114,10 +1114,10 @@ class APIClient:
         return wrap_to_async(ApplicationCommand, None, resp)
 
     def delete_application_command(self,
-                                   command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                   command: ApplicationCommand.TYPING,
                                    *,
-                                   guild: typing.Union[int, str, Snowflake, Guild] = None,
-                                   application_id: typing.Union[int, str, Snowflake] = None):
+                                   guild: Guild.TYPING = None,
+                                   application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         command_id = int(command)
@@ -1125,8 +1125,8 @@ class APIClient:
 
     def bulk_overwrite_application_commands(self,
                                             *commands: typing.Union[dict, ApplicationCommand],
-                                            guild: typing.Union[int, str, Snowflake, Guild] = None,
-                                            application_id: typing.Union[int, str, Snowflake] = None):
+                                            guild: Guild.TYPING = None,
+                                            application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         commands = [x if isinstance(x, dict) else x.to_dict() for x in commands]
@@ -1136,7 +1136,7 @@ class APIClient:
         return wrap_to_async(ApplicationCommand, None, app_commands)
 
     def create_interaction_response(self,
-                                    interaction: typing.Union[int, str, Snowflake, Interaction],
+                                    interaction: Interaction.TYPING,
                                     interaction_response: InteractionResponse,
                                     *,
                                     interaction_token: str = None):
@@ -1145,11 +1145,11 @@ class APIClient:
         return self.http.create_interaction_response(int(interaction), interaction_token or interaction.token, interaction_response.to_dict())
 
     def request_interaction_response(self,
-                                     interaction: typing.Union[int, str, Snowflake, Interaction] = None,
-                                     message: typing.Union[int, str, Snowflake, Message] = "@original",
+                                     interaction: Interaction.TYPING = None,
+                                     message: Message.TYPING = "@original",
                                      *,
                                      interaction_token: str = None,
-                                     application_id: typing.Union[int, str, Snowflake] = None):
+                                     application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
@@ -1161,16 +1161,16 @@ class APIClient:
         return wrap_to_async(Message, self, msg, interaction_token=interaction_token or interaction.token, original_response=original_response)
 
     def create_followup_message(self,
-                                interaction: typing.Union[int, str, Snowflake, Interaction] = None,
+                                interaction: Interaction.TYPING = None,
                                 *,
                                 interaction_token: str = None,
-                                application_id: typing.Union[int, str, Snowflake] = None,
+                                application_id: Snowflake.TYPING = None,
                                 content: str = None,
                                 username: str = None,
                                 avatar_url: str = None,
                                 tts: bool = False,
-                                file: typing.Union[io.FileIO, pathlib.Path, str] = None,
-                                files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = None,
+                                file: FILE_TYPE = None,
+                                files: typing.List[FILE_TYPE] = None,
                                 embed: typing.Union[Embed, dict] = None,
                                 embeds: typing.List[typing.Union[Embed, dict]] = None,
                                 allowed_mentions: typing.Union[AllowedMentions, dict] = None,
@@ -1220,14 +1220,14 @@ class APIClient:
                 [x.close() for x in files if not x.closed]
 
     def edit_interaction_response(self,
-                                  interaction: typing.Union[int, str, Snowflake, Interaction] = None,
-                                  message: typing.Union[int, str, Snowflake, Message] = "@original",
+                                  interaction: Interaction.TYPING = None,
+                                  message: Message.TYPING = "@original",
                                   *,
                                   interaction_token: str = None,
-                                  application_id: typing.Union[int, str, Snowflake] = None,
+                                  application_id: Snowflake.TYPING = None,
                                   content: str = EmptyObject,
-                                  file: typing.Union[io.FileIO, pathlib.Path, str] = EmptyObject,
-                                  files: typing.List[typing.Union[io.FileIO, pathlib.Path, str]] = EmptyObject,
+                                  file: FILE_TYPE = EmptyObject,
+                                  files: typing.List[FILE_TYPE] = EmptyObject,
                                   embed: typing.Union[Embed, dict] = EmptyObject,
                                   embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
                                   allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
@@ -1297,18 +1297,18 @@ class APIClient:
         return self.edit_interaction_response
 
     def delete_interaction_response(self,
-                                    interaction: typing.Union[int, str, Snowflake, Interaction] = None,
-                                    message: typing.Union[int, str, Snowflake, Message] = "@original",
+                                    interaction: Interaction.TYPING = None,
+                                    message: Message.TYPING = "@original",
                                     *,
                                     interaction_token: str = None,
-                                    application_id: typing.Union[int, str, Snowflake] = None):
+                                    application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
             raise TypeError("you must pass interaction_token if interaction is not dico.Interaction object.")
         return self.http.delete_interaction_response(int(application_id or self.application_id), interaction_token or interaction.token, int(message) if message != "@original" else message)
 
-    def request_guild_application_command_permissions(self, guild: typing.Union[int, str, Snowflake, Guild], *, application_id: typing.Union[int, str, Snowflake] = None):
+    def request_guild_application_command_permissions(self, guild: Guild.TYPING, *, application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         resp = self.http.request_guild_application_command_permissions(int(application_id or self.application_id), int(guild))
@@ -1317,9 +1317,9 @@ class APIClient:
         return wrap_to_async(GuildApplicationCommandPermissions, None, resp, as_create=False)
 
     def request_application_command_permissions(self,
-                                                guild: typing.Union[int, str, Snowflake, Guild],
-                                                command: typing.Union[int, str, Snowflake, ApplicationCommand],
-                                                *, application_id: typing.Union[int, str, Snowflake] = None):
+                                                guild: Guild.TYPING,
+                                                command: ApplicationCommand.TYPING,
+                                                *, application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         resp = self.http.request_application_command_permissions(int(application_id or self.application_id), int(guild), int(command))
@@ -1328,10 +1328,10 @@ class APIClient:
         return wrap_to_async(GuildApplicationCommandPermissions, None, resp, as_create=False)
 
     def edit_application_command_permissions(self,
-                                             guild: typing.Union[int, str, Snowflake, Guild],
-                                             command: typing.Union[int, str, Snowflake, ApplicationCommand],
+                                             guild: Guild.TYPING,
+                                             command: ApplicationCommand.TYPING,
                                              *permissions: typing.Union[dict, ApplicationCommandPermissions],
-                                             application_id: typing.Union[int, str, Snowflake] = None):
+                                             application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         permissions = [x if isinstance(x, dict) else x.to_dict() for x in permissions]
@@ -1341,10 +1341,9 @@ class APIClient:
         return wrap_to_async(GuildApplicationCommandPermissions, None, resp, as_create=False)
 
     def batch_edit_application_command_permissions(self,
-                                                   guild: typing.Union[int, str, Snowflake, Guild],
-                                                   permissions_dict: typing.Dict[typing.Union[int, str, Snowflake, ApplicationCommand],
-                                                                                 typing.List[typing.Union[dict, ApplicationCommandPermissions]]],
-                                                   *, application_id: typing.Union[int, str, Snowflake] = None):
+                                                   guild: Guild.TYPING,
+                                                   permissions_dict: typing.Dict[ApplicationCommand.TYPING, typing.List[typing.Union[dict, ApplicationCommandPermissions]]],
+                                                   *, application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         permissions_dicts = [{"id": str(int(k)), "permissions": [x if isinstance(x, dict) else x.to_dict() for x in v]} for k, v in permissions_dict.items()]

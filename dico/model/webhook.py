@@ -7,6 +7,8 @@ from ..base.model import TypeBase
 
 
 class Webhook:
+    TYPING = typing.Union[int, str, Snowflake, "Webhook"]
+
     def __init__(self, client, resp):
         self.raw = resp
         self.client = client

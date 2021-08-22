@@ -1,7 +1,10 @@
+import typing
 import datetime
 
 
 class Snowflake:
+    TYPING = typing.Union[int, str, "Snowflake"]
+
     def __init__(self, snowflake):
         self.__snowflake = int(snowflake)
 

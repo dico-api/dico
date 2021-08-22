@@ -12,6 +12,8 @@ from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
 
 
 class Channel(DiscordObjectBase):
+    TYPING = typing.Union[int, str, Snowflake, "Channel"]
+
     def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
         self._cache_type = "channel"
@@ -195,6 +197,8 @@ class VideoQualityModes(TypeBase):
 
 
 class Message(DiscordObjectBase):
+    TYPING = typing.Union[int, str, Snowflake, "Message"]
+
     def __init__(self, client, resp, *, guild_id=None, webhook_token=None, interaction_token=None, original_response=False):
         from .interactions import MessageInteraction, Component  # Prevent circular import.
         super().__init__(client, resp)

@@ -10,6 +10,8 @@ from ..base.model import DiscordObjectBase, TypeBase, FlagBase
 
 
 class Guild(DiscordObjectBase):
+    TYPING = typing.Union[int, str, Snowflake, "Guild"]
+
     def __init__(self, client, resp):
         from .channel import Channel  # Prevent circular import.
         super().__init__(client, resp)
@@ -194,6 +196,8 @@ class GuildWidget:
 
 
 class GuildMember:
+    TYPING = typing.Union[int, str, Snowflake, "GuildMember"]
+
     def __init__(self, client, resp, *, user: User = None, guild_id=None):
         self.raw = resp
         self.client = client

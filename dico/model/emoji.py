@@ -1,8 +1,11 @@
+import typing
 from .user import User
 from .snowflake import Snowflake
 
 
 class Emoji:
+    TYPING = typing.Union[int, str, Snowflake, "Emoji"]
+
     def __init__(self, client, resp):
         self.id = Snowflake.optional(resp.get("id"))
         self.name = resp["name"]

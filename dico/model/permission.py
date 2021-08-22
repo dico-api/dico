@@ -1,3 +1,5 @@
+import typing
+
 from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, FlagBase
 
@@ -43,6 +45,8 @@ class PermissionFlags(FlagBase):
 
 
 class Role(DiscordObjectBase):
+    TYPING = typing.Union[int, str, Snowflake, "Role"]
+
     def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
         self.guild_id = Snowflake.optional(guild_id)  # This isn't actually in payload, but role is always created at the guild, so why not?

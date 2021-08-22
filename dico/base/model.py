@@ -1,4 +1,6 @@
 import copy
+import typing
+
 from ..model.snowflake import Snowflake
 
 
@@ -19,6 +21,8 @@ class EventBase:
 
 
 class DiscordObjectBase:
+    TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase"]
+
     def __init__(self, client, resp, **kwargs):
         resp.update(kwargs)
         self._cache_type = None

@@ -6,6 +6,8 @@ from ...base.model import TypeBase
 
 
 class ApplicationCommand:
+    TYPING = typing.Union[int, str, Snowflake, "ApplicationCommand"]
+
     def __init__(self,
                  name: str,
                  description: str,

@@ -73,6 +73,8 @@ class GatewayResponse:
 
 
 class Application:
+    TYPING = typing.Union[int, str, Snowflake, "Application"]
+
     def __init__(self, client, resp):
         self.id = Snowflake(resp["id"])
         self.name = resp["name"]

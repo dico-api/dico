@@ -1,8 +1,12 @@
+import typing
+from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, FlagBase, TypeBase
 from ..utils import cdn_url
 
 
 class User(DiscordObjectBase):
+    TYPING = typing.Union[int, str, Snowflake, "User"]
+
     def __init__(self, client, resp):
         super().__init__(client, resp)
         self._cache_type = "user"
