@@ -271,3 +271,11 @@ class Ban:
 
 
 # TODO: Welcome Screen
+
+
+class PruneCountResponse:
+    def __init__(self, resp: dict):
+        self.pruned = resp["pruned"]
+
+    def __int__(self):
+        return int(self.pruned)

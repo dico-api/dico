@@ -1259,6 +1259,22 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/roles/{role_id}", "DELETE", reason_header=reason)
 
+    def request_guild_prune_count(self, guild_id, days: int = None, include_roles: typing.List[str] = None):
+        """
+        Sends get guild prune count request.
+
+        :param guild_id: ID of the guild.
+        :param days: Days to count prune.
+        :param include_roles: Roles to include.
+        :return:
+        """
+        params = {}
+        if days is not None:
+            params["days"] = days
+        if include_roles is not None:
+            params["include_roles"] = ','.join(include_roles)
+        return self.request(f"/guilds/{guild_id}/prune", "GET", params=params)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

@@ -7,7 +7,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
-    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags
+    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, PruneCountResponse
 from .utils import from_emoji, wrap_to_async
 
 
@@ -852,6 +852,14 @@ class APIClient:
 
     def delete_guild_role(self, guild: typing.Union[int, str, Snowflake, Guild], role: typing.Union[int, str, Snowflake, Role], *, reason: str = None):
         return self.http.delete_guild_role(int(guild), int(role), reason=reason)
+
+    def request_guild_prune_count(self, guild: typing.Union[int, str, Snowflake, Guild], *, days: int = None, include_roles: typing.List[typing.Union[int, str, Snowflake, Role]] = None):
+        if include_roles is not None:
+            include_roles = [*map(str, include_roles)]
+        resp = self.http.request_guild_prune_count(int(guild), days, include_roles)
+        if isinstance(resp, dict):
+            return PruneCountResponse(resp)
+        return wrap_to_async(PruneCountResponse, None, resp, as_create=False)
 
     # Webhook
 
