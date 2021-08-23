@@ -7,7 +7,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, PruneCountResponse, FILE_TYPE, \
-    VoiceRegion, Integration
+    VoiceRegion, Integration, ApplicationCommandTypes
 from .utils import from_emoji, wrap_to_async
 
 
@@ -1105,14 +1105,18 @@ class APIClient:
                                    guild: Guild.TYPING = None,
                                    *,
                                    name: str,
-                                   description: str,
+                                   description: str = None,
                                    options: typing.List[typing.Union[ApplicationCommandOption, dict]] = None,
                                    default_permission: bool = None,
+                                   command_type: typing.Union[ApplicationCommandTypes, int] = None,
                                    application_id: Snowflake.TYPING = None):
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
+        if description is None and (command_type is None or int(command_type) == 1):
+            raise ValueError("CHAT_INPUT requires description.")
         options = [x if isinstance(x, dict) else x.to_dict() for x in options or []]
-        resp = self.http.create_application_command(int(application_id or self.application_id), name, description, options, default_permission, int(guild) if guild else guild)
+        command_type = int(command_type) if command_type is not None else command_type
+        resp = self.http.create_application_command(int(application_id or self.application_id), name, description, options, default_permission, command_type, int(guild) if guild else guild)
         if isinstance(resp, dict):
             return ApplicationCommand.create(resp)
         return wrap_to_async(ApplicationCommand, None, resp)
@@ -1156,7 +1160,7 @@ class APIClient:
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         command_id = int(command)
-        return self.http.delete_application_command(int(application_id or self.application_id), command_id, int(guild))
+        return self.http.delete_application_command(int(application_id or self.application_id), command_id, int(guild) if guild else guild)
 
     def bulk_overwrite_application_commands(self,
                                             *commands: typing.Union[dict, ApplicationCommand],

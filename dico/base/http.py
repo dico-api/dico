@@ -1567,7 +1567,14 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "GET")
 
-    def create_application_command(self, application_id, name: str, description: str, options: typing.List[dict] = None, default_permission: bool = None, guild_id=None):
+    def create_application_command(self,
+                                   application_id,
+                                   name: str,
+                                   description: str = None,
+                                   options: typing.List[dict] = None,
+                                   default_permission: bool = None,
+                                   command_type: int = None,
+                                   guild_id=None):
         """
         Sends create global or guild application command request.
 
@@ -1576,13 +1583,18 @@ class HTTPRequestBase(ABC):
         :param description: Description of the command.
         :param options: Options of the command.
         :param default_permission: Whether the command is enabled as a default.
+        :param command_type: Type of the command.
         :param guild_id: ID of the guild. Set to None for global.
         """
-        body = {"name": name, "description": description}
+        body = {"name": name}
+        if description is not None:
+            body["description"] = description
         if options:
             body["options"] = options
         if default_permission is not None:
             body["default_permission"] = default_permission
+        if command_type is not None:
+            body["type"] = command_type
         return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "POST", body, is_json=True)
 
     def request_application_command(self, application_id, command_id, guild_id=None):

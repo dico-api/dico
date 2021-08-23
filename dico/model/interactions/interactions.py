@@ -1,5 +1,5 @@
 import typing
-from .commands import ApplicationCommandInteractionDataOption
+from .commands import ApplicationCommandInteractionDataOption, ApplicationCommandTypes
 from .components import Component, ComponentTypes
 from ..channel import Channel, Message, Embed, AllowedMentions
 from ..guild import GuildMember
@@ -27,6 +27,8 @@ class Interaction:
         self.user = User.create(client, self.__user) if self.__user else None
         self.token = resp["token"]
         self.version = resp["version"]
+        self.__message = resp.get("message")
+        self._message = Message.create(client, self.__message) if self.__message else self.__message
 
     def __int__(self):
         return int(self.id)
@@ -36,6 +38,12 @@ class Interaction:
 
     def create_followup_message(self, **kwargs):
         return self.client.create_followup_message(self, **kwargs)
+
+    @property
+    def message(self):
+        if self.type.application_command:
+            raise AttributeError("message is exclusive to Components.")
+        return self._message
 
     @classmethod
     def create(cls, client, resp):
@@ -52,11 +60,12 @@ class InteractionData:
     def __init__(self, client, resp: dict):
         self.id = Snowflake.optional(resp.get("id"))
         self.name = resp.get("name")
+        self.type = ApplicationCommandTypes(resp.get("type")) if resp.get("type") is not None else None
         self.__resolved = resp.get("resolved")
         self.resolved = ResolvedData(client, resp.get("resolved")) if self.__resolved else self.__resolved
         self.options = [ApplicationCommandInteractionDataOption(x) for x in resp.get("options", [])]
         self.custom_id = resp.get("custom_id")
-        self.component_type = ComponentTypes(resp.get("component_type")) if resp.get("component_type") else None
+        self.component_type = ComponentTypes(resp.get("component_type")) if resp.get("component_type") is not None else None
         self.values = resp.get("values", [])
         self.target_id = Snowflake.optional(resp.get("target_id"))
 
