@@ -41,3 +41,13 @@ class VoiceState:
     @classmethod
     def create(cls, *args, **kwargs):
         return cls(*args, **kwargs)
+
+
+class VoiceRegion:
+    def __init__(self, resp):
+        self.id = resp["id"]
+        self.name = resp["name"]
+        self.vip = resp.get("vip")
+        self.optimal = resp["optimal"]
+        self.deprecated = resp["deprecated"]
+        self.custom = resp["custom"]

@@ -265,7 +265,52 @@ class GuildMember:
         return ret
 
 
-# TODO: Integration
+class Integration:
+    def __init__(self, client, resp):
+        self.id = Snowflake(resp["id"])
+        self.name = resp["name"]
+        self.type = resp["type"]
+        self.enabled = resp["enabled"]
+        self.syncing = resp.get("syncing")
+        self.role_id = Snowflake.optional(resp.get("role_id"))
+        self.enable_emoticons = resp.get("enable_emoticons")
+        self.__expire_behavior = resp.get("expire_behavior")
+        self.expire_behavior = IntegrationExpireBehaviors(int(self.__expire_behavior)) if self.__expire_behavior else self.__expire_behavior
+        self.expire_grace_period = resp.get("expire_grace_period")
+        self.__user = resp.get("user")
+        self.user = User.create(client, self.__user) if self.__user else self.__user
+        self.account = IntegrationAccount(resp["account"])
+        self.__synced_at = resp.get("synced_at")
+        self.synced_at = datetime.datetime.fromisoformat(self.__synced_at) if self.__synced_at else self.__synced_at
+        self.subscriber_count = resp.get("subscriber_count")
+        self.revoked = resp.get("revoked")
+        self.__application = resp.get("application")
+        self.application = IntegrationApplication(client, self.__application) if self.__application else self.__application
+
+
+class IntegrationExpireBehaviors(TypeBase):
+    REMOVE_ROLE = 0
+    KICK = 1
+
+
+class IntegrationAccount:
+    def __init__(self, resp):
+        self.id = resp["id"]
+        self.name = resp["name"]
+
+
+class IntegrationApplication:
+    def __init__(self, client, resp):
+        self.id = Snowflake(resp["id"])
+        self.name = resp["name"]
+        self.icon = resp["icon"]
+        self.description = resp["description"]
+        self.summary = resp["summary"]
+        self.__bot = resp.get("bot")
+        self.bot = User.create(client, self.__bot) if self.__bot else self.__bot
+
+    def icon_url(self, *, extension="webp", size=1024):
+        return cdn_url("app-icons/{application_id}", image_hash=self.icon, extension=extension, size=size, application_id=self.id)
 
 
 class Ban:

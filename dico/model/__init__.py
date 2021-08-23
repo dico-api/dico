@@ -8,5 +8,6 @@ from .invite import *
 from .permission import *
 from .snowflake import *
 from .user import *
+from .voice import *
 from .webhook import *
 from .interactions import *

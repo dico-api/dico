@@ -1,6 +1,6 @@
 import datetime
 from .channel import Channel
-from .guild import Guild
+from .guild import Guild, GuildMember
 from .user import User
 from ..base.model import TypeBase
 
@@ -21,6 +21,9 @@ class Invite:
         self.approximate_member_count = resp.get("approximate_member_count")
         self.__expires_at = resp.get("expires_at")
         self.expires_at = datetime.datetime.fromisoformat(self.__expires_at) if self.__expires_at else self.__expires_at
+        self.__stage_instance = resp.get("stage_instance")
+        self.stage_instance = InviteStageInstance(client, self.__stage_instance) if self.__stage_instance else self.__stage_instance
+        self.metadata = InviteMetadata.optional(resp)
 
 
 class InviteTargetTypes(TypeBase):
@@ -35,3 +38,16 @@ class InviteMetadata:
         self.max_age = resp["max_age"]
         self.temporary = resp["temporary"]
         self.created_at = datetime.datetime.fromisoformat(resp["created_at"])
+
+    @classmethod
+    def optional(cls, resp):
+        if "uses" in resp:
+            return cls(resp)
+
+
+class InviteStageInstance:
+    def __init__(self, client, resp):
+        self.members = [GuildMember.create(client, x) for x in resp["members"]]
+        self.participant_count = resp["participant_count"]
+        self.speaker_count = resp["speaker_count"]
+        self.topic = resp["topic"]

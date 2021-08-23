@@ -435,7 +435,8 @@ class Overwrite(CopyableObject):
             self.deny.__setattr__(k, not v)
 
     @classmethod
-    def create(cls, resp):
+    def create(cls, resp: dict):
+        resp = resp.copy()
         _id = resp.pop("id")
         _type = resp.pop("type")
         if _type == 1:
