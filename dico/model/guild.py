@@ -266,6 +266,8 @@ class GuildMember:
 
 
 class Integration:
+    TYPING = typing.Union[int, str, Snowflake, "Integration"]
+
     def __init__(self, client, resp):
         self.id = Snowflake(resp["id"])
         self.name = resp["name"]
@@ -286,6 +288,9 @@ class Integration:
         self.revoked = resp.get("revoked")
         self.__application = resp.get("application")
         self.application = IntegrationApplication(client, self.__application) if self.__application else self.__application
+
+    def __int__(self):
+        return int(self.id)
 
 
 class IntegrationExpireBehaviors(TypeBase):

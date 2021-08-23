@@ -1,13 +1,13 @@
 import io
 import typing
-import pathlib
 import datetime
 from .base.http import HTTPRequestBase, EmptyObject
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
-    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, PruneCountResponse, FILE_TYPE
+    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, PruneCountResponse, FILE_TYPE, \
+    VoiceRegion, Integration
 from .utils import from_emoji, wrap_to_async
 
 
@@ -860,6 +860,41 @@ class APIClient:
         if isinstance(resp, dict):
             return PruneCountResponse(resp)
         return wrap_to_async(PruneCountResponse, None, resp, as_create=False)
+
+    def begin_guild_prune(self,
+                          guild: Guild.TYPING,
+                          *,
+                          days: int = 7,
+                          compute_prune_count: bool = True,
+                          include_roles: typing.List[Role.TYPING] = None,
+                          reason: str = None):
+        if include_roles is not None:
+            include_roles = [*map(str, include_roles)]
+        resp = self.http.begin_guild_prune(int(guild), days, compute_prune_count, include_roles, reason=reason)
+        if isinstance(resp, dict):
+            return PruneCountResponse(resp)
+        return wrap_to_async(PruneCountResponse, None, resp, as_create=False)
+
+    def request_guild_voice_regions(self, guild: Guild.TYPING):
+        resp = self.http.request_guild_voice_regions(int(guild))
+        if isinstance(resp, list):
+            return [VoiceRegion(x) for x in resp]
+        return wrap_to_async(VoiceRegion, None, resp, as_create=False)
+
+    def request_guild_invites(self, guild: Guild.TYPING):
+        resp = self.http.request_guild_invites(int(guild))
+        if isinstance(resp, list):
+            return [Invite(self, x) for x in resp]
+        return wrap_to_async(Invite, self, resp, as_create=False)
+
+    def request_guild_integrations(self, guild: Guild.TYPING):
+        resp = self.http.request_guild_integrations(int(guild))
+        if isinstance(resp, list):
+            return [Integration(self, x) for x in resp]
+        return wrap_to_async(Integration, self, resp, as_create=False)
+
+    def delete_guild_integration(self, guild: Guild.TYPING, integration: Integration.TYPING, *, reason: str = None):
+        return self.http.delete_guild_integration(int(guild), int(integration), reason=reason)
 
     # Webhook
 

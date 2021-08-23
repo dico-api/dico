@@ -1275,6 +1275,53 @@ class HTTPRequestBase(ABC):
             params["include_roles"] = ','.join(include_roles)
         return self.request(f"/guilds/{guild_id}/prune", "GET", params=params)
 
+    def begin_guild_prune(self, guild_id, days: int = 7, compute_prune_count: bool = True, include_roles: typing.List[str] = None, reason: str = None):
+        """
+        Sends begin guild prune request.
+
+        :param guild_id: ID of the guild.
+        :param days: Days to prune.
+        :param compute_prune_count: Whether to return ``pruned``.
+        :param include_roles: Roles to include.
+        :param reason: Reason of the action.
+        """
+        body = {"days": days, "compute_prune_count": compute_prune_count, "include_roles": include_roles}  # Not sure if params are optional
+        return self.request(f"/guilds/{guild_id}/prune", "POST", body, reason_header=reason)
+
+    def request_guild_voice_regions(self, guild_id):
+        """
+        Sends get guild voice regions request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/regions", "GET")
+
+    def request_guild_invites(self, guild_id):
+        """
+        Sends get guild invites request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/invites", "GET")
+
+    def request_guild_integrations(self, guild_id):
+        """
+        Sends get guild integrations request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/integrations", "GET")
+
+    def delete_guild_integration(self, guild_id, integration_id, reason: str = None):
+        """
+        Sends delete guild integration request.
+
+        :param guild_id: ID of the guild.
+        :param integration_id: ID of the integration to delete.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/guilds/{guild_id}/integrations/{integration_id}", "DELETE", reason_header=reason)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

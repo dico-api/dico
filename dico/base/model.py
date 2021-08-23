@@ -96,10 +96,10 @@ class FlagBase:
             self.value &= ~self.values[key]
 
     def add(self, value):
-        return self.__setattr(value, True)
+        return self.__setattr__(value, True)
 
     def remove(self, value):
-        return self.__setattr(value, False)
+        return self.__setattr__(value, False)
 
     @classmethod
     def from_value(cls, value: int):
