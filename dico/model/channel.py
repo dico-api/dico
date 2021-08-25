@@ -379,10 +379,15 @@ class MessageReference:
         self.fail_if_not_exists = resp.get("fail_if_not_exists", True)
 
     def to_dict(self):
-        return {"message_id": str(self.message_id),
-                "channel_id": str(self.channel_id),
-                "guild_id": str(self.guild_id),
-                "fail_if_not_exists": self.fail_if_not_exists}
+        resp = {}
+        if self.message_id:
+            resp["message_id"] = str(self.message_id)
+        if self.channel_id:
+            resp["channel_id"] = str(self.channel_id)
+        if self.guild_id:
+            resp["guild_id"] = str(self.guild_id)
+        resp["fail_if_not_exists"] = self.fail_if_not_exists
+        return resp
 
     @classmethod
     def from_message(cls, message: Message, fail_if_not_exists: bool = True):

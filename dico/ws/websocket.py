@@ -105,6 +105,7 @@ class WebSocketClient:
 
     async def receive(self):
         resp = await self.ws.receive()
+        self.logger.debug(f"Raw receive {resp.type}: {resp.data}")
         if resp.type == aiohttp.WSMsgType.TEXT:
             res = gateway.GatewayResponse(resp.json())
             if res.s is not None:
