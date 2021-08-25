@@ -60,8 +60,14 @@ class WebSocketClient:
                         await self.reconnect(fresh=True)
                     break
                 if not resp:
-                    self.logger.warning("Empty response detected, ignoring.")
-                    continue
+                    # self.logger.warning("Empty response detected, ignoring.")
+                    # continue
+
+                    # Actually, we should terminate or we might have 500MB+ logger file ¯\_(ツ)_/¯
+                    await self.close(1001)
+                    raise Exception("Uh oh, it looks like you just encountered some annoying issue. For the safety, this client will automatically closed.\n"
+                                    "If you have the logger set to DEBUG mode, please report this issue with 4~5 previous raw response lof to GitHub issue #1 or our support server.\n"
+                                    "Sorry for the inconvenience.")
                 self.logger.debug(f"Received `{gateway.Opcodes.as_string(resp.op)}` payload"
                                   f"{f' with event name `{resp.t}`' if resp.op == gateway.Opcodes.DISPATCH else ''}.")
                 if resp.s:
