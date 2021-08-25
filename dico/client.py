@@ -2,6 +2,8 @@ import sys
 import typing
 import asyncio
 import traceback
+from contextlib import suppress
+
 from . import utils
 from .api import APIClient
 from .http.async_http import AsyncHTTPRequest
@@ -120,9 +122,10 @@ class Client(APIClient):
         [self.loop.create_task(utils.safe_call(x(*args))) for x in self.events.get(name.upper())]
         # [self.__wait_futures[name.upper()].pop(x).set_result(args) for x in range(len(self.__wait_futures.get(name.upper(), [])))]
         for x in range(len(self.__wait_futures.get(name.upper(), []))):
-            fut: asyncio.Future = self.__wait_futures[name.upper()].pop(x)
-            if not fut.cancelled():
-                fut.set_result(args)
+            with suppress(IndexError):  # temporary fix, we might need to use while instead
+                fut: asyncio.Future = self.__wait_futures[name.upper()].pop(x)
+                if not fut.cancelled():
+                    fut.set_result(args)
 
     @property
     def get(self):
