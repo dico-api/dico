@@ -103,14 +103,14 @@ class Client(APIClient):
                 if event_name.upper() not in self.__wait_futures:
                     self.__wait_futures[event_name.upper()] = []
                 self.__wait_futures[event_name.upper()].append(future)
-                res = await asyncio.wait_for(future, timeout=None, loop=self.loop)
+                res = await asyncio.wait_for(future, timeout=None)
                 ret = res if len(res) > 1 else res[0]
                 if check and check(*res):
                     return ret
                 elif not check:
                     return ret
             raise WebsocketClosed
-        return asyncio.wait_for(wrap(), timeout=timeout, loop=self.loop)
+        return asyncio.wait_for(wrap(), timeout=timeout)
 
     def dispatch(self, name, *args):
         """
