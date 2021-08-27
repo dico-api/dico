@@ -45,6 +45,12 @@ class Interaction:
             raise AttributeError("message is exclusive to Components.")
         return self._message
 
+    @property
+    def target(self):
+        if not self.type.application_command or self.data.type.chat_input:
+            raise AttributeError("target is exclusive to context menu.")
+        return self.data.resolved.get(self.data.target_id)
+
     @classmethod
     def create(cls, client, resp):
         return cls(client, resp)
