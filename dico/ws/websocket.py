@@ -55,9 +55,11 @@ class WebSocketClient:
                     resp = await self.receive()
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
-                    if ex.code is None and self.try_reconnect:
-                        self.logger.warning("Trying to reconnect...")
+                    if (ex.code in (1000, 1001) or ex.code is None) or self.try_reconnect:
+                        self.logger.warning("Websocket closed, trying to reconnect...")
                         await self.reconnect(fresh=True)
+                    else:
+                        self.logger.error(f"Unexpected websocket disconnection; this client will now be terminated.")
                     break
                 if not resp:
                     # self.logger.warning("Empty response detected, ignoring.")
@@ -117,7 +119,7 @@ class WebSocketClient:
             if res.s is not None:
                 self.seq = res.s
             return res
-        elif resp.type == aiohttp.WSMsgType.CLOSE:
+        elif resp.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
             raise WSClosing(resp.data)
 
     async def reconnect(self, fresh: bool = False):
