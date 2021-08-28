@@ -13,6 +13,8 @@ from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
 
 if typing.TYPE_CHECKING:
     from .gateway import Application
+    from .guild import Guild
+    from ..api import APIClient
 
 
 class Channel(DiscordObjectBase):
@@ -47,7 +49,8 @@ class Channel(DiscordObjectBase):
         self.thread_metadata: typing.Optional[ThreadMetadata] = ThreadMetadata.optional(self.client, resp.get("thread_metadata"))
         self.member: typing.Optional[ThreadMember] = ThreadMember.optional(self.client, resp.get("member"))
         self.default_auto_archive_duration: typing.Optional[int] = resp.get("default_auto_archive_duration")
-        self.permissions: typing.Optional[str] = resp.get("permissions")
+        self.__permissions = resp.get("permissions")
+        self.permissions: typing.Optional[PermissionFlags] = PermissionFlags.from_value(int(self.__permissions)) if self.__permissions else self.__permissions
 
     def modify(self, **kwargs):
         if self.type.group_dm:
@@ -154,7 +157,7 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to archive.")
         return self.modify(archived=True, locked=locked)
 
-    def to_position_param(self, position: int = None, lock_permissions: bool = None, parent: typing.Union[int, str, Snowflake, "Channel"] = None):
+    def to_position_param(self, position: int = None, lock_permissions: bool = None, parent: typing.Union[int, str, Snowflake, "Channel"] = None) -> dict:
         if isinstance(parent, Channel) and not parent.type.guild_category:
             raise TypeError("parent must be category channel.")
         param = {
@@ -166,11 +169,11 @@ class Channel(DiscordObjectBase):
         return param
 
     @property
-    def mention(self):
+    def mention(self) -> str:
         return f"<#{self.id}>"
 
     @property
-    def guild(self):
+    def guild(self) -> typing.Optional["Guild"]:
         if self.guild_id and self.client.has_cache:
             return self.client.cache.get(self.guild_id, "guild")  # noqa
 
@@ -252,7 +255,7 @@ class Message(DiscordObjectBase):
 
         # self.stickers: typing.Optional[typing.List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
 
-    def reply(self, content=None, **kwargs):
+    def reply(self, content=None, **kwargs) -> "Message":
         kwargs["message_reference"] = self
         mention = kwargs.pop("mention") if "mention" in kwargs.keys() else True
         allowed_mentions = kwargs.get("allowed_mentions", self.client.default_allowed_mentions or AllowedMentions(replied_user=mention)).copy()
@@ -297,12 +300,12 @@ class Message(DiscordObjectBase):
         return self.client.start_thread(self.channel_id, self, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     @property
-    def guild(self):
+    def guild(self) -> typing.Optional["Guild"]:
         if self.guild_id and self.client.has_cache:
             return self.client.get(self.guild_id, "guild")
 
     @property
-    def channel(self):
+    def channel(self) -> typing.Optional[Channel]:
         if self.channel_id and self.client.has_cache:
             if self.guild_id:
                 return self.guild.get(self.channel_id, "channel") or self.client.get(self.channel_id, "channel")
@@ -337,8 +340,8 @@ class MessageTypes(TypeBase):
 
 class MessageActivity:
     def __init__(self, resp):
-        self.type = MessageActivityTypes(resp["type"])
-        self.party_id = resp.get("party_id")  # This is actually set as string in discord docs.
+        self.type: MessageActivityTypes = MessageActivityTypes(resp["type"])
+        self.party_id: str = resp.get("party_id")  # This is actually set as string in discord docs.
 
     @classmethod
     def optional(cls, resp):
@@ -366,12 +369,12 @@ class MessageFlags(FlagBase):
 
 class MessageReference:
     def __init__(self, resp):
-        self.message_id = Snowflake.optional(resp.get("message_id"))
-        self.channel_id = Snowflake.optional(resp.get("channel_id"))
-        self.guild_id = Snowflake.optional(resp.get("guild_id"))
-        self.fail_if_not_exists = resp.get("fail_if_not_exists", True)
+        self.message_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("message_id"))
+        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.fail_if_not_exists: bool = resp.get("fail_if_not_exists", True)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         resp = {}
         if self.message_id:
             resp["message_id"] = str(self.message_id)
@@ -393,21 +396,21 @@ class MessageReference:
 
 class FollowedChannel:
     def __init__(self, client, resp):
-        self.client = client
-        self.channel_id = Snowflake(resp["channel_id"])
-        self.webhook_id = Snowflake(resp["webhook_id"])
+        self.client: "APIClient" = client
+        self.channel_id: typing.Optional[Snowflake] = Snowflake(resp["channel_id"])
+        self.webhook_id: typing.Optional[Snowflake] = Snowflake(resp["webhook_id"])
 
     @property
-    def channel(self):
+    def channel(self) -> typing.Optional[Channel]:
         if self.client.has_cache:
             return self.client.get(self.channel_id)
 
 
 class Reaction:
     def __init__(self, client, resp):
-        self.count = resp["count"]
-        self.me = resp["me"]
-        self.emoji = Emoji(client, resp["emoji"])
+        self.count: int = resp["count"]
+        self.me: bool = resp["me"]
+        self.emoji: Emoji = Emoji(client, resp["emoji"])
 
 
 class Overwrite(CopyableObject):
@@ -419,12 +422,12 @@ class Overwrite(CopyableObject):
                  **kw):
         if user is None and role is None:
             raise TypeError("you must pass user or role.")
-        self.id = Snowflake.ensure_snowflake(int(user or role))
-        self.type = 0 if role else 1
-        self.allow = PermissionFlags.from_value(int(allow))
-        self.deny = PermissionFlags.from_value(int(deny))
+        self.id: Snowflake = Snowflake.ensure_snowflake(int(user or role))
+        self.type: int = 0 if role else 1
+        self.allow: PermissionFlags = PermissionFlags.from_value(int(allow))
+        self.deny: PermissionFlags = PermissionFlags.from_value(int(deny))
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {"id": str(self.id), "type": self.type, "allow": str(int(self.allow)), "deny": str(int(self.deny))}
 
     def edit(self, **kwargs):
@@ -446,17 +449,13 @@ class Overwrite(CopyableObject):
 
 class ThreadMetadata:
     def __init__(self, client, resp):
-        self.client = client
-        self.archived = resp["archived"]
-        self.archiver_id = Snowflake.optional(resp.get("archiver_id"))
-        self.auto_archive_duration = resp["auto_archive_duration"]
+        self.client: APIClient = client
+        self.archived: bool = resp["archived"]
+        # self.archiver_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("archiver_id"))
+        self.auto_archive_duration: int = resp["auto_archive_duration"]
         self.archive_timestamp = datetime.datetime.fromisoformat(resp["archive_timestamp"])
-        self.locked = resp.get("locked", False)
-
-    @property
-    def archiver(self):
-        if self.client.has_cache and self.archiver_id:
-            return self.client.get(self.archiver_id)
+        self.locked: bool = resp["locked"]
+        self.invitable: typing.Optional[bool] = resp.get("invitable")
 
     @classmethod
     def optional(cls, client, resp):
@@ -466,14 +465,14 @@ class ThreadMetadata:
 
 class ThreadMember:
     def __init__(self, client, resp):
-        self.client = client
-        self.id = Snowflake(resp["id"])
-        self.user_id = Snowflake(resp["user_id"])
-        self.join_timestamp = datetime.datetime.fromisoformat(resp["join_timestamp"])
-        self.flags = resp["flags"]
+        self.client: APIClient = client
+        self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
+        self.user_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("user_id"))
+        self.join_timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["join_timestamp"])
+        self.flags: int = resp["flags"]
 
     @property
-    def user(self):
+    def user(self) -> typing.Optional[User]:
         if self.client.has_cache:
             return self.client.get(self.user_id, "user")
 
@@ -492,20 +491,20 @@ class Embed(CopyableObject):
     def __init__(self, *, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None, **kwargs):
         resp = self.__create(title=title, description=description, url=url, timestamp=timestamp, color=color)
         resp.update(kwargs)
-        self.title = resp.get("title")
-        self.type = resp.get("type", "rich")
-        self.description = resp.get("description")
-        self.url = resp.get("url")
+        self.title: typing.Optional[str] = resp.get("title")
+        self.type: typing.Optional[str] = resp.get("type", "rich")
+        self.description: typing.Optional[str] = resp.get("description")
+        self.url: typing.Optional[str] = resp.get("url")
         self.__timestamp = resp.get("timestamp")
-        self.timestamp = datetime.datetime.fromisoformat(self.__timestamp) if self.__timestamp else self.__timestamp
-        self.color = resp.get("color")
-        self.footer = EmbedFooter.optional(resp.get("footer"))
-        self.image = EmbedImage.optional(resp.get("image"))
-        self.thumbnail = EmbedThumbnail.optional(resp.get("thumbnail"))
-        self.video = EmbedVideo.optional(resp.get("video"))
-        self.provider = EmbedProvider.optional(resp.get("provider"))
-        self.author = EmbedAuthor.optional(resp.get("author"))
-        self.fields = [EmbedField(x) for x in resp.get("fields", [])]
+        self.timestamp: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__timestamp) if self.__timestamp else self.__timestamp
+        self.color: typing.Optional[int] = resp.get("color")
+        self.footer: typing.Optional[EmbedFooter] = EmbedFooter.optional(resp.get("footer"))
+        self.image: typing.Optional[EmbedImage] = EmbedImage.optional(resp.get("image"))
+        self.thumbnail: typing.Optional[EmbedThumbnail] = EmbedThumbnail.optional(resp.get("thumbnail"))
+        self.video: typing.Optional[EmbedVideo] = EmbedVideo.optional(resp.get("video"))
+        self.provider: typing.Optional[EmbedProvider] = EmbedProvider.optional(resp.get("provider"))
+        self.author: typing.Optional[EmbedAuthor] = EmbedAuthor.optional(resp.get("author"))
+        self.fields: typing.Optional[typing.List[EmbedField]] = [EmbedField(x) for x in resp.get("fields", [])]
 
     @staticmethod
     def __create(*, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None):
@@ -540,7 +539,7 @@ class Embed(CopyableObject):
     def remove_field(self):
         return self.fields.pop
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {}
         if self.title:
             ret["title"] = self.title
@@ -571,12 +570,12 @@ class Embed(CopyableObject):
 
 class EmbedThumbnail(CopyableObject):
     def __init__(self, resp):
-        self.url = resp.get("url")
-        self.proxy_url = resp.get("proxy_url")
-        self.height = resp.get("height")
-        self.width = resp.get("width")
+        self.url: typing.Optional[str] = resp.get("url")
+        self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
+        self.height: typing.Optional[int] = resp.get("height")
+        self.width: typing.Optional[int] = resp.get("width")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {}
         if self.url:
             ret["url"] = self.url
@@ -596,12 +595,12 @@ class EmbedThumbnail(CopyableObject):
 
 class EmbedVideo(CopyableObject):
     def __init__(self, resp):
-        self.url = resp.get("url")
-        self.proxy_url = resp.get("proxy_url")
-        self.height = resp.get("height")
-        self.width = resp.get("width")
+        self.url: typing.Optional[str] = resp.get("url")
+        self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
+        self.height: typing.Optional[int] = resp.get("height")
+        self.width: typing.Optional[int] = resp.get("width")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {}
         if self.url:
             ret["url"] = self.url
@@ -621,12 +620,12 @@ class EmbedVideo(CopyableObject):
 
 class EmbedImage(CopyableObject):
     def __init__(self, resp):
-        self.url = resp.get("url")
-        self.proxy_url = resp.get("proxy_url")
-        self.height = resp.get("height")
-        self.width = resp.get("width")
+        self.url: typing.Optional[str] = resp.get("url")
+        self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
+        self.height: typing.Optional[int] = resp.get("height")
+        self.width: typing.Optional[int] = resp.get("width")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {}
         if self.url:
             ret["url"] = self.url
@@ -646,10 +645,10 @@ class EmbedImage(CopyableObject):
 
 class EmbedProvider(CopyableObject):
     def __init__(self, resp):
-        self.name = resp.get("name")
-        self.url = resp.get("url")
+        self.name: typing.Optional[str] = resp.get("name")
+        self.url: typing.Optional[str] = resp.get("url")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {}
         if self.name:
             ret["name"] = self.name
@@ -665,12 +664,12 @@ class EmbedProvider(CopyableObject):
 
 class EmbedAuthor(CopyableObject):
     def __init__(self, resp):
-        self.name = resp.get("name")
-        self.url = resp.get("url")
-        self.icon_url = resp.get("icon_url")
-        self.proxy_icon_url = resp.get("proxy_icon_url")
+        self.name: typing.Optional[str] = resp.get("name")
+        self.url: typing.Optional[str] = resp.get("url")
+        self.icon_url: typing.Optional[str] = resp.get("icon_url")
+        self.proxy_icon_url: typing.Optional[str] = resp.get("proxy_icon_url")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {}
         if self.name:
             ret["name"] = self.name
@@ -690,11 +689,11 @@ class EmbedAuthor(CopyableObject):
 
 class EmbedFooter(CopyableObject):
     def __init__(self, resp):
-        self.text = resp["text"]
-        self.icon_url = resp.get("icon_url")
-        self.proxy_icon_url = resp.get("proxy_icon_url")
+        self.text: typing.Optional[str] = resp["text"]
+        self.icon_url: typing.Optional[str] = resp.get("icon_url")
+        self.proxy_icon_url: typing.Optional[str] = resp.get("proxy_icon_url")
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {"text": self.text}
         if self.icon_url:
             ret["icon_url"] = self.icon_url
@@ -710,11 +709,11 @@ class EmbedFooter(CopyableObject):
 
 class EmbedField(CopyableObject):
     def __init__(self, resp):
-        self.name = resp["name"]
-        self.value = resp["value"]
-        self.inline = resp.get("inline", True)
+        self.name: typing.Optional[str] = resp["name"]
+        self.value: typing.Optional[str] = resp["value"]
+        self.inline: typing.Optional[bool] = resp.get("inline", True)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {"name": self.name, "value": self.value, "inline": self.inline}
 
     @classmethod
@@ -725,18 +724,18 @@ class EmbedField(CopyableObject):
 
 class Attachment:
     def __init__(self, client, resp):
-        self.client = client
-        self.id = Snowflake(resp["id"])
-        self.filename = resp["filename"]
-        self.content_type = resp.get("content_type")
-        self.size = resp["size"]
-        self.url = resp["url"]
-        self.proxy_url = resp["proxy_url"]
-        self.height = resp.get("height")
-        self.width = resp.get("width")
-        self.content = None  # Filled after download is called
+        self.client: APIClient = client
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.filename: str = resp["filename"]
+        self.content_type: typing.Optional[str] = resp.get("content_type")
+        self.size: int = resp["size"]
+        self.url: str = resp["url"]
+        self.proxy_url: str = resp["proxy_url"]
+        self.height: typing.Optional[int] = resp.get("height")
+        self.width: typing.Optional[int] = resp.get("width")
+        self.content: typing.Optional[bytes] = None  # Filled after download is called
 
-    def download(self):
+    def download(self) -> typing.Union[bytes, typing.Awaitable[bytes]]:
         dw = self.client.http.download(self.url)
         if inspect.isawaitable(dw):
             return self.__async_download(dw)
@@ -753,7 +752,7 @@ class Attachment:
         with open(str(target)+"/" if target and not str(target).endswith("/") else ""+self.filename, "wb") as f:
             f.write(self.content)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {"id": str(self.id),
                "filename": self.filename,
                "size": self.size,
@@ -770,24 +769,24 @@ class Attachment:
 
 class ChannelMention:
     def __init__(self, resp):
-        self.id = Snowflake(resp["id"])
-        self.guild_id = Snowflake(resp["guild_id"])
-        self.type = ChannelTypes(resp["type"])
-        self.name = resp["name"]
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.guild_id: Snowflake = Snowflake(resp["guild_id"])
+        self.type: ChannelTypes = ChannelTypes(resp["type"])
+        self.name: str = resp["name"]
 
 
 class AllowedMentions(CopyableObject):
     def __init__(self, *,
                  everyone: bool = False,
-                 users: typing.List[typing.Union[str, int, Snowflake]] = None,
-                 roles: typing.List[typing.Union[str, int, Snowflake]] = None,
+                 users: typing.List[Snowflake.TYPING] = None,
+                 roles: typing.List[Snowflake.TYPING] = None,
                  replied_user: bool = False):
         self.everyone: bool = everyone
-        self.users = users or []
-        self.roles = roles or []
+        self.users: typing.List[Snowflake.TYPING] = users or []
+        self.roles: typing.List[Snowflake.TYPING] = roles or []
         self.replied_user = replied_user
 
-    def to_dict(self, *, reply: bool = False):
+    def to_dict(self, *, reply: bool = False) -> dict:
         ret = {"parsed": []}
         if self.everyone:
             ret["parsed"].append("everyone")
@@ -804,6 +803,6 @@ class AllowedMentions(CopyableObject):
 
 class ListThreadsResponse:
     def __init__(self, client, resp):
-        self.threads = [Channel.create(client, x) for x in resp["threads"]]
-        self.members = [ThreadMember(client, x) for x in resp["members"]]
-        self.has_more = resp.get("has_more")
+        self.threads: typing.List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
+        self.members: typing.List[ThreadMember] = [ThreadMember(client, x) for x in resp["members"]]
+        self.has_more: typing.Optional[bool] = resp.get("has_more")
