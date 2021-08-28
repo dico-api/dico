@@ -324,12 +324,21 @@ class Ban:
         self.user = User.create(client, resp["user"])
 
 
-# TODO: Welcome Screen
+class WelcomeScreen:
+    def __init__(self, resp):
+        self.description = resp["description"]
+        self.welcome_channels = [WelcomeScreenChannel(x) for x in resp["welcome_channels"]]
+
+    def to_dict(self):
+        return {"description": self.description, "welcome_channels": [x.to_dict() for x in self.welcome_channels]}
 
 
-class PruneCountResponse:
-    def __init__(self, resp: dict):
-        self.pruned = resp["pruned"]
+class WelcomeScreenChannel:
+    def __init__(self, resp):
+        self.channel_id = Snowflake(resp["channel_id"])
+        self.description = resp["description"]
+        self.emoji_id = Snowflake.optional(resp["emoji_id"])
+        self.emoji_name = resp["emoji_name"]
 
-    def __int__(self):
-        return int(self.pruned)
+    def to_dict(self):
+        return {"channel_id": str(self.channel_id), "description": self.description, "emoji_id": str(self.emoji_id), "emoji_name": self.emoji_name}

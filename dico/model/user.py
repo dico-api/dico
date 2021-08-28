@@ -16,6 +16,8 @@ class User(DiscordObjectBase):
         self.bot = resp.get("bot", False)
         self.system = resp.get("system", False)
         self.mfa_enabled = resp.get("mfa_enabled", False)
+        self.banner = resp.get("banner")
+        self.accent_color = resp.get("accent_color")
         self.locale = resp.get("locale")
         self.verified = resp.get("verified", False)
         self.email = resp.get("email")
@@ -37,6 +39,10 @@ class User(DiscordObjectBase):
             return cdn_url("avatars/{user_id}", image_hash=self.avatar, extension=extension, size=size, user_id=self.id)
         else:
             return cdn_url("embed/avatars", image_hash=self.discriminator % 5, extension=extension)
+
+    def banner_url(self, *, extension="webp", size=1024):
+        if self.banner:
+            return cdn_url("banners/{user_id}", image_hash=self.banner, extension=extension, size=size, user_id=self.id)
 
     def set_voice_state(self, voice_state):
         self.voice_state = voice_state
@@ -60,6 +66,7 @@ class UserFlags(FlagBase):
     BHG_HUNTER_LEVEL_2 = 1 << 14
     VERIFIED_BOT = 1 << 16
     EARLY_VERIFIED_BOT_DEVELOPER = 1 << 17
+    DISCORD_CERTIFIED_MODERATOR = 1 << 18
 
 
 class PremiumTypes(TypeBase):

@@ -6,8 +6,8 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
-    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, PruneCountResponse, FILE_TYPE, \
-    VoiceRegion, Integration, ApplicationCommandTypes
+    SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
+    VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel
 from .utils import from_emoji, wrap_to_async
 
 
@@ -854,12 +854,13 @@ class APIClient:
         return self.http.delete_guild_role(int(guild), int(role), reason=reason)
 
     def request_guild_prune_count(self, guild: Guild.TYPING, *, days: int = None, include_roles: typing.List[Role.TYPING] = None):
+        from .base.model import AbstractObject
         if include_roles is not None:
             include_roles = [*map(str, include_roles)]
         resp = self.http.request_guild_prune_count(int(guild), days, include_roles)
         if isinstance(resp, dict):
-            return PruneCountResponse(resp)
-        return wrap_to_async(PruneCountResponse, None, resp, as_create=False)
+            return AbstractObject(resp)
+        return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
     def begin_guild_prune(self,
                           guild: Guild.TYPING,
@@ -868,12 +869,13 @@ class APIClient:
                           compute_prune_count: bool = True,
                           include_roles: typing.List[Role.TYPING] = None,
                           reason: str = None):
+        from .base.model import AbstractObject
         if include_roles is not None:
             include_roles = [*map(str, include_roles)]
         resp = self.http.begin_guild_prune(int(guild), days, compute_prune_count, include_roles, reason=reason)
         if isinstance(resp, dict):
-            return PruneCountResponse(resp)
-        return wrap_to_async(PruneCountResponse, None, resp, as_create=False)
+            return AbstractObject(resp)
+        return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
     def request_guild_voice_regions(self, guild: Guild.TYPING):
         resp = self.http.request_guild_voice_regions(int(guild))
@@ -895,6 +897,68 @@ class APIClient:
 
     def delete_guild_integration(self, guild: Guild.TYPING, integration: Integration.TYPING, *, reason: str = None):
         return self.http.delete_guild_integration(int(guild), int(integration), reason=reason)
+
+    def request_guild_widget_settings(self, guild: Guild.TYPING):
+        resp = self.http.request_guild_widget_settings(int(guild))
+        if isinstance(resp, dict):
+            return GuildWidget(resp)
+        return wrap_to_async(GuildWidget, None, resp, as_create=False)
+
+    def modify_guild_widget(self, guild: Guild.TYPING, *, enabled: bool = None, channel: Channel.TYPING = EmptyObject, reason: str = None):
+        resp = self.http.modify_guild_widget(int(guild), enabled, channel, reason=reason)
+        if isinstance(resp, dict):
+            return GuildWidget(resp)
+        return wrap_to_async(GuildWidget, None, resp, as_create=False)
+
+    def request_guild_widget(self, guild: Guild.TYPING):
+        from .base.model import AbstractObject
+        resp = self.http.request_guild_widget(int(guild))
+        if isinstance(resp, dict):
+            return AbstractObject(resp)
+        return wrap_to_async(AbstractObject, None, resp, as_create=False)
+
+    def request_guild_vanity_url(self, guild: Guild.TYPING):
+        from .base.model import AbstractObject
+        resp = self.http.request_guild_vanity_url(int(guild))
+        if isinstance(resp, dict):
+            return AbstractObject(resp)
+        return wrap_to_async(AbstractObject, None, resp, as_create=False)
+
+    def request_guild_widget_image(self, guild: Guild.TYPING, style: str = None):
+        return self.http.request_guild_widget_image(int(guild), style)
+
+    def request_guild_welcome_screen(self, guild: Guild.TYPING):
+        resp = self.http.request_guild_welcome_screen(int(guild))
+        if isinstance(resp, dict):
+            return WelcomeScreen(resp)
+        return wrap_to_async(WelcomeScreen, None, resp, as_create=False)
+
+    def modify_guild_welcome_screen(self,
+                                    guild: Guild.TYPING,
+                                    *,
+                                    enabled: bool = EmptyObject,
+                                    welcome_channels: typing.List[typing.Union[WelcomeScreenChannel, dict]] = EmptyObject,
+                                    description: str = EmptyObject,
+                                    reason: str = None):
+        if welcome_channels is not EmptyObject:
+            welcome_channels = [x if isinstance(x, dict) else x.to_dict() for x in welcome_channels or []]
+        resp = self.http.modify_guild_welcome_screen(int(guild), enabled, welcome_channels, description, reason=reason)
+        if isinstance(resp, dict):
+            return WelcomeScreen(resp)
+        return wrap_to_async(WelcomeScreen, None, resp, as_create=False)
+
+    def modify_user_voice_state(self,
+                                guild: Guild.TYPING,
+                                channel: Channel.TYPING,
+                                user: User.TYPING = "@me",
+                                *,
+                                suppress: bool = None,
+                                request_to_speak_timestamp: typing.Union[datetime.datetime, str] = None):
+        user = int(user) if user != "@me" else user
+        if request_to_speak_timestamp is not None:
+            request_to_speak_timestamp = request_to_speak_timestamp if isinstance(request_to_speak_timestamp, str) else \
+                request_to_speak_timestamp.isoformat()
+        return self.http.modify_user_voice_state(int(guild), str(int(channel)), user, suppress, request_to_speak_timestamp)
 
     # Webhook
 

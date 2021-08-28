@@ -8,6 +8,7 @@ Yet another Discord API wrapper for Python.
 
 __version__ = "0.0.11"
 
+from .api import APIClient
 from .client import Client
 from .model.channel import *
 from .model.event import *

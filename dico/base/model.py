@@ -52,6 +52,17 @@ class DiscordObjectBase:
             return ret
 
 
+class AbstractObject(dict):
+    def __init__(self, resp):
+        super().__init__(**resp)
+
+    def __getattr__(self, item):
+        return self.get(item)
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+
 class FlagBase:
     def __init__(self, *args, **kwargs):
         self.values = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}

@@ -1322,6 +1322,108 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/integrations/{integration_id}", "DELETE", reason_header=reason)
 
+    def request_guild_widget_settings(self, guild_id):
+        """
+        Sends get guild widget settings request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/widget", "GET")
+
+    def modify_guild_widget(self, guild_id, enabled: bool = None, channel_id: str = EmptyObject, reason: str = None):
+        """
+        Sends modify guild widget request.
+
+        :param guild_id: ID of the guild.
+        :param enabled: Whether the widget is enabled.
+        :param channel_id: ID of the channel for the widget.
+        :param reason: Reason of the action.
+        """
+        body = {}
+        if enabled is not None:
+            body["enabled"] = enabled
+        if channel_id is not EmptyObject:
+            body["channel_id"] = channel_id
+        return self.request(f"/guilds/{guild_id}/widget", "PATCH", body, is_json=True, reason_header=reason)
+
+    def request_guild_widget(self, guild_id):
+        """
+        Sends get guild widget request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/widget.json", "GET")
+
+    def request_guild_vanity_url(self, guild_id):
+        """
+        Sends get guild vanity URL request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/vanity-url", "GET")
+
+    def request_guild_widget_image(self, guild_id, style: str = None):
+        """
+        Sends get guild widget image request.
+
+        :param guild_id: ID of the guild.
+        :param style: Style to use. Can be one of ``shield``, ``banner1``, ``banner2``, ``banner3``, or ``banner4``.
+        """
+        params = {}
+        if style is not None:
+            params["style"] = style
+        return self.request(f"/guilds/{guild_id}/widget.png", "GET", params=params)
+
+    def request_guild_welcome_screen(self, guild_id):
+        """
+        Sends get guild welcome screen request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/welcome-screen", "GET")
+
+    def modify_guild_welcome_screen(self,
+                                    guild_id, enabled: bool = EmptyObject,
+                                    welcome_channels: typing.List[dict] = EmptyObject,
+                                    description: str = EmptyObject,
+                                    reason: str = None):
+        """
+        Sends modify guild welcome screen request.
+
+        :param guild_id: ID of the guild.
+        :param enabled: Whether it is enabled.
+        :param welcome_channels: Welcome channels to link.
+        :param description: Description to show in welcome screen.
+        :param reason: Reason of the action.
+        """
+        body = {}
+        if enabled is not EmptyObject:
+            body["enabled"] = enabled
+        if welcome_channels is not EmptyObject:
+            body["welcome_channels"] = welcome_channels
+        if description is not EmptyObject:
+            body["description"] = description
+        return self.request(f"/guilds/{guild_id}/welcome-screen", "PATCH", body, is_json=True, reason_header=reason)
+
+    def modify_user_voice_state(self, guild_id, channel_id: str, user_id="@me", suppress: bool = None, request_to_speak_timestamp: str = None):
+        """
+        Sends modify curren user or user voice state requset.
+
+        :param guild_id: ID of the guild.
+        :param channel_id: ID of the stage channel.
+        :param user_id: ID of the user to modify. Set to ``@me`` for current user.
+        :param suppress: Whether suppress is enabled.
+        :param request_to_speak_timestamp: When to set the user to request to speak. Exclusive to current user(``@me``).
+        """
+        if user_id != "@me" and request_to_speak_timestamp is not None:
+            raise TypeError("request_to_speak_timestamp is exclusive to @me.")
+        body = {"channel_id": channel_id}
+        if suppress is not None:
+            body["suppress"] = suppress
+        if request_to_speak_timestamp is not None:
+            body["request_to_speak_timestamp"] = request_to_speak_timestamp
+        return self.request(f"/guilds/{guild_id}/voice-states/{user_id}", "PATCH", body, is_json=True)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

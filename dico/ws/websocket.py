@@ -53,10 +53,12 @@ class WebSocketClient:
             while not self._closed:
                 try:
                     resp = await self.receive()
+                except Ignore:
+                    continue
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
                     if (ex.code in (1000, 1001) or ex.code is None) or self.try_reconnect:
-                        self.logger.warning("Websocket closed, trying to reconnect...")
+                        self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
                     else:
                         self.logger.error(f"Unexpected websocket disconnection; this client will now be terminated.")
@@ -119,6 +121,8 @@ class WebSocketClient:
             if res.s is not None:
                 self.seq = res.s
             return res
+        elif resp.type == aiohttp.WSMsgType.CONTINUATION:
+            raise Ignore
         elif resp.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
             raise WSClosing(resp.data)
 
@@ -228,3 +232,7 @@ class WSClosing(Exception):
     """Internal exception class for controlling WS close event. You should not see this exception in normal situation."""
     def __init__(self, code):
         self.code = code
+
+
+class Ignore(Exception):
+    """Internal exception class for just ignoring the response. Used for ignoring unsupported response."""
