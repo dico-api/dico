@@ -11,7 +11,7 @@ setuptools.setup(
     description="Yet another Discord API wrapper for Python.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/eunwoo1104/dico",
+    url="https://github.com/dico-api/dico",
     packages=setuptools.find_packages(),
     python_requires='>=3.7',
     install_requires=["aiohttp", "requests"],

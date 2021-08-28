@@ -9,7 +9,7 @@ Yet another Discord API wrapper for Python, aimed to follow Discord API format a
 [Discord Server](https://discord.gg/QH4AXNySpB)
 
 ## Features
-- Discord v9 API
+- Discord v9 API (including Threads, components, context menus, etc.)
 - Full interaction support
 - More soon™
 
@@ -44,7 +44,6 @@ More examples are in [here](https://github.com/eunwoo1104/dico/tree/master/examp
 ## Requirements
 - Python 3.7+
 
-## TODO
-- Implement sync http client
-- Documentation
-- Implement Audit Log, etc...
+## Extra Libs
+- [dico-interaction](https://github.com/dico-api/dico-interaction)
+- [dico-command](https://github.com/dico-api/dico-command)
