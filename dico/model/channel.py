@@ -7,8 +7,12 @@ from .emoji import Emoji
 from .guild import GuildMember
 from .permission import PermissionFlags, Role
 from .snowflake import Snowflake
+from .sticker import Sticker, StickerItem
 from .user import User
 from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
+
+if typing.TYPE_CHECKING:
+    from .gateway import Application
 
 
 class Channel(DiscordObjectBase):
@@ -17,33 +21,33 @@ class Channel(DiscordObjectBase):
     def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
         self._cache_type = "channel"
-        self.type = ChannelTypes(resp["type"])
-        self.guild_id = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
-        self.position = resp.get("position")
-        self.permission_overwrites = [Overwrite.create(x) for x in resp.get("permission_overwrites", [])]
-        self.name = resp.get("name")
-        self.topic = resp.get("topic")
-        self.nsfw = resp.get("nsfw")
-        self.last_message_id = Snowflake.optional(resp.get("last_message_id"))
-        self.bitrate = resp.get("bitrate")
-        self.user_limit = resp.get("user_limit")
-        self.rate_limit_per_user = resp.get("rate_limit_per_user")
-        self.recipients = resp.get("recipients", [])
-        self.icon = resp.get("icon")
-        self.owner_id = Snowflake.optional(resp.get("owner_id"))
-        self.application_id = Snowflake.optional(resp.get("application_id"))
-        self.parent_id = Snowflake.optional(resp.get("parent_id"))
+        self.type: ChannelTypes = ChannelTypes(resp["type"])
+        self.guild_id: Snowflake = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
+        self.position: typing.Optional[int] = resp.get("position")
+        self.permission_overwrites: typing.Optional[typing.List[Overwrite]] = [Overwrite.create(x) for x in resp.get("permission_overwrites", [])]
+        self.name: typing.Optional[str] = resp.get("name")
+        self.topic: typing.Optional[str] = resp.get("topic")
+        self.nsfw: typing.Optional[bool] = resp.get("nsfw")
+        self.last_message_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("last_message_id"))
+        self.bitrate: typing.Optional[int] = resp.get("bitrate")
+        self.user_limit: typing.Optional[int] = resp.get("user_limit")
+        self.rate_limit_per_user: typing.Optional[int] = resp.get("rate_limit_per_user")
+        self.recipients: typing.Optional[typing.List[User]] = [User.create(client, x) for x in resp.get("recipients", [])]
+        self.icon: typing.Optional[str] = resp.get("icon")
+        self.owner_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("owner_id"))
+        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
+        self.parent_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("parent_id"))
         self.__last_pin_timestamp = resp.get("last_pin_timestamp")
-        self.last_pin_timestamp = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
-        self.rtc_region = resp.get("rtc_region")
+        self.last_pin_timestamp: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
+        self.rtc_region: typing.Optional[str] = resp.get("rtc_region")
         self.__video_quality_mode = resp.get("video_quality_mode")
-        self.video_quality_mode = VideoQualityModes(self.__video_quality_mode) if self.__video_quality_mode else self.__video_quality_mode
-        self.message_count = resp.get("message_count")
-        self.member_count = resp.get("member_count")
-        self.thread_metadata = ThreadMetadata.optional(self.client, resp.get("thread_metadata"))
-        self.member = ThreadMember.optional(self.client, resp.get("member"))
-        self.default_auto_archive_duration = resp.get("default_auto_archive_duration")
-        self.permissions = resp.get("permissions")
+        self.video_quality_mode: typing.Optional[VideoQualityModes] = VideoQualityModes(self.__video_quality_mode) if self.__video_quality_mode else self.__video_quality_mode
+        self.message_count: typing.Optional[int] = resp.get("message_count")
+        self.member_count: typing.Optional[int] = resp.get("member_count")
+        self.thread_metadata: typing.Optional[ThreadMetadata] = ThreadMetadata.optional(self.client, resp.get("thread_metadata"))
+        self.member: typing.Optional[ThreadMember] = ThreadMember.optional(self.client, resp.get("member"))
+        self.default_auto_archive_duration: typing.Optional[int] = resp.get("default_auto_archive_duration")
+        self.permissions: typing.Optional[str] = resp.get("permissions")
 
     def modify(self, **kwargs):
         if self.type.group_dm:
@@ -62,7 +66,7 @@ class Channel(DiscordObjectBase):
     def delete(self, *, reason: str = None):
         return self.client.delete_channel(self, reason=reason)
 
-    def create_message(self, *args, **kwargs):
+    def create_message(self, *args, **kwargs) -> "Message":
         if not self.is_messageable():
             raise TypeError("You can't send message in this type of channel.")
         return self.client.create_message(self, *args, **kwargs)
@@ -116,7 +120,7 @@ class Channel(DiscordObjectBase):
     def add_thread_member(self, user: typing.Union[int, str, Snowflake, User]):
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to add thread member.")
-        return self.client.add_thread_member(user)
+        return self.client.add_thread_member(self, user)
 
     def leave_thread(self):
         if not self.is_thread_channel():
@@ -137,13 +141,13 @@ class Channel(DiscordObjectBase):
         return self.client.list_active_threads(self)
 
     def list_public_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
-        return self.client.list_public_archived_threads(self, before, limit)
+        return self.client.list_public_archived_threads(self, before=before, limit=limit)
 
     def list_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
-        return self.client.list_private_archived_threads(self, before, limit)
+        return self.client.list_private_archived_threads(self, before=before, limit=limit)
 
     def list_joined_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
-        return self.client.list_joined_private_archived_threads(self, before, limit)
+        return self.client.list_joined_private_archived_threads(self, before=before, limit=limit)
 
     def archive(self, locked: bool = False):
         if not self.is_thread_channel():
@@ -168,12 +172,14 @@ class Channel(DiscordObjectBase):
     @property
     def guild(self):
         if self.guild_id and self.client.has_cache:
-            return self.client.cache.get(self.guild_id, "guild")
+            return self.client.cache.get(self.guild_id, "guild")  # noqa
 
-    def is_messageable(self):
+    def is_messageable(self) -> bool:
+        if self.is_thread_channel():
+            return self.thread_metadata.archived
         return self.type.guild_text or self.type.guild_news or self.type.dm or self.type.group_dm
 
-    def is_thread_channel(self):
+    def is_thread_channel(self) -> bool:
         return self.type.guild_news_thread or self.type.guild_public_thread or self.type.guild_private_thread
 
 
@@ -203,44 +209,48 @@ class Message(DiscordObjectBase):
         from .interactions import MessageInteraction, Component  # Prevent circular import.
         super().__init__(client, resp)
         self._cache_type = "message"
-        self.channel_id = Snowflake(resp["channel_id"])
-        self.guild_id = Snowflake.optional(resp.get("guild_id") or guild_id)
-        self.author = User.create(client, resp["author"])
+        self.channel_id: Snowflake = Snowflake(resp["channel_id"])
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id") or guild_id)
+        self.author: User = User.create(client, resp["author"])
         self.__member = resp.get("member")
-        self.member = GuildMember.create(self.client, self.__member, user=self.author, guild_id=self.guild_id) if self.__member else self.__member
-        self.content = resp["content"]
-        self.timestamp = datetime.datetime.fromisoformat(resp["timestamp"])
+        self.member: GuildMember = GuildMember.create(self.client, self.__member, user=self.author, guild_id=self.guild_id) if self.__member else self.__member
+        self.content: str = resp["content"]
+        self.timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["timestamp"])
         self.__edited_timestamp = resp["edited_timestamp"]
-        self.edited_timestamp = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
-        self.tts = resp["tts"]
-        self.mention_everyone = resp["mention_everyone"]
-        self.mentions = [GuildMember.create(self.client, x["member"], user=User.create(self.client, x), guild_id=self.guild_id)
-                         if "member" in x else User.create(self.client, x) for x in resp["mentions"]]
-        self.mention_roles = [Snowflake(x) for x in resp["mention_roles"]]
-        self.mention_channels = [ChannelMention(x) for x in resp.get("mention_channels", [])]
-        self.attachments = [Attachment(self.client, x) for x in resp["attachments"] or []]
-        self.embeds = [Embed.create(x) for x in resp["embeds"] or []]
-        self.reactions = [Reaction(self.client, x) for x in resp.get("reactions", [])]
-        self.nonce = resp.get("nonce")
-        self.pinned = resp["pinned"]
-        self.webhook_id = Snowflake.optional(resp.get("webhook_id"))
+        self.edited_timestamp: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
+        self.tts: bool = resp["tts"]
+        self.mention_everyone: bool = resp["mention_everyone"]
+        self.mentions: typing.List[typing.Union[User, GuildMember]] = [GuildMember.create(self.client, x["member"], user=User.create(self.client, x), guild_id=self.guild_id)
+                                                                       if "member" in x else User.create(self.client, x) for x in resp["mentions"]]
+        self.mention_roles: typing.List[Snowflake] = [Snowflake(x) for x in resp["mention_roles"]]
+        self.mention_channels: typing.List[ChannelMention] = [ChannelMention(x) for x in resp.get("mention_channels", [])]
+        self.attachments: typing.List[Attachment] = [Attachment(self.client, x) for x in resp["attachments"] or []]
+        self.embeds: typing.List[Embed] = [Embed.create(x) for x in resp["embeds"] or []]
+        self.reactions: typing.Optional[typing.List[Reaction]] = [Reaction(self.client, x) for x in resp.get("reactions", [])]
+        self.nonce: typing.Optional[typing.Union[int, str]] = resp.get("nonce")
+        self.pinned: bool = resp["pinned"]
+        self.webhook_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("webhook_id"))
         self.__webhook_token = webhook_token
         self.__interaction_token = interaction_token
         self.__original_response = original_response
-        self.type = MessageTypes(resp["type"])
-        self.activity = MessageActivity.optional(resp.get("activity"))
-        self.application = resp.get("application")
-        self.message_reference = MessageReference(resp.get("message_reference", {}))
+        self.type: MessageTypes = MessageTypes(resp["type"])
+        self.activity: typing.Optional[MessageActivity] = MessageActivity.optional(resp.get("activity"))
+        self.application: typing.Optional[Application] = resp.get("application")
+        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
+        self.message_reference: typing.Optional[MessageReference] = MessageReference(resp.get("message_reference", {}))
         self.__flags = resp.get("flags")
-        self.flags = MessageFlags.from_value(self.__flags) if self.__flags else self.__flags
-        self.stickers = [MessageSticker(x) for x in resp.get("stickers", [])]
+        self.flags: MessageFlags = MessageFlags.from_value(self.__flags) if self.__flags else self.__flags
         self.__referenced_message = resp.get("referenced_message")
-        self.referenced_message = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id) if self.__referenced_message else self.__referenced_message
+        self.referenced_message: typing.Optional[Message] = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id) if self.__referenced_message else self.__referenced_message
         self.__interaction = resp.get("interaction")
-        self.interaction = MessageInteraction(self.client, self.__interaction) if self.__interaction else self.__interaction
+        self.interaction: typing.Optional[MessageInteraction] = MessageInteraction(self.client, self.__interaction) if self.__interaction else self.__interaction
         self.__thread = resp.get("thread")
-        self.thread = Channel.create(self.client, self.__thread, guild_id=self.guild_id, ensure_cache_type="channel") if self.__thread else self.__thread
-        self.components = [Component.auto_detect(x) for x in resp.get("components", [])]
+        self.thread: typing.Optional[Channel] = Channel.create(self.client, self.__thread, guild_id=self.guild_id, ensure_cache_type="channel") if self.__thread else self.__thread
+        self.components: typing.Optional[typing.List[Component]] = [Component.auto_detect(x) for x in resp.get("components", [])]
+        self.sticker_items: typing.Optional[typing.List[StickerItem]] = [StickerItem(x) for x in resp.get("sticker_items", [])]
+        self.stickers: typing.Optional[typing.List[Sticker]] = [Sticker.create(client, x) for x in resp.get("stickers", [])]
+
+        # self.stickers: typing.Optional[typing.List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
 
     def reply(self, content=None, **kwargs):
         kwargs["message_reference"] = self
@@ -352,23 +362,6 @@ class MessageFlags(FlagBase):
     HAS_THREAD = 1 << 5
     EPHEMERAL = 1 << 6
     LOADING = 1 << 7
-
-
-class MessageSticker:
-    def __init__(self, resp):
-        self.id = Snowflake(resp["id"])
-        self.pack_id = Snowflake(resp["pack_id"])
-        self.name = resp["name"]
-        self.description = resp["description"]
-        self.tags = resp.get("tags")
-        self.asset = resp["asset"]
-        self.format_type = MessageStickerFormatTypes(resp["format_type"])
-
-
-class MessageStickerFormatTypes(TypeBase):
-    PNG = 1
-    APNG = 2
-    LOTTIE = 3
 
 
 class MessageReference:

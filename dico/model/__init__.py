@@ -7,6 +7,8 @@ from .guild import *
 from .invite import *
 from .permission import *
 from .snowflake import *
+from .stage import *
+from .sticker import *
 from .user import *
 from .voice import *
 from .webhook import *

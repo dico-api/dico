@@ -62,16 +62,16 @@ class HTTPRequestBase(ABC):
                              channel_id,
                              name: str = None,
                              channel_type: int = None,
-                             position: int = None,
-                             topic: str = None,
-                             nsfw: bool = None,
-                             rate_limit_per_user: int = None,
-                             bitrate: int = None,
-                             user_limit: int = None,
-                             permission_overwrites: typing.List[dict] = None,
-                             parent_id: str = None,
-                             rtc_region: str = None,
-                             video_quality_mode: int = None,
+                             position: int = EmptyObject,
+                             topic: str = EmptyObject,
+                             nsfw: bool = EmptyObject,
+                             rate_limit_per_user: int = EmptyObject,
+                             bitrate: int = EmptyObject,
+                             user_limit: int = EmptyObject,
+                             permission_overwrites: typing.List[dict] = EmptyObject,
+                             parent_id: str = EmptyObject,
+                             rtc_region: str = EmptyObject,
+                             video_quality_mode: int = EmptyObject,
                              reason: str = None):
         """
         Sends modify channel request, for guild channel.
@@ -96,25 +96,25 @@ class HTTPRequestBase(ABC):
             body["name"] = name
         if channel_type is not None:
             body["channel_type"] = channel_type
-        if position is not None:
+        if position is not EmptyObject:
             body["position"] = position
-        if topic is not None:
+        if topic is not EmptyObject:
             body["topic"] = topic
-        if nsfw is not None:
+        if nsfw is not EmptyObject:
             body["nsfw"] = nsfw
-        if rate_limit_per_user is not None:
+        if rate_limit_per_user is not EmptyObject:
             body["rate_limit_per_user"] = rate_limit_per_user
-        if bitrate is not None:
+        if bitrate is not EmptyObject:
             body["bitrate"] = bitrate
-        if user_limit is not None:
+        if user_limit is not EmptyObject:
             body["user_limit"] = user_limit
-        if permission_overwrites is not None:
+        if permission_overwrites is not EmptyObject:
             body["permission_overwrites"] = permission_overwrites
-        if parent_id is not None:
+        if parent_id is not EmptyObject:
             body["parent_id"] = parent_id
-        if rtc_region is not None:
+        if rtc_region is not EmptyObject:
             body["rtc_region"] = rtc_region
-        if video_quality_mode is not None:
+        if video_quality_mode is not EmptyObject:
             body["video_quality_mode"] = video_quality_mode
         return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
 
@@ -140,7 +140,7 @@ class HTTPRequestBase(ABC):
                               archived: bool = None,
                               auto_archive_duration: int = None,
                               locked: bool = None,
-                              rate_limit_per_user: int = None,
+                              rate_limit_per_user: int = EmptyObject,
                               reason: str = None):
         """
         Sends modify channel request, for thread channel.
@@ -162,7 +162,7 @@ class HTTPRequestBase(ABC):
             body["auto_archive_duration"] = auto_archive_duration
         if locked is not None:
             body["locked"] = locked
-        if rate_limit_per_user is not None:
+        if rate_limit_per_user is not EmptyObject:
             body["rate_limit_per_user"] = rate_limit_per_user
         return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
 

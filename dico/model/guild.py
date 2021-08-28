@@ -7,6 +7,10 @@ from .snowflake import Snowflake
 from .user import User
 from ..utils import cdn_url
 from ..base.model import DiscordObjectBase, TypeBase, FlagBase
+from ..base.http import EmptyObject
+
+if typing.TYPE_CHECKING:
+    from .channel import Channel
 
 
 class Guild(DiscordObjectBase):
@@ -107,25 +111,136 @@ class Guild(DiscordObjectBase):
     def list_active_threads(self):
         return self.client.list_active_threads_as_guild(self)
 
-    def request_member(self, user: typing.Union[int, str, Snowflake, User]):
+    def request_member(self, user: User.TYPING):
         return self.client.request_guild_member(self, user)
 
     def list_members(self, limit: int = None, after: str = None):
         return self.client.list_guild_members(self, limit, after)
 
-    def remove_guild_member(self, user: typing.Union[int, str, Snowflake, User]):
+    def remove_guild_member(self, user: User.TYPING):
         return self.client.remove_guild_member(self, user)
 
     @property
     def kick(self):
         return self.remove_guild_member
 
-    def create_ban(self, user: typing.Union[int, str, Snowflake, User], *, delete_message_days: int = None, reason: str = None):
+    def create_ban(self, user: User.TYPING, *, delete_message_days: int = None, reason: str = None):
         return self.client.create_guild_ban(self, user, delete_message_days=delete_message_days, reason=reason)
 
     @property
     def ban(self):
         return self.create_ban
+
+    def remove_ban(self, user: User.TYPING, *, reason: str = None):
+        return self.client.remove_guild_ban(self, user, reason=reason)
+
+    @property
+    def unban(self):
+        return self.remove_ban
+
+    def request_roles(self):
+        return self.client.request_guild_roles(self)
+
+    def create_role(self,
+                    *,
+                    name: str = None,
+                    permissions: typing.Union[int, str, PermissionFlags] = None,
+                    color: int = None,
+                    hoist: bool = None,
+                    mentionable: bool = None,
+                    reason: str = None):
+        kwargs = {"name": name,
+                  "permissions": permissions,
+                  "color": color,
+                  "hoist": hoist,
+                  "mentionable": mentionable,
+                  "reason": reason}
+        return self.client.create_guild_role(self, **kwargs)
+
+    def modify_role_positions(self, *params: dict, reason: str = None):
+        return self.client.modify_guild_role_positions(self, *params, reason=reason)
+
+    def modify_role(self,
+                    role: Role.TYPING,
+                    *,
+                    name: str = EmptyObject,
+                    permissions: typing.Union[int, str, PermissionFlags] = EmptyObject,
+                    color: int = EmptyObject,
+                    hoist: bool = EmptyObject,
+                    mentionable: bool = EmptyObject,
+                    reason: str = None):
+        kwargs = {"role": role,
+                  "name": name,
+                  "permissions": permissions,
+                  "color": color,
+                  "hoist": hoist,
+                  "mentionable": mentionable,
+                  "reason": reason}
+        return self.client.modify_guild_role(self, **kwargs)
+
+    def delete_role(self, role: Role.TYPING, *, reason: str = None):
+        return self.client.delete_guild_role(self, role, reason=reason)
+
+    def request_prune_count(self, *, days: int = None, include_roles: typing.List[Role.TYPING] = None):
+        return self.client.request_guild_prune_count(self, days=days, include_roles=include_roles)
+
+    def begin_prune(self,
+                    *,
+                    days: int = 7,
+                    compute_prune_count: bool = True,
+                    include_roles: typing.List[Role.TYPING] = None,
+                    reason: str = None):
+        return self.client.begin_guild_prune(self, days=days, compute_prune_count=compute_prune_count, include_roles=include_roles, reason=reason)
+
+    @property
+    def prune(self):
+        return self.begin_prune
+
+    def request_voice_regions(self):
+        return self.client.request_guild_voice_regions(self)
+
+    def request_invites(self):
+        return self.client.request_guild_invites(self)
+
+    def request_integrations(self):
+        return self.client.request_guild_integrations(self)
+
+    def delete_integration(self, integration: "Integration.TYPING", *, reason: str = None):
+        return self.client.delete_guild_integration(self, integration, reason=reason)
+
+    def request_widget_settings(self):
+        return self.client.request_guild_widget_settings(self)
+
+    def modify_widget(self, *, enabled: bool = None, channel: "Channel.TYPING" = EmptyObject, reason: str = None):
+        return self.client.modify_guild_widget(self, enabled=enabled, channel=channel, reason=reason)
+
+    def request_widget(self):
+        return self.client.request_guild_widget(self)
+
+    def request_vanity_url(self):
+        return self.client.request_guild_vanity_url(self)
+
+    def request_widget_image(self, style: str = None):
+        return self.client.request_guild_widget_image(self, style)
+
+    def request_welcome_screen(self):
+        return self.client.request_guild_welcome_screen(self)
+
+    def modify_guild_welcome_screen(self,
+                                    *,
+                                    enabled: bool = EmptyObject,
+                                    welcome_channels: typing.List[typing.Union["WelcomeScreenChannel", dict]] = EmptyObject,
+                                    description: str = EmptyObject,
+                                    reason: str = None):
+        return self.client.modify_guild_welcome_screen(self, enabled=enabled, welcome_channels=welcome_channels, description=description, reason=reason)
+
+    def modify_user_voice_state(self,
+                                channel: "Channel.TYPING",
+                                user: User.TYPING = "@me",
+                                *,
+                                suppress: bool = None,
+                                request_to_speak_timestamp: typing.Union[datetime.datetime, str] = None):
+        return self.client.modify_user_voice_state(self, channel, user, suppress=suppress, request_to_speak_timestamp=request_to_speak_timestamp)
 
     @property
     def get(self):

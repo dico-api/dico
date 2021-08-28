@@ -53,16 +53,16 @@ class APIClient:
                              *,
                              name: str = None,
                              channel_type: int = None,
-                             position: int = None,
-                             topic: str = None,
-                             nsfw: bool = None,
-                             rate_limit_per_user: int = None,
-                             bitrate: int = None,
-                             user_limit: int = None,
-                             permission_overwrites: typing.List[Overwrite] = None,
-                             parent: Channel.TYPING = None,
-                             rtc_region: str = None,
-                             video_quality_mode: int = None,
+                             position: int = EmptyObject,
+                             topic: str = EmptyObject,
+                             nsfw: bool = EmptyObject,
+                             rate_limit_per_user: int = EmptyObject,
+                             bitrate: int = EmptyObject,
+                             user_limit: int = EmptyObject,
+                             permission_overwrites: typing.List[Overwrite] = EmptyObject,
+                             parent: Channel.TYPING = EmptyObject,
+                             rtc_region: str = EmptyObject,
+                             video_quality_mode: int = EmptyObject,
                              reason: str = None):
         if permission_overwrites:
             permission_overwrites = [x.to_dict() for x in permission_overwrites]
@@ -86,7 +86,7 @@ class APIClient:
                               archived: bool = None,
                               auto_archive_duration: int = None,
                               locked: bool = None,
-                              rate_limit_per_user: int = None,
+                              rate_limit_per_user: int = EmptyObject,
                               reason: str = None):
         channel = self.http.modify_thread_channel(int(channel), name, archived, auto_archive_duration, locked, rate_limit_per_user, reason=reason)
         if isinstance(channel, dict):
@@ -828,6 +828,7 @@ class APIClient:
     def modify_guild_role(self,
                           guild: Guild.TYPING,
                           role: Role.TYPING,
+                          *,
                           name: str = EmptyObject,
                           permissions: typing.Union[int, str, PermissionFlags] = EmptyObject,
                           color: int = EmptyObject,

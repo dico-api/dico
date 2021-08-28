@@ -3,6 +3,9 @@ import typing
 
 from ..model.snowflake import Snowflake
 
+if typing.TYPE_CHECKING:
+    from ..api import APIClient
+
 
 class CopyableObject:
     def copy(self):
@@ -26,9 +29,9 @@ class DiscordObjectBase:
     def __init__(self, client, resp, **kwargs):
         resp.update(kwargs)
         self._cache_type = None
-        self.raw = resp
-        self.id = Snowflake(resp["id"])
-        self.client = client
+        self.raw: dict = resp
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.client: APIClient = client
 
     def __int__(self):
         return int(self.id)

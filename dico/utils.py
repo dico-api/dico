@@ -104,6 +104,10 @@ def to_image_data(image: typing.Union[io.FileIO, typing.BinaryIO, pathlib.Path, 
     return f"data:image/{img_type};base64,{img.decode()}"
 
 
+def rgb(red, green, blue):
+    return red << 16 | green << 8 | blue
+
+
 """
 def create_partial_channel(name: str,
                            channel_type: typing.Union[ChannelTypes, int],
