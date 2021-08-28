@@ -167,7 +167,7 @@ class APIClient:
         if embed:
             embeds = [embed]
         if embeds:
-            embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+            embeds = [x if isinstance(x, dict) else x.to_dict() for x in embeds]
         if message_reference and not isinstance(message_reference, dict):
             message_reference = message_reference.to_dict()
         if component and components:
@@ -269,7 +269,7 @@ class APIClient:
             if embed:
                 embeds = [embed]
             if embeds:
-                embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+                embeds = [x if isinstance(x, dict) else x.to_dict() for x in embeds]
         _att = []
         if attachments:
             for x in attachments:
@@ -1112,7 +1112,7 @@ class APIClient:
             if embed:
                 embeds = [embed]
             if embeds:
-                embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+                embeds = [x if isinstance(x, dict) else x.to_dict() for x in embeds]
         if component is None or components is None:
             components = None
         else:
@@ -1364,7 +1364,7 @@ class APIClient:
             if embed:
                 embeds = [embed]
             if embeds:
-                embeds = [x.to_dict() for x in embeds if not isinstance(x, dict)]
+                embeds = [x if isinstance(x, dict) else x.to_dict() for x in embeds]
         if component is None or components is None:
             components = None
         else:

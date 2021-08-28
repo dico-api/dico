@@ -1,15 +1,13 @@
 import typing
 from .user import User
 from .snowflake import Snowflake
-from ..base.model import DiscordObjectBase
 
 
-class Emoji(DiscordObjectBase):
+class Emoji:
     TYPING = typing.Union[int, str, Snowflake, "Emoji"]
 
     def __init__(self, client, resp):
-        super().__init__(client, resp)
-        self._cache_type = "emoji"
+        self.id = Snowflake.optional(resp.get("id"))
         self.name = resp["name"]
         self.roles = [client.get(x) for x in resp.get("roles", [])] if client.has_cache else [Snowflake.optional(x) for x in resp.get("roles", [])]
         self.__user = resp.get("user")
