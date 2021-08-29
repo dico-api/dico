@@ -1476,5 +1476,9 @@ class APIClient:
         return _all_men
 
     @property
+    def get(self):
+        raise NotImplementedError
+
+    @property
     def has_cache(self):
         return hasattr(self, "cache")

@@ -2,20 +2,23 @@ import typing
 from .user import User
 from .snowflake import Snowflake
 
+if typing.TYPE_CHECKING:
+    from .permission import Role
+
 
 class Emoji:
     TYPING = typing.Union[int, str, Snowflake, "Emoji"]
 
     def __init__(self, client, resp):
-        self.id = Snowflake.optional(resp.get("id"))
-        self.name = resp["name"]
-        self.roles = [client.get(x) for x in resp.get("roles", [])] if client.has_cache else [Snowflake.optional(x) for x in resp.get("roles", [])]
+        self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
+        self.name: str = resp["name"]
+        self.roles: typing.Optional[typing.List["Role"]] = [client.get(x) for x in resp.get("roles", [])] if client.has_cache else [Snowflake.optional(x) for x in resp.get("roles", [])]
         self.__user = resp.get("user")
-        self.user = User.create(client, self.__user) if self.__user else self.__user
-        self.require_colons = resp.get("require_colons")
-        self.managed = resp.get("managed")
-        self.animated = resp.get("animated")
-        self.available = resp.get("available")
+        self.user: typing.Optional[User] = User.create(client, self.__user) if self.__user else self.__user
+        self.require_colons: typing.Optional[bool] = resp.get("require_colons")
+        self.managed: typing.Optional[bool] = resp.get("managed")
+        self.animated: typing.Optional[bool] = resp.get("animated")
+        self.available: typing.Optional[bool] = resp.get("available")
 
     def __str__(self):
         return f"<:{self.name}:{self.id}>" if self.id else self.name
