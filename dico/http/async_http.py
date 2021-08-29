@@ -4,6 +4,7 @@ import typing
 import logging
 import asyncio
 import aiohttp
+from .ratelimit import RatelimitHandler
 from .. import exception
 from ..base.http import HTTPRequestBase, EmptyObject
 
@@ -23,6 +24,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
         if not session:
             self._close_on_del = True
         self._closed = False
+        self.ratelimits = RatelimitHandler()
 
     def __del__(self):
         if not self._closed:
@@ -49,9 +51,6 @@ class AsyncHTTPRequest(HTTPRequestBase):
             elif code == 404:
                 raise exception.NotFound(route, code, resp)
             elif code == 429:
-                wait_sec = resp["retry_after"]
-                self.logger.warning(f"Rate limited, waiting for {wait_sec} second{'s' if wait_sec == 1 else ''}...")
-                await asyncio.sleep(wait_sec)
                 continue
             elif 500 <= code < 600:
                 raise exception.DiscordError(route, code, resp)
@@ -60,17 +59,39 @@ class AsyncHTTPRequest(HTTPRequestBase):
         raise exception.RateLimited(route, code, resp)
 
     async def _request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, reason_header: str = None, **kwargs) -> typing.Tuple[int, dict]:
-        headers = {"Authorization": f"Bot {self.token}"}
-        if meth not in ["GET"] and body is not None:
-            if is_json:
-                headers["Content-Type"] = "application/json"
-                body = json.dumps(body)
-            kwargs["data"] = body
-        if reason_header is not None:
-            headers["X-Audit-Log-Reason"] = reason_header
-        async with self.session.request(meth, self.BASE_URL+route, headers=headers, **kwargs) as resp:
-            self.logger.debug(f"{route}: {meth} request - {resp.status}")
-            return resp.status, await resp.json() if resp.status != 204 else None  # if resp.headers.get("Content-Type") == "applications/json" else {"text": await resp.text()}
+        await self.ratelimits.maybe_global()
+        locker = self.ratelimits.get_locker(meth, route)
+        async with locker["lock"]:
+            if locker["remaining"] == 0:
+                wait_time = (locker["reset_at"] - self.ratelimits.utc).total_seconds()
+                self.logger.warning(f"No more remaining request count, waiting for {wait_time} seconds...")
+                await asyncio.sleep(wait_time)
+            headers = {"Authorization": f"Bot {self.token}"}
+            if meth not in ["GET"] and body is not None:
+                if is_json:
+                    headers["Content-Type"] = "application/json"
+                    body = json.dumps(body)
+                kwargs["data"] = body
+            if reason_header is not None:
+                headers["X-Audit-Log-Reason"] = reason_header
+            async with self.session.request(meth, self.BASE_URL + route, headers=headers, **kwargs) as resp:
+                self.logger.debug(f"{route}: {meth} request - {resp.status}")
+                bucket = resp.headers.get("X-RateLimit-Bucket")
+                reset_after = resp.headers.get("X-RateLimit-Reset-After")
+                reset_at = resp.headers.get("X-RateLimit-Reset")
+                remaining = resp.headers.get("X-RateLimit-Remaining")
+                self.ratelimits.set_bucket(meth, route, bucket, reset_after, reset_at, remaining)
+                maybe_json = await resp.json() if resp.status != 204 else None
+                if maybe_json and resp.status == 429:
+                    wait_sec = float(maybe_json["retry_after"])
+                    if maybe_json["global"]:
+                        async with self.ratelimits.global_locker:
+                            self.logger.warning(f"Rate limited globally, waiting for {wait_sec} second{'s' if wait_sec == 1 else ''}...")
+                            await asyncio.sleep(wait_sec)
+                    else:
+                        self.logger.warning(f"Rate limited, waiting for {wait_sec} second{'s' if wait_sec == 1 else ''}...")
+                        await asyncio.sleep(wait_sec)
+                return resp.status, maybe_json  # if resp.headers.get("Content-Type") == "applications/json" else {"text": await resp.text()}
 
     def create_message_with_files(self,
                                   channel_id,
