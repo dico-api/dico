@@ -2,11 +2,11 @@
 dico
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Yet another Discord API wrapper for Python.
-:copyright: (c) 2021 eunwoo1104
+:copyright: (c) 2021 dico-api
 :license: MIT
 """
 
-__version__ = "0.0.12"
+__version__ = "0.0.13"
 
 from .api import APIClient
 from .client import Client
