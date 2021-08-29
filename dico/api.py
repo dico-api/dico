@@ -15,9 +15,6 @@ class APIClient:
     """
     REST API handling client.
 
-    .. note::
-        If you chose to use async request handler, all request functions will return coroutine which will return raw instance.
-
     :param token: Token of the client.
     :param base: HTTP request handler to use. Must inherit :class:`.base.http.HTTPRequestBase`.
     :param default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object to use. Default None.

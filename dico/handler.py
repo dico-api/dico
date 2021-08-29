@@ -57,6 +57,9 @@ class EventHandler:
             "MESSAGE_REACTION_REMOVE_ALL": MessageReactionRemoveAll,
             "MESSAGE_REACTION_REMOVE_EMOJI": MessageReactionRemoveEmoji,
             "PRESENCE_UPDATE": PresenceUpdate,
+            "STAGE_INSTANCE_CREATE": StageInstanceCreate,
+            "STAGE_INSTANCE_DELETE": StageInstanceDelete,
+            "STAGE_INSTANCE_UPDATE": StageInstanceUpdate,
             "TYPING_START": TypingStart,
             "USER_UPDATE": UserUpdate,
             "VOICE_STATE_UPDATE": VoiceStateUpdate

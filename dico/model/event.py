@@ -6,6 +6,7 @@ from .gateway import Activity
 from .guild import Guild, GuildMember
 from .permission import Role
 from .snowflake import Snowflake
+from .stage import StageInstance
 from .user import User
 from .voice import VoiceState
 from .interactions import Interaction, ApplicationCommand, ApplicationCommandOption
@@ -54,7 +55,7 @@ class ChannelUpdate(Channel):
     @property
     def original(self):
         if self.client.has_cache:
-            return self.client.get_channel(self.id)
+            return self.client.get(self.id, "channel")
 
 
 class ChannelDelete(Channel):
@@ -522,6 +523,29 @@ class PresenceUpdate(EventBase):
     def guild(self):
         if self.client.has_cache:
             return self.client.cache.get(self.guild_id, "guild")
+
+
+StageInstanceCreate = StageInstance
+
+
+class StageInstanceDelete(StageInstance):
+    def __del__(self):
+        if self.client.has_cache:
+            self.client.cache.remove(self.id, self._cache_type)
+
+
+class StageInstanceUpdate(StageInstance):
+    def __del__(self):
+        StageInstance.create(self.client, self.raw)
+
+    @classmethod
+    def create(cls, client, resp, **kwargs):
+        return cls(client, resp)
+
+    @property
+    def original(self):
+        if self.client.has_cache:
+            return self.client.get(self.id, "stage_instance")
 
 
 class TypingStart(EventBase):
