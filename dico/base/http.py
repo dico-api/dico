@@ -1369,10 +1369,8 @@ class HTTPRequestBase(ABC):
         :param guild_id: ID of the guild.
         :param style: Style to use. Can be one of ``shield``, ``banner1``, ``banner2``, ``banner3``, or ``banner4``.
         """
-        params = {}
-        if style is not None:
-            params["style"] = style
-        return self.request(f"/guilds/{guild_id}/widget.png", "GET", params=params)
+        params = f"?style={style}" if style is not None else ""
+        return self.download(f"{self.BASE_URL}/guilds/{guild_id}/widget.png{params}")
 
     def request_guild_welcome_screen(self, guild_id):
         """

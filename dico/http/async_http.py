@@ -58,11 +58,12 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 raise exception.Unknown(route, code, resp)
         raise exception.RateLimited(route, code, resp)
 
-    async def _request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, reason_header: str = None, **kwargs) -> typing.Tuple[int, dict]:
+    async def _request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, reason_header: str = None, **kwargs) \
+            -> typing.Tuple[int, typing.Union[dict, typing.Any]]:
         await self.ratelimits.maybe_global()
         locker = self.ratelimits.get_locker(meth, route)
         async with locker["lock"]:
-            if locker["remaining"] == 0 and self.ratelimits.utc < locker["reset_at"]:
+            if "remaining" in locker and "reset_at" in locker and locker["remaining"] == 0 and self.ratelimits.utc < locker["reset_at"]:
                 wait_time = (locker["reset_at"] - self.ratelimits.utc).total_seconds()
                 self.logger.warning(f"No more remaining request count, waiting for {wait_time} seconds...")
                 await asyncio.sleep(wait_time)
@@ -81,8 +82,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 reset_at = resp.headers.get("X-RateLimit-Reset")
                 remaining = resp.headers.get("X-RateLimit-Remaining")
                 self.ratelimits.set_bucket(meth, route, bucket, reset_after, reset_at, remaining)
-                maybe_json = await resp.json() if resp.status != 204 else None
-                if maybe_json and resp.status == 429:
+                maybe_json = await (resp.json() if resp.headers.get("Content-Type") == "application/json" else resp.text()) if resp.status != 204 else None
+                if isinstance(maybe_json, dict) and resp.status == 429:
                     wait_sec = float(maybe_json["retry_after"])
                     if maybe_json["global"]:
                         async with self.ratelimits.global_locker:
