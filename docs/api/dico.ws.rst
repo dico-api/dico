@@ -1,5 +1,5 @@
-dico.http package
-=================
+dico.ws package
+===============
 
 Submodules
 ----------
@@ -7,14 +7,12 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   dico.http.async_http
-   dico.http.ratelimit
-   dico.http.request
+   dico.ws.websocket
 
 Module contents
 ---------------
 
-.. automodule:: dico.http
+.. automodule:: dico.ws
    :members:
    :undoc-members:
    :show-inheritance:

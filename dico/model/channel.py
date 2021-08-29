@@ -69,7 +69,7 @@ class Channel(DiscordObjectBase):
     def delete(self, *, reason: str = None):
         return self.client.delete_channel(self, reason=reason)
 
-    def create_message(self, *args, **kwargs) -> "Message":
+    def create_message(self, *args, **kwargs) -> typing.Union["Message", typing.Awaitable["Message"]]:
         if not self.is_messageable():
             raise TypeError("You can't send message in this type of channel.")
         return self.client.create_message(self, *args, **kwargs)
@@ -78,7 +78,7 @@ class Channel(DiscordObjectBase):
     def send(self):
         return self.create_message
 
-    def bulk_delete_messages(self, *messages: typing.Union[int, str, Snowflake, "Message"], reason: str = None):
+    def bulk_delete_messages(self, *messages: "Message.TYPING", reason: str = None):
         return self.client.bulk_delete_messages(self, *messages, reason=reason)
 
     def edit_permissions(self, overwrite, *, reason: str = None):
@@ -93,7 +93,7 @@ class Channel(DiscordObjectBase):
     def delete_permissions(self, overwrite, *, reason: str = None):
         return self.client.delete_channel_permission(self, overwrite, reason=reason)
 
-    def follow(self, target_channel: typing.Union[int, str, Snowflake, "Channel"]):
+    def follow(self, target_channel: "Channel.TYPING"):
         return self.client.follow_news_channel(self, target_channel)
 
     def trigger_typing_indicator(self):
@@ -102,17 +102,17 @@ class Channel(DiscordObjectBase):
     def request_pinned_messages(self):
         return self.client.request_pinned_messages(self)
 
-    def add_recipient(self, user: typing.Union[int, str, Snowflake, User], access_token: str, nick: str):
+    def add_recipient(self, user: User.TYPING, access_token: str, nick: str):
         if not self.type.group_dm:
             raise AttributeError("This type of channel is not allowed to add recipient.")
         return self.client.group_dm_add_recipient(self, user, access_token, nick)
 
-    def remove_recipient(self, user: typing.Union[int, str, Snowflake, User]):
+    def remove_recipient(self, user: User.TYPING):
         if not self.type.group_dm:
             raise AttributeError("This type of channel is not allowed to remove recipient.")
         return self.client.group_dm_remove_recipient(self, user)
 
-    def start_thread(self, message: typing.Union[int, str, Snowflake, "Message"] = None, *, name: str, auto_archive_duration: int, reason: str = None):
+    def start_thread(self, message: "Message.TYPING" = None, *, name: str, auto_archive_duration: int, reason: str = None):
         return self.client.start_thread(self, message, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     def join_thread(self):
@@ -120,7 +120,7 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to join thread.")
         return self.client.join_thread(self)
 
-    def add_thread_member(self, user: typing.Union[int, str, Snowflake, User]):
+    def add_thread_member(self, user: User.TYPING):
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to add thread member.")
         return self.client.add_thread_member(self, user)
@@ -130,7 +130,7 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to leave thread.")
         return self.client.leave_thread(self)
 
-    def remove_thread_member(self, user: typing.Union[int, str, Snowflake, User]):
+    def remove_thread_member(self, user: User.TYPING):
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to remove thread member.")
         return self.client.remove_thread_member(self, user)
@@ -255,7 +255,7 @@ class Message(DiscordObjectBase):
 
         # self.stickers: typing.Optional[typing.List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
 
-    def reply(self, content=None, **kwargs) -> "Message":
+    def reply(self, content=None, **kwargs) -> typing.Union["Message", typing.Awaitable["Message"]]:
         kwargs["message_reference"] = self
         mention = kwargs.pop("mention") if "mention" in kwargs.keys() else True
         allowed_mentions = kwargs.get("allowed_mentions", self.client.default_allowed_mentions or AllowedMentions(replied_user=mention)).copy()
@@ -287,7 +287,7 @@ class Message(DiscordObjectBase):
     def create_reaction(self, emoji: typing.Union[Emoji, str]):
         return self.client.create_reaction(self.channel_id, self.id, emoji)
 
-    def delete_reaction(self, emoji: typing.Union[Emoji, str], user: typing.Union[int, str, Snowflake, User] = "@me"):
+    def delete_reaction(self, emoji: typing.Union[Emoji, str], user: User.TYPING = "@me"):
         return self.client.delete_reaction(self.channel_id, self.id, emoji, user)
 
     def pin(self, *, reason: str = None):

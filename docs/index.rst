@@ -6,6 +6,10 @@
 Welcome to dico's documentation!
 ================================
 
+This docs page is temporary, sorry for the inconvenience.
+
+You can see examples here: https://github.com/dico-api/dico/tree/master/examples
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

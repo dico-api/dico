@@ -1,6 +1,14 @@
 dico.model package
 ==================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   dico.model.interactions
+
 Submodules
 ----------
 
@@ -10,11 +18,17 @@ Submodules
    dico.model.channel
    dico.model.emoji
    dico.model.event
+   dico.model.extras
    dico.model.gateway
    dico.model.guild
+   dico.model.invite
    dico.model.permission
    dico.model.snowflake
+   dico.model.stage
+   dico.model.sticker
    dico.model.user
+   dico.model.voice
+   dico.model.webhook
 
 Module contents
 ---------------

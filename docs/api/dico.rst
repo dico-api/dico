@@ -10,6 +10,7 @@ Subpackages
    dico.base
    dico.http
    dico.model
+   dico.ws
 
 Submodules
 ----------
@@ -17,6 +18,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   dico.api
    dico.cache
    dico.client
    dico.exception
