@@ -62,7 +62,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
         await self.ratelimits.maybe_global()
         locker = self.ratelimits.get_locker(meth, route)
         async with locker["lock"]:
-            if locker["remaining"] == 0:
+            if locker["remaining"] == 0 and self.ratelimits.utc < locker["reset_at"]:
                 wait_time = (locker["reset_at"] - self.ratelimits.utc).total_seconds()
                 self.logger.warning(f"No more remaining request count, waiting for {wait_time} seconds...")
                 await asyncio.sleep(wait_time)
