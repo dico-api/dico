@@ -1422,6 +1422,32 @@ class HTTPRequestBase(ABC):
             body["request_to_speak_timestamp"] = request_to_speak_timestamp
         return self.request(f"/guilds/{guild_id}/voice-states/{user_id}", "PATCH", body, is_json=True)
 
+    # Invite Requests
+
+    def request_invite(self, invite_code, with_counts: bool = None, with_expiration: bool = None):
+        """
+        Sends get invite request.
+
+        :param invite_code: Code of the invite.
+        :param with_counts: Whether to include counts.
+        :param with_expiration: Whether to include expiration info.
+        """
+        params = {}
+        if with_counts is not None:
+            params["with_counts"] = with_counts
+        if with_expiration is not None:
+            params["with_expiration"] = with_expiration
+        return self.request(f"/invites/{invite_code}", "GET", params=params)
+
+    def delete_invite(self, invite_code, reason: str = None):
+        """
+        Sends delete invite request.
+
+        :param invite_code: Code of the invite.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/invites/{invite_code}", "DELETE", reason_header=reason)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

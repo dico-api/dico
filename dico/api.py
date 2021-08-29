@@ -958,6 +958,20 @@ class APIClient:
                 request_to_speak_timestamp.isoformat()
         return self.http.modify_user_voice_state(int(guild), str(int(channel)), user, suppress, request_to_speak_timestamp)
 
+    # Invite Requests
+
+    def request_invite(self, invite_code: typing.Union[str, Invite], *, with_counts: bool = None, with_expiration: bool = None):
+        resp = self.http.request_invite(str(invite_code), with_counts, with_expiration)
+        if isinstance(resp, dict):
+            return Invite(self, resp)
+        return wrap_to_async(Invite, self, resp, as_create=False)
+
+    def delete_invite(self, invite_code, *, reason: str = None):
+        resp = self.http.delete_invite(str(invite_code), reason=reason)
+        if isinstance(resp, dict):
+            return Invite(self, resp)
+        return wrap_to_async(Invite, self, resp, as_create=False)
+
     # Webhook
 
     def create_webhook(self, channel: Channel.TYPING, *, name: str = None, avatar: str = None):

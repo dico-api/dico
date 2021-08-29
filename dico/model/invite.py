@@ -25,6 +25,16 @@ class Invite:
         self.stage_instance = InviteStageInstance(client, self.__stage_instance) if self.__stage_instance else self.__stage_instance
         self.metadata = InviteMetadata.optional(resp)
 
+    def __str__(self):
+        return self.code
+
+    def delete(self, *, reason: str = None):
+        return self.client.delete_invite(self.code, reason=reason)
+
+    @property
+    def url(self):
+        return f"https://discord.gg/{self.code}"
+
 
 class InviteTargetTypes(TypeBase):
     STREAM = 1
