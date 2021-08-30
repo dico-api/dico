@@ -20,35 +20,35 @@ class Guild(DiscordObjectBase):
         from .channel import Channel  # Prevent circular import.
         super().__init__(client, resp)
         self._cache_type = "guild"
-        self.name = resp["name"]
-        self.icon = resp["icon"]
-        self.icon_hash = resp.get("icon_hash")
-        self.splash = resp["splash"]
-        self.discovery_splash = resp["discovery_splash"]
-        self.owner = resp.get("owner", False)
-        self.owner_id = Snowflake(resp["owner_id"])
-        self.permissions = resp.get("permissions")
-        self.region = resp["region"]
-        self.afk_channel_id = Snowflake.optional(resp["afk_channel_id"])
-        self.afk_timeout = resp["afk_timeout"]
-        self.widget_enabled = resp.get("widget_enabled")
-        self.widget_channel_id = Snowflake.optional(resp.get("widget_channel_id"))
-        self.verification_level = VerificationLevel(resp["verification_level"])
-        self.default_message_notifications = DefaultMessageNotificationLevel(resp["default_message_notifications"])
-        self.explicit_content_filter = ExplicitContentFilterLevel(resp["explicit_content_filter"])
-        self.roles = [Role.create(client, x, guild_id=self.id) for x in resp["roles"]]
-        self.emojis = [Emoji(self.client, x) for x in resp["emojis"]]
-        self.features = resp["features"]
-        self.mfa_level = MFALevel(resp["mfa_level"])
-        self.application_id = Snowflake.optional(resp["application_id"])
-        self.system_channel_id = Snowflake.optional(resp["system_channel_id"])
-        self.system_channel_flags = SystemChannelFlags.from_value(resp["system_channel_flags"])
-        self.rules_channel_id = Snowflake.optional(resp["rules_channel_id"])
+        self.name: str = resp["name"]
+        self.icon: typing.Optional[str] = resp["icon"]
+        self.icon_hash: typing.Optional[str] = resp.get("icon_hash")
+        self.splash: typing.Optional[str] = resp["splash"]
+        self.discovery_splash: typing.Optional[str] = resp["discovery_splash"]
+        self.owner: typing.Optional[bool] = resp.get("owner", False)
+        self.owner_id: Snowflake = Snowflake(resp["owner_id"])
+        self.permissions: typing.Optional[str] = resp.get("permissions")
+        self.region: typing.Optional[str] = resp["region"]
+        self.afk_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["afk_channel_id"])
+        self.afk_timeout: int = resp["afk_timeout"]
+        self.widget_enabled: typing.Optional[bool] = resp.get("widget_enabled")
+        self.widget_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("widget_channel_id"))
+        self.verification_level: VerificationLevel = VerificationLevel(resp["verification_level"])
+        self.default_message_notifications: DefaultMessageNotificationLevel = DefaultMessageNotificationLevel(resp["default_message_notifications"])
+        self.explicit_content_filter: ExplicitContentFilterLevel = ExplicitContentFilterLevel(resp["explicit_content_filter"])
+        self.roles: typing.List[Role] = [Role.create(client, x, guild_id=self.id) for x in resp["roles"]]
+        self.emojis: typing.List[Emoji] = [Emoji(self.client, x) for x in resp["emojis"]]
+        self.features: typing.List[str] = resp["features"]
+        self.mfa_level: MFALevel = MFALevel(resp["mfa_level"])
+        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp["application_id"])
+        self.system_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["system_channel_id"])
+        self.system_channel_flags: SystemChannelFlags = SystemChannelFlags.from_value(resp["system_channel_flags"])
+        self.rules_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["rules_channel_id"])
         self.__joined_at = resp["joined_at"]
-        self.joined_at = datetime.datetime.fromisoformat(self.__joined_at) if self.__joined_at else self.__joined_at
-        self.large = resp.get("large", False)
-        self.unavailable = resp.get("unavailable", False)
-        self.member_count = resp.get("member_count", 0)
+        self.joined_at: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__joined_at) if self.__joined_at else self.__joined_at
+        self.large: typing.Optional[bool] = resp.get("large", False)
+        self.unavailable: typing.Optional[bool] = resp.get("unavailable", False)
+        self.member_count: typing.Optional[int] = resp.get("member_count", 0)
         self.voice_states = resp.get("voice_states", [])
         self.members = [GuildMember.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
         self.channels = [Channel.create(client, x, guild_id=self.id) for x in resp.get("channels", [])]
