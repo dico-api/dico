@@ -16,7 +16,7 @@ Yet another Discord API wrapper for Python, aimed to follow Discord API format a
 ## Installation
 Development Version:
 ```
-pip install -U git+https://github.com/eunwoo1104/dico
+pip install -U git+https://github.com/dico-api/dico
 ```
 PyPi(**Not Recommended**):
 ```
@@ -32,14 +32,14 @@ client = dico.Client("YOUR_BOT_TOKEN_HERE", intents=dico.Intents.full())
 
 
 @client.on_message_create
-async def on_message_create(message):
+async def on_message_create(message: dico.Message):
     if message.content.startswith("!hello"):
         await message.reply("Hello, World!")
 
 
 client.run()
 ```
-More examples are in [here](https://github.com/eunwoo1104/dico/tree/master/examples).
+More examples are in [here](https://github.com/dico-api/dico/tree/master/examples).
 
 ## Requirements
 - Python 3.7+
