@@ -185,6 +185,9 @@ class Channel(DiscordObjectBase):
     def is_thread_channel(self) -> bool:
         return self.type.guild_news_thread or self.type.guild_public_thread or self.type.guild_private_thread
 
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} id={self.id} name={self.name}>'
+
 
 class ChannelTypes(TypeBase):
     GUILD_TEXT = 0
