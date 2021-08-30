@@ -9,9 +9,9 @@ client.on_ready = lambda ready: print(f"Bot ready, with {len(ready.guilds)} guil
 async def on_message_create(message: dico.Message):
     if message.content.startswith("!select"):
         options = [
-            dico.SelectOptions(label="Label 1", value="l1"),
-            dico.SelectOptions(label="Label 2", value="l2"),
-            dico.SelectOptions(label="Label 3", value="l3")
+            dico.SelectOption(label="Label 1", value="l1"),
+            dico.SelectOption(label="Label 2", value="l2"),
+            dico.SelectOption(label="Label 3", value="l3")
         ]
         select = dico.SelectMenu(custom_id=f"select{message.guild_id}{message.id}{message.author.id}",
                                  options=options)
