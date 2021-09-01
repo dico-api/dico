@@ -35,16 +35,8 @@ class HTTPRequestBase(ABC):
     @abstractmethod
     def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = 3, **kwargs):
         """
-        This function should wrap :meth:`._request` with rate limit handling.
+        This function includes requesting REST API.
         :return:
-        """
-        pass
-
-    @abstractmethod
-    def _request(self, route: str, meth: str, body: dict = None, is_json: bool = False, reason_header: str = None, **kwargs) -> typing.Tuple[int, dict]:
-        """
-        HTTP Requesting part.
-        :return: Tuple[int, dict]
         """
         pass
 
