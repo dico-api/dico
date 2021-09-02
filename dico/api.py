@@ -922,7 +922,7 @@ class APIClient:
             return AbstractObject(resp)
         return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
-    def request_guild_widget_image(self, guild: Guild.TYPING, style: str = None):
+    def request_guild_widget_image(self, guild: Guild.TYPING, style: typing.Literal["shield", "banner1", "banner2", "banner3", "banner4"] = None):
         return self.http.request_guild_widget_image(int(guild), style)
 
     def request_guild_welcome_screen(self, guild: Guild.TYPING):
@@ -958,7 +958,7 @@ class APIClient:
                 request_to_speak_timestamp.isoformat()
         return self.http.modify_user_voice_state(int(guild), str(int(channel)), user, suppress, request_to_speak_timestamp)
 
-    # Invite Requests
+    # Invite
 
     def request_invite(self, invite_code: typing.Union[str, Invite], *, with_counts: bool = None, with_expiration: bool = None):
         resp = self.http.request_invite(str(invite_code), with_counts, with_expiration)

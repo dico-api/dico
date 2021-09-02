@@ -25,7 +25,7 @@ class Guild(DiscordObjectBase):
         self.icon_hash: typing.Optional[str] = resp.get("icon_hash")
         self.splash: typing.Optional[str] = resp["splash"]
         self.discovery_splash: typing.Optional[str] = resp["discovery_splash"]
-        self.owner: typing.Optional[bool] = resp.get("owner", False)
+        self.owner: typing.Optional[bool] = resp.get("owner")
         self.owner_id: Snowflake = Snowflake(resp["owner_id"])
         self.permissions: typing.Optional[str] = resp.get("permissions")
         self.region: typing.Optional[str] = resp["region"]
@@ -49,24 +49,25 @@ class Guild(DiscordObjectBase):
         self.large: typing.Optional[bool] = resp.get("large", False)
         self.unavailable: typing.Optional[bool] = resp.get("unavailable", False)
         self.member_count: typing.Optional[int] = resp.get("member_count", 0)
-        self.voice_states = resp.get("voice_states", [])
-        self.members = [GuildMember.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
-        self.channels = [Channel.create(client, x, guild_id=self.id) for x in resp.get("channels", [])]
-        self.presences = resp.get("presences", [])
-        self.max_presences = resp.get("max_presences", 25000)
-        self.max_members = resp.get("max_members")
-        self.vanity_url_code = resp["vanity_url_code"]
-        self.description = resp["description"]
-        self.banner = resp["banner"]
-        self.premium_tier = PremiumTier(resp["premium_tier"])
-        self.premium_subscription_count = resp.get("premium_subscription_count", 0)
-        self.preferred_locale = resp["preferred_locale"]
-        self.public_updates_channel_id = Snowflake.optional(resp["public_updates_channel_id"])
-        self.max_video_channel_users = resp.get("max_video_channel_users")
-        self.approximate_member_count = resp.get("approximate_member_count")
-        self.approximate_presence_count = resp.get("approximate_presence_count")
-        self.welcome_screen = resp.get("welcome_screen")
-        self.nsfw = resp["nsfw"]
+        self.voice_states = resp.get("voice_states", [])  ## TODO: use voice state model
+        self.members: typing.Optional[typing.List[GuildMember]] = [GuildMember.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
+        self.channels: typing.Optional[typing.List[Channel]] = [Channel.create(client, x, guild_id=self.id) for x in resp.get("channels", [])]
+        # TODO: implement self.threads
+        self.presences = resp.get("presences", [])  # TODO: use Presence model
+        self.max_presences: typing.Optional[int] = resp.get("max_presences")
+        self.max_members: typing.Optional[int] = resp.get("max_members")
+        self.vanity_url_code: typing.Optional[str] = resp["vanity_url_code"]
+        self.description: typing.Optional[str] = resp["description"]
+        self.banner: typing.Optional[str] = resp["banner"]
+        self.premium_tier: int = PremiumTier(resp["premium_tier"])
+        self.premium_subscription_count: int = resp.get("premium_subscription_count", 0)
+        self.preferred_locale: str = resp["preferred_locale"]
+        self.public_updates_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["public_updates_channel_id"])
+        self.max_video_channel_users: typing.Optional[int] = resp.get("max_video_channel_users")
+        self.approximate_member_count: typing.Optional[int] = resp.get("approximate_member_count")
+        self.approximate_presence_count: typing.Optional[int] = resp.get("approximate_presence_count")
+        self.welcome_screen = resp.get("welcome_screen")  # TODO: use WelcomeScreen model
+        self.nsfw_level = resp["nsfw_level"]  # TODO: nsfw level type object
 
         self.cache = client.cache.get_guild_container(self.id) if client.has_cache else None
 
