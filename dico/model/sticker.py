@@ -34,6 +34,9 @@ class Sticker(DiscordObjectBase):
         if self.client.has_cache:
             return self.client.get(self.pack_id, "sticker_pack")  # noqa
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
+
 
 class StickerTypes(TypeBase):
     STANDARD = 1
@@ -58,6 +61,9 @@ class StickerItem:
     def __int__(self):
         return int(self.id)
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
+
 
 class StickerPack(DiscordObjectBase):
     def __init__(self, client, resp):
@@ -75,3 +81,6 @@ class StickerPack(DiscordObjectBase):
 
     def banner_url(self, *, extension="webp", size=1024):
         return cdn_url("app-assets/710982414301790216/store", image_hash=self.banner_asset_id, extension=extension, size=size)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"

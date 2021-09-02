@@ -51,6 +51,9 @@ class User(DiscordObjectBase):
     def get_voice_state(self):
         return self.voice_state
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id}>"
+
 
 class UserFlags(FlagBase):
     NONE = 0

@@ -315,6 +315,9 @@ class Message(DiscordObjectBase):
             else:
                 return self.client.get(self.channel_id, "channel")
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id}>"
+
 
 class MessageTypes(TypeBase):
     DEFAULT = 0

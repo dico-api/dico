@@ -42,6 +42,8 @@ class VoiceState:
     def create(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>"
 
 class VoiceRegion:
     def __init__(self, resp):
@@ -51,3 +53,6 @@ class VoiceRegion:
         self.optimal = resp["optimal"]
         self.deprecated = resp["deprecated"]
         self.custom = resp["custom"]
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
