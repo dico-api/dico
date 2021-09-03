@@ -4,6 +4,8 @@ import datetime
 from .emoji import Emoji
 from .permission import Role, PermissionFlags
 from .snowflake import Snowflake
+from .stage import StageInstance
+from .sticker import Sticker
 from .user import User
 from ..utils import cdn_url
 from ..base.model import DiscordObjectBase, TypeBase, FlagBase
@@ -18,6 +20,8 @@ class Guild(DiscordObjectBase):
 
     def __init__(self, client, resp):
         from .channel import Channel  # Prevent circular import.
+        from .event import PresenceUpdate
+        from .voice import VoiceState
         super().__init__(client, resp)
         self._cache_type = "guild"
         self.name: str = resp["name"]
@@ -49,11 +53,11 @@ class Guild(DiscordObjectBase):
         self.large: typing.Optional[bool] = resp.get("large", False)
         self.unavailable: typing.Optional[bool] = resp.get("unavailable", False)
         self.member_count: typing.Optional[int] = resp.get("member_count", 0)
-        self.voice_states = resp.get("voice_states", [])  ## TODO: use voice state model
+        self.voice_states: typing.Optional[typing.List[VoiceState]] = [VoiceState.create(client, x) for x in resp.get("voice_states", [])]
         self.members: typing.Optional[typing.List["GuildMember"]] = [GuildMember.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
         self.channels: typing.Optional[typing.List[Channel]] = [Channel.create(client, x, guild_id=self.id) for x in resp.get("channels", [])]
-        # TODO: implement self.threads
-        self.presences = resp.get("presences", [])  # TODO: use Presence model
+        self.threads: typing.Optional[typing.List[Channel]] = [Channel.create(client, x, guild_id=self.id, ensure_cache_type="channel") for x in resp.get("threads", [])]
+        self.presences: typing.Optional[typing.List[PresenceUpdate]] = [PresenceUpdate.create(client, x) for x in resp.get("presences", [])]
         self.max_presences: typing.Optional[int] = resp.get("max_presences")
         self.max_members: typing.Optional[int] = resp.get("max_members")
         self.vanity_url_code: typing.Optional[str] = resp["vanity_url_code"]
@@ -69,22 +73,24 @@ class Guild(DiscordObjectBase):
         self.__welcome_screen = resp.get("welcome_screen")
         self.welcome_screen: typing.Optional["WelcomeScreen"] = WelcomeScreen(self.__welcome_screen) if self.__welcome_screen else self.__welcome_screen
         self.nsfw_level: "NSFWLevel" = NSFWLevel(resp["nsfw_level"])
+        self.stage_instances: typing.Optional[typing.List[StageInstance]] = [StageInstance.create(client, x) for x in resp.get("stage_instances", [])]
+        self.stickers: typing.Optional[typing.List[Sticker]] = [Sticker.create(client, x) for x in resp.get("stickers", [])]
 
         self.cache = client.cache.get_guild_container(self.id) if client.has_cache else None
 
-    def icon_url(self, *, extension="webp", size=1024):
+    def icon_url(self, *, extension="webp", size=1024) -> str:
         if self.icon:
             return cdn_url("icons/{guild_id}", image_hash=self.icon, extension=extension, size=size, guild_id=self.id)
 
-    def splash_url(self, *, extension="webp", size=1024):
+    def splash_url(self, *, extension="webp", size=1024) -> str:
         if self.splash:
             return cdn_url("splashes/{guild_id}", image_hash=self.splash, extension=extension, size=size, guild_id=self.id)
 
-    def discovery_splash_url(self, *, extension="webp", size=1024):
+    def discovery_splash_url(self, *, extension="webp", size=1024) -> str:
         if self.discovery_splash:
             return cdn_url("discovery-splashes/{guild_id}", image_hash=self.discovery_splash, extension=extension, size=size, guild_id=self.id)
 
-    def banner_url(self, *, extension="webp", size=1024):
+    def banner_url(self, *, extension="webp", size=1024) -> str:
         if self.banner:
             return cdn_url("banners/{guild_id}", image_hash=self.banner, extension=extension, size=size, guild_id=self.id)
 

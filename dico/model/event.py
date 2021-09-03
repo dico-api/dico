@@ -514,7 +514,7 @@ class PresenceUpdate(EventBase):
     def __init__(self, client, resp: dict):
         super().__init__(client, resp)
         self.user = User.create(self.client, resp["user"])
-        self.guild_id = Snowflake(resp["guild_id"])
+        self.guild_id = Snowflake.optional(resp.get("guild_id"))
         self.status = resp["status"]
         self.activities = [Activity(x) for x in resp["activities"]]
         self.client_status = resp["client_status"]

@@ -922,7 +922,7 @@ class APIClient:
             return AbstractObject(resp)
         return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
-    def request_guild_widget_image(self, guild: Guild.TYPING, style: typing.Literal["shield", "banner1", "banner2", "banner3", "banner4"] = None):
+    def request_guild_widget_image(self, guild: Guild.TYPING, style: typing.Optional[str] = None):
         return self.http.request_guild_widget_image(int(guild), style)
 
     def request_guild_welcome_screen(self, guild: Guild.TYPING):
