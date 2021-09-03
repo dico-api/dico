@@ -33,13 +33,13 @@ class Guild(DiscordObjectBase):
         self.afk_timeout: int = resp["afk_timeout"]
         self.widget_enabled: typing.Optional[bool] = resp.get("widget_enabled")
         self.widget_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("widget_channel_id"))
-        self.verification_level: VerificationLevel = VerificationLevel(resp["verification_level"])
-        self.default_message_notifications: DefaultMessageNotificationLevel = DefaultMessageNotificationLevel(resp["default_message_notifications"])
-        self.explicit_content_filter: ExplicitContentFilterLevel = ExplicitContentFilterLevel(resp["explicit_content_filter"])
+        self.verification_level: "VerificationLevel" = VerificationLevel(resp["verification_level"])
+        self.default_message_notifications: "DefaultMessageNotificationLevel" = DefaultMessageNotificationLevel(resp["default_message_notifications"])
+        self.explicit_content_filter: "ExplicitContentFilterLevel" = ExplicitContentFilterLevel(resp["explicit_content_filter"])
         self.roles: typing.List[Role] = [Role.create(client, x, guild_id=self.id) for x in resp["roles"]]
         self.emojis: typing.List[Emoji] = [Emoji(self.client, x) for x in resp["emojis"]]
         self.features: typing.List[str] = resp["features"]
-        self.mfa_level: MFALevel = MFALevel(resp["mfa_level"])
+        self.mfa_level: "MFALevel" = MFALevel(resp["mfa_level"])
         self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp["application_id"])
         self.system_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["system_channel_id"])
         self.system_channel_flags: SystemChannelFlags = SystemChannelFlags.from_value(resp["system_channel_flags"])
@@ -50,7 +50,7 @@ class Guild(DiscordObjectBase):
         self.unavailable: typing.Optional[bool] = resp.get("unavailable", False)
         self.member_count: typing.Optional[int] = resp.get("member_count", 0)
         self.voice_states = resp.get("voice_states", [])  ## TODO: use voice state model
-        self.members: typing.Optional[typing.List[GuildMember]] = [GuildMember.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
+        self.members: typing.Optional[typing.List["GuildMember"]] = [GuildMember.create(self.client, x, guild_id=self.id) for x in resp.get("members", [])]
         self.channels: typing.Optional[typing.List[Channel]] = [Channel.create(client, x, guild_id=self.id) for x in resp.get("channels", [])]
         # TODO: implement self.threads
         self.presences = resp.get("presences", [])  # TODO: use Presence model
@@ -59,15 +59,16 @@ class Guild(DiscordObjectBase):
         self.vanity_url_code: typing.Optional[str] = resp["vanity_url_code"]
         self.description: typing.Optional[str] = resp["description"]
         self.banner: typing.Optional[str] = resp["banner"]
-        self.premium_tier: int = PremiumTier(resp["premium_tier"])
+        self.premium_tier: "PremiumTier" = PremiumTier(resp["premium_tier"])
         self.premium_subscription_count: int = resp.get("premium_subscription_count", 0)
         self.preferred_locale: str = resp["preferred_locale"]
         self.public_updates_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["public_updates_channel_id"])
         self.max_video_channel_users: typing.Optional[int] = resp.get("max_video_channel_users")
         self.approximate_member_count: typing.Optional[int] = resp.get("approximate_member_count")
         self.approximate_presence_count: typing.Optional[int] = resp.get("approximate_presence_count")
-        self.welcome_screen = resp.get("welcome_screen")  # TODO: use WelcomeScreen model
-        self.nsfw_level = resp["nsfw_level"]  # TODO: nsfw level type object
+        self.__welcome_screen = resp.get("welcome_screen")
+        self.welcome_screen: typing.Optional["WelcomeScreen"] = WelcomeScreen(self.__welcome_screen) if self.__welcome_screen else self.__welcome_screen
+        self.nsfw_level: "NSFWLevel" = NSFWLevel(resp["nsfw_level"])
 
         self.cache = client.cache.get_guild_container(self.id) if client.has_cache else None
 
@@ -276,6 +277,13 @@ class VerificationLevel(TypeBase):
     MEDIUM = 2
     HIGH = 3
     VERY_HIGH = 4
+
+
+class NSFWLevel(TypeBase):
+    DEFAULT = 0
+    EXPLICIT = 1
+    SAFE = 2
+    AGE_RESTRICTED = 3
 
 
 class PremiumTier(TypeBase):
