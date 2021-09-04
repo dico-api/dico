@@ -19,10 +19,10 @@ if typing.TYPE_CHECKING:
 
 class Channel(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Channel"]
+    _cache_type = "channel"
 
     def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
-        self._cache_type = "channel"
         self.type: ChannelTypes = ChannelTypes(resp["type"])
         self.guild_id: Snowflake = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
         self.position: typing.Optional[int] = resp.get("position")
@@ -207,11 +207,11 @@ class VideoQualityModes(TypeBase):
 
 class Message(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Message"]
+    _cache_type = "message"
 
     def __init__(self, client, resp, *, guild_id=None, webhook_token=None, interaction_token=None, original_response=False):
         from .interactions import MessageInteraction, Component  # Prevent circular import.
         super().__init__(client, resp)
-        self._cache_type = "message"
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id") or guild_id)
         self.author: User = User.create(client, resp["author"])

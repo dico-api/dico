@@ -6,10 +6,10 @@ from ..utils import cdn_url
 
 class User(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "User"]
+    _cache_type = "user"
 
     def __init__(self, client, resp):
         super().__init__(client, resp)
-        self._cache_type = "user"
         self.username = resp.get("username")
         self.discriminator = resp.get("discriminator")
         self.avatar = resp.get("avatar")

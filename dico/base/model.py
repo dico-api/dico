@@ -25,10 +25,11 @@ class EventBase:
 
 class DiscordObjectBase:
     TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase"]
+    _cache_type = None
 
     def __init__(self, client, resp, **kwargs):
         resp.update(kwargs)
-        self._cache_type = None
+        # self._cache_type = None
         self.raw: dict = resp
         self.id: Snowflake = Snowflake(resp["id"])
         self.client: APIClient = client
@@ -38,7 +39,7 @@ class DiscordObjectBase:
 
     @classmethod
     def create(cls, client, resp, **kwargs):
-        maybe_exist = client.has_cache and client.cache.get(resp["id"], kwargs.pop("ensure_cache_type") if "ensure_cache_type" in kwargs else None)
+        maybe_exist = client.has_cache and client.cache.get(resp["id"], kwargs.pop("ensure_cache_type") if "ensure_cache_type" in kwargs else cls._cache_type)
         if maybe_exist:
             orig = maybe_exist.raw
             for k, v in resp.items():

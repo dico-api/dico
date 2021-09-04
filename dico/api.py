@@ -521,14 +521,14 @@ class APIClient:
             kwargs["system_channel_flags"] = int(system_channel_flags)
         resp = self.http.create_guild(**kwargs)
         if isinstance(resp, dict):
-            return Guild.create(self, resp)
-        return wrap_to_async(Guild, self, resp)
+            return Guild.create(self, resp, ensure_cache_type="guild")
+        return wrap_to_async(Guild, self, resp, ensure_cache_type="guild")
 
     def request_guild(self, guild: Guild.TYPING, with_counts: bool = False):
         resp = self.http.request_guild(int(guild), with_counts)
         if isinstance(resp, dict):
-            return Guild.create(self, resp)
-        return wrap_to_async(Guild, self, resp)
+            return Guild.create(self, resp, ensure_cache_type="guild")
+        return wrap_to_async(Guild, self, resp, ensure_cache_type="guild")
 
     def request_guild_preview(self, guild: Guild.TYPING):
         resp = self.http.request_guild_preview(int(guild))
@@ -597,8 +597,8 @@ class APIClient:
             kwargs["description"] = description
         resp = self.http.modify_guild(int(guild), **kwargs, reason=reason)
         if isinstance(resp, dict):
-            return Guild.create(self, resp)
-        return wrap_to_async(Guild, self, resp)
+            return Guild.create(self, resp, ensure_cache_type="guild")
+        return wrap_to_async(Guild, self, resp, ensure_cache_type="guild")
 
     def delete_guild(self, guild: Guild.TYPING):
         return self.http.delete_guild(int(guild))

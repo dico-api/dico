@@ -130,9 +130,31 @@ class ThreadMembersUpdate(EventBase):
             return self.client.get(self.guild_id, "guild")
 
 
-GuildCreate = Guild
-GuildUpdate = Guild
-GuildDelete = Guild
+class GuildCreate(Guild):
+    @classmethod
+    def create(cls, client, resp, **kwargs):
+        kwargs.setdefault("ensure_cache_type", "guild")
+        return super().create(client, resp, **kwargs)
+
+
+class GuildUpdate(Guild):
+    def __del__(self):
+        Guild.create(self.client, self.raw, ensure_cache_type="guild")
+
+    @classmethod
+    def create(cls, client, resp, **kwargs):
+        return cls(client, resp)
+
+    @property
+    def original(self):
+        if self.client.has_cache:
+            return self.client.get(self.id, "guild")
+
+
+class GuildDelete(GuildCreate):
+    def __del__(self):
+        if self.client.has_cache:
+            self.client.cache.remove(self.id, self._cache_type)
 
 
 class GuildBanAdd(EventBase):

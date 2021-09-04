@@ -1,11 +1,15 @@
+import typing
+
 from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, TypeBase
 
 
 class StageInstance(DiscordObjectBase):
+    TYPING = typing.Union[int, str, Snowflake, "StageInstance"]
+    _cache_type = "stage_instance"
+
     def __init__(self, client, resp):
         super().__init__(client, resp)
-        self._cache_type = "stage_instance"
         self.guild_id = Snowflake(resp["guild_id"])
         self.channel_id = Snowflake(resp["channel_id"])
         self.topic = resp["topic"]

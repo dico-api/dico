@@ -6,9 +6,11 @@ from ..utils import cdn_url
 
 
 class Sticker(DiscordObjectBase):
+    TYPING = typing.Union[int, str, Snowflake, "Sticker"]
+    _cache_type = "sticker"
+
     def __init__(self, client, resp):
         super().__init__(client, resp)
-        self._cache_type = "sticker"
         self.pack_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("pack_id"))
         self.name: str = resp["name"]
         self.description: typing.Optional[str] = resp["description"]
@@ -60,9 +62,11 @@ class StickerItem:
 
 
 class StickerPack(DiscordObjectBase):
+    TYPING = typing.Union[int, str, Snowflake, "StickerPack"]
+    _cache_type = "sticker_pack"
+
     def __init__(self, client, resp):
         super().__init__(client, resp)
-        self._cache_type = "sticker_pack"
         self.stickers: typing.List[Sticker] = [Sticker.create(client, x) for x in resp["stickers"]]
         self.name: str = resp["name"]
         self.sku_id: Snowflake = Snowflake(resp["sku_id"])

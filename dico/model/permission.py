@@ -46,11 +46,11 @@ class PermissionFlags(FlagBase):
 
 class Role(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Role"]
+    _cache_type = "role"
 
     def __init__(self, client, resp, *, guild_id=None):
         super().__init__(client, resp)
         self.guild_id = Snowflake.optional(guild_id)  # This isn't actually in payload, but role is always created at the guild, so why not?
-        self._cache_type = "role"
         self.name = resp["name"]
         self.color = resp["color"]
         self.hoist = resp["hoist"]

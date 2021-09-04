@@ -17,13 +17,13 @@ if typing.TYPE_CHECKING:
 
 class Guild(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Guild"]
+    _cache_type = "guild"
 
     def __init__(self, client, resp):
         from .channel import Channel  # Prevent circular import.
         from .event import PresenceUpdate
         from .voice import VoiceState
         super().__init__(client, resp)
-        self._cache_type = "guild"
         self.name: str = resp["name"]
         self.icon: typing.Optional[str] = resp["icon"]
         self.icon_hash: typing.Optional[str] = resp.get("icon_hash")
