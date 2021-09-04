@@ -3,6 +3,7 @@ import typing
 import asyncio
 import logging
 import aiohttp
+from .ratelimit import WSRatelimit
 from ..http.async_http import AsyncHTTPRequest
 from ..model import gateway
 from ..handler import EventHandler
@@ -34,6 +35,7 @@ class WebSocketClient:
         self.ping = 0.0
         self._ping_start = 0.0
         self.try_reconnect = try_reconnect
+        self.ratelimit = WSRatelimit()
 
     def __del__(self):
         if not self._closed:
@@ -85,6 +87,7 @@ class WebSocketClient:
 
                 elif resp.op == gateway.Opcodes.HELLO:
                     self.heartbeat_interval = resp.d["heartbeat_interval"]
+                    self.ratelimit.reload_heartbeat(self.heartbeat_interval/1000)
                     self._heartbeat_task = self.http.loop.create_task(self.run_heartbeat())
                     if self._reconnecting:
                         await self.resume()
@@ -112,6 +115,10 @@ class WebSocketClient:
                 self._closed = False
             else:
                 return
+
+    async def request(self, *args, **kwargs):
+        async with self.ratelimit.maybe_limited():  # Will raise exception if rate limited, else wait until previous request is done.
+            return await self.ws.send_json(*args, **kwargs)
 
     async def receive(self):
         resp = await self.ws.receive()
@@ -145,7 +152,7 @@ class WebSocketClient:
                 "seq": self.seq
             }
         }
-        await self.ws.send_json(data)
+        await self.request(data)
         self._reconnecting = False
 
     async def run_heartbeat(self):
@@ -156,7 +163,7 @@ class WebSocketClient:
                 break
             data = {"op": gateway.Opcodes.HEARTBEAT, "d": self.seq}
             self._ping_start = time.time()
-            await self.ws.send_json(data)
+            await self.ws.send_json(data)  # Don't track rate limit for this.
             self.last_heartbeat_send = time.time()
             await asyncio.sleep(self.heartbeat_interval/1000)
 
@@ -173,7 +180,7 @@ class WebSocketClient:
                 }
             }
         }
-        await self.ws.send_json(data)
+        await self.request(data)
 
     async def request_guild_members(self, guild_id: str, *, query: str = None, limit: int = None, presences: bool = None, user_ids: typing.List[str] = None, nonce: bool = None):
         d = {"guild_id": guild_id}
@@ -190,7 +197,7 @@ class WebSocketClient:
             "op": gateway.Opcodes.REQUEST_GUILD_MEMBERS,
             "d": d
         }
-        await self.ws.send_json(data)
+        await self.request(data)
 
     async def update_voice_state(self, guild_id: str, channel_id: typing.Optional[str], self_mute: bool, self_deaf: bool):
         data = {
@@ -202,7 +209,7 @@ class WebSocketClient:
                 "self_deaf": self_deaf
             }
         }
-        await self.ws.send_json(data)
+        await self.request(data)
 
     async def update_presence(self, since: typing.Optional[int], activities: typing.List[dict], status: str, afk: bool):
         data = {
@@ -214,7 +221,7 @@ class WebSocketClient:
                 "afk": afk
             }
         }
-        await self.ws.send_json(data)
+        await self.request(data)
 
     @property
     def closed(self):

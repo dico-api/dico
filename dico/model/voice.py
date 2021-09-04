@@ -51,3 +51,32 @@ class VoiceRegion:
         self.optimal = resp["optimal"]
         self.deprecated = resp["deprecated"]
         self.custom = resp["custom"]
+
+
+class Opcodes:
+    IDENTIFY = 0
+    SELECT_PROTOCOL = 1
+    READY = 2
+    HEARTBEAT = 3
+    SESSION_DESCRIPTION = 4
+    SPEAKING = 5
+    HEARTBEAT_ACK = 6
+    RESUME = 7
+    HELLO = 8
+    RESUMED = 9
+    CLIENT_DISCONNECT = 13
+
+    @staticmethod
+    def as_string(code: int) -> str:
+        opcodes = {0: "Identify",
+                   1: "Select Protocol",
+                   2: "Ready",
+                   3: "Heartbeat",
+                   4: "Session Description",
+                   5: "Speaking",
+                   6: "Heartbeat ACK",
+                   7: "Resume",
+                   8: "Hello",
+                   9: "Resumed",
+                   13: "Client Disconnect"}
+        return opcodes.get(code)

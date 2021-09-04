@@ -9,6 +9,13 @@ class WebsocketClosed(DicoException):
     """Websocket is closed, so this action could not be performed."""
 
 
+class WebsocketRateLimited(DicoException):
+    """Websocket is rate limit, try again later."""
+    def __init__(self, left):
+        self.left = left
+        super().__init__(f"Please try again after {self.left} seconds.")
+
+
 class DownloadFailed(DicoException):
     """Downloading something has failed."""
     def __init__(self, url, code, resp):
