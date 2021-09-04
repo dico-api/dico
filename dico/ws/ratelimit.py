@@ -13,9 +13,6 @@ class WSRatelimit:
 
     def maybe_limited(self):
         now = time.time()
-        print(self.init_time + 60)
-        print(now)
-        print(self.count)
         if self.init_time + 60 >= now and self.count >= self.max_requests:
             raise WebsocketRateLimited((self.init_time + 60) - now)
         elif self.init_time + 60 <= now:
