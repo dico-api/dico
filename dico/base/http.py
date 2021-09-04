@@ -798,7 +798,7 @@ class HTTPRequestBase(ABC):
         :param guild_id: ID of the guild to request.
         :param with_counts: Whether to return member and presence count.
         """
-        return self.request(f"/guilds/{guild_id}", "GET", params={"with_counts": with_counts})
+        return self.request(f"/guilds/{guild_id}", "GET", params={"with_counts": "true" if with_counts else "false"})
 
     def request_guild_preview(self, guild_id):
         """
@@ -1426,9 +1426,9 @@ class HTTPRequestBase(ABC):
         """
         params = {}
         if with_counts is not None:
-            params["with_counts"] = with_counts
+            params["with_counts"] = "true" if with_counts else "false"
         if with_expiration is not None:
-            params["with_expiration"] = with_expiration
+            params["with_expiration"] = "true" if with_expiration else "false"
         return self.request(f"/invites/{invite_code}", "GET", params=params)
 
     def delete_invite(self, invite_code, reason: str = None):
@@ -1439,6 +1439,8 @@ class HTTPRequestBase(ABC):
         :param reason: Reason of the action.
         """
         return self.request(f"/invites/{invite_code}", "DELETE", reason_header=reason)
+
+    # User Requests
 
     # Webhook Requests
 

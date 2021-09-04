@@ -151,6 +151,7 @@ class WebSocketClient:
     async def run_heartbeat(self):
         while not self._closed:
             if not self.last_heartbeat_send <= self.last_heartbeat_ack <= time.time():
+                self.logger.warning("Heartbeat timeout, reconnecting...")
                 await self.reconnect()
                 break
             data = {"op": gateway.Opcodes.HEARTBEAT, "d": self.seq}

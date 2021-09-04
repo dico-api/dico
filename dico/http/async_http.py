@@ -198,7 +198,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["flags"] = flags
         params = {}
         if wait is not None:
-            params["wait"] = wait
+            params["wait"] = "true" if wait else "false"
         if thread_id is not None:
             params["thread_id"] = thread_id
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
