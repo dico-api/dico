@@ -39,7 +39,8 @@ class DiscordObjectBase:
 
     @classmethod
     def create(cls, client, resp, **kwargs):
-        maybe_exist = client.has_cache and client.cache.get(resp["id"], kwargs.pop("ensure_cache_type") if "ensure_cache_type" in kwargs else cls._cache_type)
+        ensure_cache_type = kwargs.pop("ensure_cache_type") if "ensure_cache_type" in kwargs else cls._cache_type
+        maybe_exist = client.has_cache and client.cache.get(resp["id"], ensure_cache_type)
         if maybe_exist:
             orig = maybe_exist.raw
             for k, v in resp.items():
