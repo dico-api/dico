@@ -12,7 +12,7 @@ class EventHandler:
             self.events[event] = []
 
         self.events[event].append(func)
-        
+
     def remove(self, event, func):
         self.events[event].remove(func)
 

@@ -59,7 +59,7 @@ class WebSocketClient:
                     continue
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
-                    if (ex.code in (1000, 1001) or ex.code is None) or self.try_reconnect:
+                    if ex.code in (1000, 1001) or self.try_reconnect:
                         self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
                     else:
@@ -79,35 +79,8 @@ class WebSocketClient:
                 if resp.s:
                     self.seq = resp.s
 
-                if resp.op == gateway.Opcodes.DISPATCH:
-                    if resp.t == "READY":
-                        self.session_id = resp.d.get("session_id", self.session_id)
-                    self.event_handler.client.dispatch("RAW", resp.raw)
-                    self.event_handler.dispatch_from_raw(resp.t, resp.d)
-
-                elif resp.op == gateway.Opcodes.HELLO:
-                    self.heartbeat_interval = resp.d["heartbeat_interval"]
-                    self.ratelimit.reload_heartbeat(self.heartbeat_interval/1000)
-                    self._heartbeat_task = self.http.loop.create_task(self.run_heartbeat())
-                    if self._reconnecting:
-                        await self.resume()
-                    else:
-                        await self.identify()
-                    if self._fresh_reconnecting:
-                        self._fresh_reconnecting = False
-
-                elif resp.op == gateway.Opcodes.HEARTBEAT_ACK:
-                    self.last_heartbeat_ack = time.time()
-                    self.ping = self.last_heartbeat_ack - self._ping_start
-
-                elif resp.op == gateway.Opcodes.INVALID_SESSION:
-                    self.logger.warning("Failed gateway resume, reconnecting to gateway without resuming.")
-                    await asyncio.sleep(5)
-                    await self.reconnect(fresh=True)
-                    break
-
-                elif resp.op == gateway.Opcodes.RECONNECT:
-                    await self.reconnect()
+                proc = await self.process(resp)
+                if proc == -1:
                     break
 
             if self._reconnecting or self._fresh_reconnecting:
@@ -132,6 +105,38 @@ class WebSocketClient:
             raise Ignore
         elif resp.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
             raise WSClosing(resp.data)
+
+    async def process(self, resp):
+        if resp.op == gateway.Opcodes.DISPATCH:
+            if resp.t == "READY":
+                self.session_id = resp.d.get("session_id", self.session_id)
+            self.event_handler.client.dispatch("RAW", resp.raw)
+            self.event_handler.dispatch_from_raw(resp.t, resp.d)
+
+        elif resp.op == gateway.Opcodes.HELLO:
+            self.heartbeat_interval = resp.d["heartbeat_interval"]
+            self.ratelimit.reload_heartbeat(self.heartbeat_interval/1000)
+            self._heartbeat_task = self.http.loop.create_task(self.run_heartbeat())
+            if self._reconnecting:
+                await self.resume()
+            else:
+                await self.identify()
+            if self._fresh_reconnecting:
+                self._fresh_reconnecting = False
+
+        elif resp.op == gateway.Opcodes.HEARTBEAT_ACK:
+            self.last_heartbeat_ack = time.time()
+            self.ping = self.last_heartbeat_ack - self._ping_start
+
+        elif resp.op == gateway.Opcodes.INVALID_SESSION:
+            self.logger.warning("Failed gateway resume, reconnecting to gateway without resuming.")
+            await asyncio.sleep(5)
+            await self.reconnect(fresh=True)
+            return -1
+
+        elif resp.op == gateway.Opcodes.RECONNECT:
+            await self.reconnect()
+            return -1
 
     async def reconnect(self, fresh: bool = False):
         if self._reconnecting or self._fresh_reconnecting:
