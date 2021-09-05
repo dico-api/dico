@@ -48,7 +48,7 @@ class Guild(DiscordObjectBase):
         self.system_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["system_channel_id"])
         self.system_channel_flags: SystemChannelFlags = SystemChannelFlags.from_value(resp["system_channel_flags"])
         self.rules_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["rules_channel_id"])
-        self.__joined_at = resp["joined_at"]
+        self.__joined_at = resp.get("joined_at")
         self.joined_at: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__joined_at) if self.__joined_at else self.__joined_at
         self.large: typing.Optional[bool] = resp.get("large", False)
         self.unavailable: typing.Optional[bool] = resp.get("unavailable", False)
