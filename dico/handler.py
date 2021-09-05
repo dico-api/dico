@@ -11,10 +11,13 @@ class EventHandler:
         if event not in self.events:
             self.events[event] = []
 
-        self.events[event].append(ensure_coro(func))
+        self.events[event].append(func)
+        
+    def remove(self, event, func):
+        self.events[event].remove(func)
 
     def get(self, event) -> list:
-        return self.events.get(event, [])
+        return [ensure_coro(x) for x in self.events.get(event, [])]
 
     def process_response(self, name, resp):
         model_dict = {
