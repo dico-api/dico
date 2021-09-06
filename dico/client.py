@@ -54,6 +54,7 @@ class Client(APIClient):
         self.application: typing.Union[None, Application] = None
         self.__wait_futures = {}
         self.application_id = Snowflake.ensure_snowflake(application_id)
+        self.__ready_future = asyncio.Future()
 
         # Internal events dispatch
         self.events.add("READY", self.__ready)
@@ -61,6 +62,8 @@ class Client(APIClient):
 
     def __ready(self, ready):
         self.application_id = Snowflake(ready.application["id"])
+        if not self.__ready_future.done():
+            self.__ready_future.set_result(True)
 
     def __voice_state_update(self, voice_state):
         if self.has_cache:
@@ -126,6 +129,10 @@ class Client(APIClient):
                 fut: asyncio.Future = self.__wait_futures[name.upper()].pop(x)
                 if not fut.cancelled():
                     fut.set_result(args)
+
+    async def wait_ready(self):
+        if not self.__ready_future.done():
+            await self.__ready_future
 
     @property
     def get(self):
@@ -198,8 +205,14 @@ class Client(APIClient):
         return self.on_(event_name, value)
 
     def __getattr__(self, item):
-        if not item.lower().startswith("on_") or item.lower() in ["on", "on_"]:
+        if item.startswith("get_"):
+            def wrap(snowflake_id):
+                return self.get(snowflake_id, item[4:])  # noqa
+            return wrap
+
+        if not item.lower().startswith("on_") or item.lower() in ["on", "on_", "get"]:
             return super().__getattribute__(item)  # Should raise AttributeError or whatever.
+
         event_name = item.lower().lstrip("on_")
 
         def deco(func):
