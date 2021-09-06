@@ -13,7 +13,8 @@ from ..handler import EventHandler
 
 class WebSocketClient:
     ZLIB_SUFFIX = b'\x00\x00\xff\xff'
-    RECONNECT_CODES = [1000, 1001, 1006, 4000, 4007, 4009]
+    RECONNECT_CODES = [1000, 1001, 1006, 4000, 4001, 4002, 4003, 4005, 4007, 4009]
+    INPUT_WARN = [4001, 4002, 4003, 4005]
 
     def __init__(self,
                  http: AsyncHTTPRequest,
@@ -71,7 +72,15 @@ class WebSocketClient:
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
                     self.intended_shutdown = True
-                    if ex.code in self.RECONNECT_CODES or self.try_reconnect:
+                    if ex.code in self.RECONNECT_CODES or 1000 <= ex.code < 2000 or self.try_reconnect:
+                        self.logger.warning("Trying to reconnect...")
+                        if ex.code in self.INPUT_WARN:
+                            self.logger.warning("Next time, be aware with your websocket request.")
+                        await self.reconnect(fresh=True)
+                    elif ex.code == 4008:  # Rate limit, we may reconnect after 60 secs?
+                        reset_after = self.ratelimit.reset_after()
+                        self.logger.error(f"We are rate limited, retrying reconnection after {round(reset_after)} seconds...")
+                        await asyncio.sleep(reset_after)
                         self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
                     else:

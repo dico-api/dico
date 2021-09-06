@@ -23,3 +23,6 @@ class WSRatelimit:
 
     def reload_heartbeat(self, heartbeat_time):
         self.max_requests = int(120 - (60 / heartbeat_time))
+
+    def reset_after(self):
+        return self.init_time + 60 - time.time()
