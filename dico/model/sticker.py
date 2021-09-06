@@ -7,6 +7,8 @@ from ..utils import cdn_url
 
 class Sticker(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Sticker"]
+    RESPONSE = typing.Union["Sticker", typing.Awaitable["Sticker"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Sticker"], typing.Awaitable[typing.List["Sticker"]]]
     _cache_type = "sticker"
 
     def __init__(self, client, resp):
@@ -63,6 +65,8 @@ class StickerItem:
 
 class StickerPack(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "StickerPack"]
+    RESPONSE = typing.Union["StickerPack", typing.Awaitable["StickerPack"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["StickerPack"], typing.Awaitable[typing.List["StickerPack"]]]
     _cache_type = "sticker_pack"
 
     def __init__(self, client, resp):

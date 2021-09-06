@@ -1,3 +1,4 @@
+import typing
 import datetime
 from .channel import Channel
 from .guild import Guild, GuildMember
@@ -6,6 +7,9 @@ from ..base.model import TypeBase
 
 
 class Invite:
+    RESPONSE = typing.Union["Invite", typing.Awaitable["Invite"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Invite"], typing.Awaitable[typing.List["Invite"]]]
+
     def __init__(self, client, resp):
         self.client = client
         self.code = resp["code"]

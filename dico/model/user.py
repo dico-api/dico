@@ -6,6 +6,8 @@ from ..utils import cdn_url
 
 class User(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "User"]
+    RESPONSE = typing.Union["User", typing.Awaitable["User"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["User"], typing.Awaitable[typing.List["User"]]]
     _cache_type = "user"
 
     def __init__(self, client, resp):

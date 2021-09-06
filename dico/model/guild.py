@@ -17,6 +17,8 @@ if typing.TYPE_CHECKING:
 
 class Guild(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Guild"]
+    RESPONSE = typing.Union["Guild", typing.Awaitable["Guild"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Guild"], typing.Awaitable[typing.List["Guild"]]]
     _cache_type = "guild"
 
     def __init__(self, client, resp):
@@ -78,23 +80,23 @@ class Guild(DiscordObjectBase):
 
         self.cache = client.cache.get_guild_container(self.id) if client.has_cache else None
 
-    def icon_url(self, *, extension="webp", size=1024) -> str:
+    def icon_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
         if self.icon:
             return cdn_url("icons/{guild_id}", image_hash=self.icon, extension=extension, size=size, guild_id=self.id)
 
-    def splash_url(self, *, extension="webp", size=1024) -> str:
+    def splash_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
         if self.splash:
             return cdn_url("splashes/{guild_id}", image_hash=self.splash, extension=extension, size=size, guild_id=self.id)
 
-    def discovery_splash_url(self, *, extension="webp", size=1024) -> str:
+    def discovery_splash_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
         if self.discovery_splash:
             return cdn_url("discovery-splashes/{guild_id}", image_hash=self.discovery_splash, extension=extension, size=size, guild_id=self.id)
 
-    def banner_url(self, *, extension="webp", size=1024) -> str:
+    def banner_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
         if self.banner:
             return cdn_url("banners/{guild_id}", image_hash=self.banner, extension=extension, size=size, guild_id=self.id)
 
-    def request_preview(self):
+    def request_preview(self) -> "GuildPreview.RESPONSE":
         return self.client.request_guild_preview(self)
 
     def delete(self):
@@ -107,22 +109,22 @@ class Guild(DiscordObjectBase):
     def edit(self):
         return self.modify
 
-    def request_channels(self):
+    def request_channels(self) -> typing.Union[typing.List["Channel"], typing.Awaitable[typing.List["Channel"]]]:
         return self.client.request_guild_channels(self)
 
-    def create_channel(self, name: str, **kwargs):
+    def create_channel(self, name: str, **kwargs) -> "Channel.RESPONSE":
         return self.client.create_guild_channel(self, name, **kwargs)
 
     def modify_channel_positions(self, *params: dict, reason: str = None):
         return self.client.modify_guild_channel_positions(self, *params, reason=reason)
 
-    def list_active_threads(self):
+    def list_active_threads(self) -> typing.Union[typing.List["Channel"], typing.Awaitable[typing.List["Channel"]]]:
         return self.client.list_active_threads_as_guild(self)
 
-    def request_member(self, user: User.TYPING):
+    def request_member(self, user: User.TYPING) -> "GuildMember.RESPONSE":
         return self.client.request_guild_member(self, user)
 
-    def list_members(self, limit: int = None, after: str = None):
+    def list_members(self, limit: int = None, after: str = None) -> typing.Union[typing.List["GuildMember"], typing.Awaitable[typing.List["GuildMember"]]]:
         return self.client.list_guild_members(self, limit, after)
 
     def remove_guild_member(self, user: User.TYPING):
@@ -146,7 +148,7 @@ class Guild(DiscordObjectBase):
     def unban(self):
         return self.remove_ban
 
-    def request_roles(self):
+    def request_roles(self) -> typing.List[Role]:
         return self.client.request_guild_roles(self)
 
     def create_role(self,
@@ -156,7 +158,7 @@ class Guild(DiscordObjectBase):
                     color: int = None,
                     hoist: bool = None,
                     mentionable: bool = None,
-                    reason: str = None):
+                    reason: str = None) -> Role:
         kwargs = {"name": name,
                   "permissions": permissions,
                   "color": color,
@@ -306,6 +308,8 @@ class SystemChannelFlags(FlagBase):
 
 
 class GuildPreview:
+    RESPONSE = typing.Union["GuildPreview", typing.Awaitable["GuildPreview"]]
+
     def __init__(self, client, resp):
         self.id = Snowflake(resp["id"])
         self.name = resp["name"]
@@ -320,6 +324,9 @@ class GuildPreview:
 
 
 class GuildWidget:
+    RESPONSE = typing.Union["GuildWidget", typing.Awaitable["GuildWidget"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["GuildWidget"], typing.Awaitable[typing.List["GuildWidget"]]]
+
     def __init__(self, resp):
         self.enabled = resp["enabled"]
         self.channel_id = Snowflake.optional(resp["channel_id"])
@@ -327,6 +334,8 @@ class GuildWidget:
 
 class GuildMember:
     TYPING = typing.Union[int, str, Snowflake, "GuildMember"]
+    RESPONSE = typing.Union["GuildMember", typing.Awaitable["GuildMember"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["GuildMember"], typing.Awaitable[typing.List["GuildMember"]]]
 
     def __init__(self, client, resp, *, user: User = None, guild_id=None):
         self.raw = resp
@@ -397,6 +406,8 @@ class GuildMember:
 
 class Integration:
     TYPING = typing.Union[int, str, Snowflake, "Integration"]
+    RESPONSE = typing.Union["Integration", typing.Awaitable["Integration"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Integration"], typing.Awaitable[typing.List["Integration"]]]
 
     def __init__(self, client, resp):
         self.id = Snowflake(resp["id"])
@@ -449,12 +460,18 @@ class IntegrationApplication:
 
 
 class Ban:
+    RESPONSE = typing.Union["Ban", typing.Awaitable["Ban"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Ban"], typing.Awaitable[typing.List["Ban"]]]
+
     def __init__(self, client, resp):
         self.reason = resp["reason"]
         self.user = User.create(client, resp["user"])
 
 
 class WelcomeScreen:
+    RESPONSE = typing.Union["WelcomeScreen", typing.Awaitable["WelcomeScreen"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["WelcomeScreen"], typing.Awaitable[typing.List["WelcomeScreen"]]]
+
     def __init__(self, resp):
         self.description = resp["description"]
         self.welcome_channels = [WelcomeScreenChannel(x) for x in resp["welcome_channels"]]

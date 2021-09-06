@@ -6,6 +6,8 @@ from ..base.model import DiscordObjectBase, TypeBase
 
 class StageInstance(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "StageInstance"]
+    RESPONSE = typing.Union["StageInstance", typing.Awaitable["StageInstance"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["StageInstance"], typing.Awaitable[typing.List["StageInstance"]]]
     _cache_type = "stage_instance"
 
     def __init__(self, client, resp):

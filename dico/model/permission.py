@@ -46,6 +46,8 @@ class PermissionFlags(FlagBase):
 
 class Role(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Role"]
+    RESPONSE = typing.Union["Role", typing.Awaitable["Role"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Role"], typing.Awaitable[typing.List["Role"]]]
     _cache_type = "role"
 
     def __init__(self, client, resp, *, guild_id=None):

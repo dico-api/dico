@@ -25,6 +25,8 @@ class EventBase:
 
 class DiscordObjectBase:
     TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase"]
+    RESPONSE = typing.Union["DiscordObjectBase", typing.Awaitable["DiscordObjectBase"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["DiscordObjectBase"], typing.Awaitable[typing.List["DiscordObjectBase"]]]
     _cache_type = None
 
     def __init__(self, client, resp, **kwargs):
@@ -58,6 +60,9 @@ class DiscordObjectBase:
 
 
 class AbstractObject(dict):
+    RESPONSE = typing.Union["AbstractObject", typing.Awaitable["AbstractObject"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["AbstractObject"], typing.Awaitable[typing.List["AbstractObject"]]]
+
     def __init__(self, resp):
         super().__init__(**resp)
 

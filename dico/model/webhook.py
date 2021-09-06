@@ -8,6 +8,8 @@ from ..base.model import TypeBase
 
 class Webhook:
     TYPING = typing.Union[int, str, Snowflake, "Webhook"]
+    RESPONSE = typing.Union["Webhook", typing.Awaitable["Webhook"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Webhook"], typing.Awaitable[typing.List["Webhook"]]]
 
     def __init__(self, client, resp):
         self.raw = resp

@@ -8,6 +8,8 @@ if typing.TYPE_CHECKING:
 
 class Emoji:
     TYPING = typing.Union[int, str, Snowflake, "Emoji"]
+    RESPONSE = typing.Union["Emoji", typing.Awaitable["Emoji"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Emoji"], typing.Awaitable[typing.List["Emoji"]]]
 
     def __init__(self, client, resp):
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))

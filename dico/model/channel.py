@@ -19,6 +19,8 @@ if typing.TYPE_CHECKING:
 
 class Channel(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Channel"]
+    RESPONSE = typing.Union["Channel", typing.Awaitable["Channel"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Channel"], typing.Awaitable[typing.List["Channel"]]]
     _cache_type = "channel"
 
     def __init__(self, client, resp, *, guild_id=None):
@@ -207,6 +209,8 @@ class VideoQualityModes(TypeBase):
 
 class Message(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Message"]
+    RESPONSE = typing.Union["Message", typing.Awaitable["Message"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Message"], typing.Awaitable[typing.List["Message"]]]
     _cache_type = "message"
 
     def __init__(self, client, resp, *, guild_id=None, webhook_token=None, interaction_token=None, original_response=False):
@@ -395,6 +399,8 @@ class MessageReference:
 
 
 class FollowedChannel:
+    RESPONSE = typing.Union["FollowedChannel", typing.Awaitable["FollowedChannel"]]
+
     def __init__(self, client, resp):
         self.client: "APIClient" = client
         self.channel_id: typing.Optional[Snowflake] = Snowflake(resp["channel_id"])
@@ -464,6 +470,9 @@ class ThreadMetadata:
 
 
 class ThreadMember:
+    RESPONSE = typing.Union["ThreadMember", typing.Awaitable["ThreadMember"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["ThreadMember"], typing.Awaitable[typing.List["ThreadMember"]]]
+
     def __init__(self, client, resp):
         self.client: APIClient = client
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
@@ -802,6 +811,8 @@ class AllowedMentions(CopyableObject):
 
 
 class ListThreadsResponse:
+    RESPONSE = typing.Union["ListThreadsResponse", typing.Awaitable["ListThreadsResponse"]]
+
     def __init__(self, client, resp):
         self.threads: typing.List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
         self.members: typing.List[ThreadMember] = [ThreadMember(client, x) for x in resp["members"]]

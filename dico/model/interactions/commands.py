@@ -7,6 +7,8 @@ from ...base.model import TypeBase
 
 class ApplicationCommand:
     TYPING = typing.Union[int, str, Snowflake, "ApplicationCommand"]
+    RESPONSE = typing.Union["ApplicationCommand", typing.Awaitable["ApplicationCommand"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["ApplicationCommand"], typing.Awaitable[typing.List["ApplicationCommand"]]]
 
     def __init__(self,
                  name: str,
@@ -109,6 +111,9 @@ class ApplicationCommandOptionChoice:
 
 
 class GuildApplicationCommandPermissions:
+    RESPONSE = typing.Union["GuildApplicationCommandPermissions", typing.Awaitable["GuildApplicationCommandPermissions"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["GuildApplicationCommandPermissions"], typing.Awaitable[typing.List["GuildApplicationCommandPermissions"]]]
+
     def __init__(self, resp: dict):
         self.id = Snowflake(resp["id"])
         self.application_id = Snowflake(resp["application_id"])

@@ -1,3 +1,4 @@
+import typing
 import datetime
 from .guild import GuildMember
 from .snowflake import Snowflake
@@ -44,6 +45,9 @@ class VoiceState:
 
 
 class VoiceRegion:
+    RESPONSE = typing.Union["VoiceRegion", typing.Awaitable["VoiceRegion"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["VoiceRegion"], typing.Awaitable[typing.List["VoiceRegion"]]]
+
     def __init__(self, resp):
         self.id = resp["id"]
         self.name = resp["name"]
