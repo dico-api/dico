@@ -8,7 +8,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel
-from .utils import from_emoji, wrap_to_async
+from .utils import from_emoji, wrap_to_async, to_image_data
 
 if typing.TYPE_CHECKING:
     from .base.model import AbstractObject
@@ -974,6 +974,43 @@ class APIClient:
         if isinstance(resp, dict):
             return Invite(self, resp)
         return wrap_to_async(Invite, self, resp, as_create=False)
+
+    # User
+
+    def request_user(self, user: User.TYPING = "@me") -> User.RESPONSE:
+        resp = self.http.request_user(int(user) if user != "@me" else user)
+        if isinstance(resp, dict):
+            return User.create(self, resp)
+        return wrap_to_async(User, self, resp)
+
+    def modify_current_user(self, username: str = None, avatar: typing.Union[FILE_TYPE] = EmptyObject) -> User.RESPONSE:
+        avatar = to_image_data(avatar) if avatar is not None or avatar is not EmptyObject else avatar
+        resp = self.http.modify_current_user(username, avatar)
+        if isinstance(resp, dict):
+            return User.create(self, resp)
+        return wrap_to_async(User, self, resp)
+
+    def request_current_user_guilds(self) -> Guild.RESPONSE_AS_LIST:
+        resp = self.http.request_current_user_guilds()
+        if isinstance(resp, list):
+            return [Guild.create(self, x) for x in resp]
+        return wrap_to_async(Guild, self, resp)
+
+    def leave_guild(self, guild: Guild.TYPING):
+        return self.leave_guild(int(guild))
+
+    def create_dm(self, recipient: User.TYPING) -> Channel.RESPONSE:
+        resp = self.http.create_dm(str(int(recipient)))
+        if isinstance(resp, dict):
+            return Channel.create(self, resp)
+        return wrap_to_async(Channel, self, resp)
+
+    def create_group_dm(self, access_tokens: typing.List[str], nicks: typing.Dict[User.TYPING, str]):
+        nicks = {str(int(k)): v for k, v in nicks.items()}
+        resp = self.http.create_group_dm(access_tokens, nicks)
+        if isinstance(resp, dict):
+            return Channel.create(self, resp)
+        return wrap_to_async(Channel, self, resp)
 
     # Webhook
 

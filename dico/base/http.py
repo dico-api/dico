@@ -1442,6 +1442,59 @@ class HTTPRequestBase(ABC):
 
     # User Requests
 
+    def request_user(self, user_id="@me"):
+        """
+        Sends get user request.
+
+        :param user_id: ID of the user to get.
+        """
+        return self.request(f"/users/{user_id}", "GET")
+
+    def modify_current_user(self, username: str = None, avatar: str = EmptyObject):
+        """
+        Sends modify current user request. You can create avatar using ``to_image_data`` of utils.
+
+        :param username: Name to modify.
+        :param avatar: Image data to modify.
+        """
+        body = {}
+        if username is not None:
+            body["username"] = username
+        if avatar is not EmptyObject:
+            body["avatar"] = avatar
+        return self.request("/users/@me", "PATCH", body, is_json=True)
+
+    def request_current_user_guilds(self):
+        """
+        Sends get current user guilds request.
+        """
+        return self.request(f"/users/@me/guilds", "GET")
+
+    def leave_guild(self, guild_id):
+        """
+        Sends leave guild request.
+
+        :param guild_id: ID of the guild to leave.
+        """
+        return self.request(f"/users/@me/guilds/{guild_id}", "DELETE")
+
+    def create_dm(self, recipient_id: str):
+        """
+        Sends create dm request.
+
+        :param recipient_id: ID of the recipient to add.
+        """
+        return self.request(f"/users/@me/channels", "POST", {"recipient_id": recipient_id}, is_json=True)
+
+    def create_group_dm(self, access_tokens: typing.List[str], nicks: typing.Dict[str, str]):
+        """
+        Sends create group dm request.
+
+        :param access_tokens: OAuth2 access tokens of the participants to add.
+        :param nicks: Dict of ID-nick to set.
+        """
+        return self.request(f"/users/@me/channels", "POST", {"access_tokens": access_tokens, "nicks": nicks}, is_json=True)
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):

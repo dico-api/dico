@@ -252,6 +252,9 @@ class Guild(DiscordObjectBase):
                                 request_to_speak_timestamp: typing.Union[datetime.datetime, str] = None):
         return self.client.modify_user_voice_state(self, channel, user, suppress=suppress, request_to_speak_timestamp=request_to_speak_timestamp)
 
+    def leave(self):
+        return self.client.leave_guild(self)
+
     @property
     def get(self):
         """Alias of ``Guild.cache.get``."""
