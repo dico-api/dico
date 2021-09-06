@@ -40,8 +40,8 @@ class ApplicationCommand:
 
     @classmethod
     def create(cls, resp):
-        resp["options"] = [ApplicationCommandOption.create(x) for x in resp.get("options", [])]
-        resp["type"] = resp.get("type", 1)
+        resp["options"] = [ApplicationCommandOption.create(x) for x in resp.pop("options", [])]
+        resp["command_type"] = resp.pop("type", 1)
         return cls(**resp)
 
 

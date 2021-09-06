@@ -42,6 +42,7 @@ class WebSocketClient:
         self.ratelimit = WSRatelimit()
         self.buffer = bytearray()
         self.inflator = zlib.decompressobj()
+        self.intended_shutdown = False
 
     def __del__(self):
         if not self._closed:
@@ -51,9 +52,11 @@ class WebSocketClient:
     async def close(self, code: int = 1000):
         if not self._heartbeat_task.cancelled():
             self._heartbeat_task.cancel()
+        self.intended_shutdown = True
         if self._closed:
             return
-        await self.ws.close(code=code)
+        if not self.ws.closed:
+            await self.ws.close(code=code)
         self._closed = True
 
     async def run(self):
@@ -65,6 +68,7 @@ class WebSocketClient:
                     continue
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
+                    self.intended_shutdown = True
                     if ex.code in (1000, 1001) or self.try_reconnect:
                         self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
@@ -87,12 +91,17 @@ class WebSocketClient:
 
                 proc = await self.process(resp)
                 if proc == -1:
+                    self.intended_shutdown = True
                     break
 
             if self._reconnecting or self._fresh_reconnecting:
                 self.ws = await self.http.session.ws_connect(self.base_url)
                 self._closed = False
+                self.intended_shutdown = False
             else:
+                if not self.intended_shutdown:
+                    self.logger.error("This shutdown is not intended!")
+                    continue
                 return
 
     async def request(self, *args, **kwargs):

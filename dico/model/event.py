@@ -33,7 +33,8 @@ class ApplicationCommandCreate(ApplicationCommand):
     @classmethod
     def create(cls, client, resp):  # noqa
         resp["client"] = client
-        resp["options"] = [ApplicationCommandOption.create(x) for x in resp.get("options", [])]
+        resp["options"] = [ApplicationCommandOption.create(x) for x in resp.pop("options", [])]
+        resp["command_type"] = resp.pop("type", 1)
         return cls(**resp)
 
 
