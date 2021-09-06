@@ -61,8 +61,9 @@ class WebSocketClient:
 
     async def run(self):
         while True:
-            async for msg in self.ws:
+            while not self.ws.closed:
                 try:
+                    msg = await self.ws.receive()
                     resp = await self.receive(msg)
                 except Ignore:
                     continue
@@ -101,6 +102,9 @@ class WebSocketClient:
             else:
                 if not self.intended_shutdown:
                     self.logger.error("This shutdown is not intended!")
+                    if self.ws.closed:
+                        self.logger.error("aiohttp websocket is somehow closed, hmm")
+                        return
                     continue
                 return
 
