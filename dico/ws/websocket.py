@@ -13,6 +13,7 @@ from ..handler import EventHandler
 
 class WebSocketClient:
     ZLIB_SUFFIX = b'\x00\x00\xff\xff'
+    RECONNECT_CODES = [1000, 1001, 1006, 4000, 4007, 4009]
 
     def __init__(self,
                  http: AsyncHTTPRequest,
@@ -70,7 +71,7 @@ class WebSocketClient:
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
                     self.intended_shutdown = True
-                    if ex.code in (1000, 1001) or self.try_reconnect:
+                    if ex.code in self.RECONNECT_CODES or self.try_reconnect:
                         self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
                     else:
