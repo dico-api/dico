@@ -133,24 +133,15 @@ class Client(APIClient):
         if self.has_cache:
             return self.cache.get
 
-    async def start(self, reconnect_on_unknown_disconnect: bool = False):
+    async def start(self, reconnect_on_unknown_disconnect: bool = False, compress: bool = True):
         """
-        Starts websocket connection and clears every connections after stopping due to error or KeyboardInterrupt.
+        Starts websocket connection.
 
         .. warning::
             You can call this only once.
         """
-        self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect)
-        try:
-            await self.ws.run()
-        except KeyboardInterrupt:
-            print("Detected KeyboardInterrupt, exiting...", file=sys.stderr)
-        except Exception as ex:
-            print("Unexpected exception occurred, exiting...", file=sys.stderr)
-            traceback.print_exc()
-        finally:
-            await self.ws.close()
-            await self.http.close()
+        self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress)
+        await self.ws.run()
 
     async def close(self):
         """Clears all connections and closes session."""
@@ -216,11 +207,19 @@ class Client(APIClient):
 
         return deco
 
-    def run(self, reconnect_on_unknown_disconnect: bool = False):
+    def run(self, *, reconnect_on_unknown_disconnect: bool = False, compress: bool = False):
         """
-        Runs client. Actually this is sync function wrapping :meth:`.start`.
+        Runs client and clears every connections after stopping due to error or KeyboardInterrupt.
 
         .. warning::
             This must be placed at the end of the code.
         """
-        self.loop.run_until_complete(self.start(reconnect_on_unknown_disconnect))
+        try:
+            self.loop.run_until_complete(self.start(reconnect_on_unknown_disconnect, compress))
+        except KeyboardInterrupt:
+            print("Detected KeyboardInterrupt, exiting...", file=sys.stderr)
+        except Exception as ex:
+            print("Unexpected exception occurred, exiting...", file=sys.stderr)
+            traceback.print_exc()
+        finally:
+            self.loop.run_until_complete(self.close())

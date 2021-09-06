@@ -1,4 +1,6 @@
+import json
 import time
+import zlib
 import typing
 import asyncio
 import logging
@@ -10,6 +12,8 @@ from ..handler import EventHandler
 
 
 class WebSocketClient:
+    ZLIB_SUFFIX = b'\x00\x00\xff\xff'
+
     def __init__(self,
                  http: AsyncHTTPRequest,
                  ws: aiohttp.ClientWebSocketResponse,
@@ -36,6 +40,8 @@ class WebSocketClient:
         self._ping_start = 0.0
         self.try_reconnect = try_reconnect
         self.ratelimit = WSRatelimit()
+        self.buffer = bytearray()
+        self.inflator = zlib.decompressobj()
 
     def __del__(self):
         if not self._closed:
@@ -52,9 +58,9 @@ class WebSocketClient:
 
     async def run(self):
         while True:
-            while not self._closed:
+            async for msg in self.ws:
                 try:
-                    resp = await self.receive()
+                    resp = await self.receive(msg)
                 except Ignore:
                     continue
                 except WSClosing as ex:
@@ -93,18 +99,29 @@ class WebSocketClient:
         async with self.ratelimit.maybe_limited():  # Will raise exception if rate limited, else wait until previous request is done.
             return await self.ws.send_json(*args, **kwargs)
 
-    async def receive(self):
-        resp = await self.ws.receive()
+    def to_gateway_response(self, resp) -> gateway.GatewayResponse:
+        res = gateway.GatewayResponse(resp)
+        if res.s is not None:
+            self.seq = res.s
+        return res
+
+    async def receive(self, resp: aiohttp.WSMessage):
+        # resp = await self.ws.receive()
         self.logger.debug(f"Raw receive {resp.type}: {resp.data}")
         if resp.type == aiohttp.WSMsgType.TEXT:
-            res = gateway.GatewayResponse(resp.json())
-            if res.s is not None:
-                self.seq = res.s
-            return res
+            return self.to_gateway_response(resp.json())
+        elif resp.type == aiohttp.WSMsgType.BINARY:
+            msg = resp.data
+            self.buffer.extend(msg)
+            if len(msg) < 4 or msg[-4:] != self.ZLIB_SUFFIX:
+                raise Ignore
+            msg = self.inflator.decompress(self.buffer)
+            self.buffer = bytearray()
+            return self.to_gateway_response(json.loads(msg.decode("UTF-8")))
         elif resp.type == aiohttp.WSMsgType.CONTINUATION:
             raise Ignore
         elif resp.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
-            raise WSClosing(resp.data)
+            raise WSClosing(resp.data or self.ws.close_code)
 
     async def process(self, resp):
         if resp.op == gateway.Opcodes.DISPATCH:
@@ -164,7 +181,7 @@ class WebSocketClient:
         while not self._closed:
             if not self.last_heartbeat_send <= self.last_heartbeat_ack <= time.time():
                 self.logger.warning("Heartbeat timeout, reconnecting...")
-                await self.reconnect()
+                self.http.loop.create_task(self.reconnect())
                 break
             data = {"op": gateway.Opcodes.HEARTBEAT, "d": self.seq}
             self._ping_start = time.time()
@@ -233,10 +250,11 @@ class WebSocketClient:
         return self._closed
 
     @classmethod
-    async def connect(cls, http, intents, event_handler, try_reconnect):
+    async def connect(cls, http, intents, event_handler, try_reconnect, compress):
         resp = await http.request("/gateway/bot", "GET")
         gw = gateway.GetGateway(resp)
-        base_url = gw.url+f"?v=9&encoding=json"
+        extra = "compress=zlib-stream" if compress else ""
+        base_url = gw.url+f"?v=9&encoding=json" + extra
         ws = await http.session.ws_connect(base_url)
         return cls(http, ws, base_url, intents, event_handler, try_reconnect)
 
