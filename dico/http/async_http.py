@@ -5,7 +5,7 @@ import logging
 import asyncio
 import aiohttp
 from .ratelimit import RatelimitHandler
-from .. import exception
+from .. import exception, __version__
 from ..base.http import HTTPRequestBase, EmptyObject
 
 
@@ -67,7 +67,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 wait_time = (locker["reset_at"] - self.ratelimits.utc).total_seconds()
                 self.logger.warning(f"No more remaining request count, waiting for {wait_time} seconds...")
                 await asyncio.sleep(wait_time)
-            headers = {"Authorization": f"Bot {self.token}"}
+            headers = {"Authorization": f"Bot {self.token}", "User-Agent": f"DiscordBot (https://github.com/dico-api/dico, {__version__})"}
             if meth not in ["GET"] and body is not None:
                 if is_json:
                     headers["Content-Type"] = "application/json"
