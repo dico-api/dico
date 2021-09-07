@@ -54,6 +54,8 @@ class Channel(DiscordObjectBase):
         self.__permissions = resp.get("permissions")
         self.permissions: typing.Optional[PermissionFlags] = PermissionFlags.from_value(int(self.__permissions)) if self.__permissions else self.__permissions
 
+        # if self.type.dm and self.
+
     def modify(self, **kwargs):
         if self.type.group_dm:
             return self.client.modify_group_dm_channel(self.id, **kwargs)
@@ -207,6 +209,18 @@ class VideoQualityModes(TypeBase):
     FULL = 2
 
 
+class SendOnlyChannel:
+    def __init__(self, client, channel_id):
+        self.client = client
+        self.id: Snowflake = Snowflake.ensure_snowflake(channel_id)
+
+    def send(self, *args, **kwargs) -> "Message.RESPONSE":
+        return self.client.create_message(self.id, *args, **kwargs)
+
+    def __getattr__(self, item):
+        return None
+
+
 class Message(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Message"]
     RESPONSE = typing.Union["Message", typing.Awaitable["Message"]]
@@ -309,12 +323,16 @@ class Message(DiscordObjectBase):
             return self.client.get(self.guild_id, "guild")
 
     @property
-    def channel(self) -> typing.Optional[Channel]:
+    def channel(self) -> typing.Union[Channel, SendOnlyChannel]:
+        send_only = SendOnlyChannel(self.client, self.channel_id)
         if self.channel_id and self.client.has_cache:
             if self.guild_id:
-                return self.guild.get(self.channel_id, "channel") or self.client.get(self.channel_id, "channel")
+                return self.guild.get(self.channel_id, "channel") or self.client.get(self.channel_id, "channel") or send_only
             else:
-                return self.client.get(self.channel_id, "channel")
+                return self.client.get(self.channel_id, "channel") or send_only
+        elif self.author and self.client.has_cache:
+            return self.client.get(self.author.dm_channel_id, "channel") or send_only
+        return send_only
 
 
 class MessageTypes(TypeBase):

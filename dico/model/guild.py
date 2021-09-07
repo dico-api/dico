@@ -347,7 +347,7 @@ class GuildMember:
         self.__user = resp.get("user")
         self.user = User.create(client, self.__user) if self.__user and not self.user else self.user if self.user else self.__user
         self.nick = resp.get("nick")
-        self.roles = [client.get(x) for x in resp["roles"]] if client.has_cache else [Snowflake(x) for x in resp["roles"]]
+        self.roles = [client.get(x, "role") for x in resp["roles"]] if client.has_cache else [Snowflake(x) for x in resp["roles"]]
         self.joined_at = datetime.datetime.fromisoformat(resp["joined_at"])
         self.__premium_since = resp.get("premium_since")
         self.premium_since = datetime.datetime.fromisoformat(self.__premium_since) if self.__premium_since else self.__premium_since
@@ -380,11 +380,17 @@ class GuildMember:
             return f"<@!{self.user.id}>"
 
     @property
-    def permissions(self):
+    def permissions(self) -> typing.Optional[PermissionFlags]:
         if self.__permissions:
             return PermissionFlags.from_value(int(self.__permissions))
         elif self.roles:
-            raise NotImplementedError
+            value = 0
+            for x in self.roles:
+                if isinstance(x, Role):
+                    value |= x.permissions.value
+                else:
+                    return None
+            return PermissionFlags.from_value(value)
         else:
             return PermissionFlags.from_value(0)
 
