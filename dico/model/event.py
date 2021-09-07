@@ -353,7 +353,7 @@ class MessageUpdate(Message):
             return cls(client, resp, **kwargs)
         except KeyError:
             if client.has_cache:
-                msg = client.get(resp["id"])
+                msg = client.get(resp["id"], cls._cache_type)
                 if msg:
                     orig = msg.raw
                     for k, v in resp.items():

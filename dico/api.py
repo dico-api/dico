@@ -45,7 +45,7 @@ class APIClient:
     def request_channel(self, channel: Channel.TYPING) -> Channel.RESPONSE:
         channel = self.http.request_channel(int(channel))
         if isinstance(channel, dict):
-            channel = Channel.create(self, channel)
+            return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
     def modify_guild_channel(self,
@@ -71,13 +71,13 @@ class APIClient:
         channel = self.http.modify_guild_channel(int(channel), name, channel_type, position, topic, nsfw, rate_limit_per_user,
                                                  bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode, reason=reason)
         if isinstance(channel, dict):
-            channel = Channel.create(self, channel)
+            return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
     def modify_group_dm_channel(self, channel: Channel.TYPING, *, name: str = None, icon: bin = None, reason: str = None) -> Channel.RESPONSE:
         channel = self.http.modify_group_dm_channel(int(channel), name, icon, reason=reason)
         if isinstance(channel, dict):
-            channel = Channel.create(self, channel)
+            return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
     def modify_thread_channel(self,
@@ -90,11 +90,14 @@ class APIClient:
                               reason: str = None) -> Channel.RESPONSE:
         channel = self.http.modify_thread_channel(int(channel), name, archived, auto_archive_duration, locked, rate_limit_per_user, reason=reason)
         if isinstance(channel, dict):
-            channel = Channel.create(self, channel)
+            return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
     def delete_channel(self, channel: Channel.TYPING, *, reason: str = None) -> Channel.RESPONSE:
-        return self.http.delete_channel(int(channel), reason=reason)
+        resp = self.http.delete_channel(int(channel), reason=reason)
+        if isinstance(resp, dict):
+            return Channel.create(self, resp)
+        return wrap_to_async(Channel, self, resp)
 
     def request_channel_messages(self,
                                  channel: Channel.TYPING, *,
@@ -105,13 +108,13 @@ class APIClient:
         messages = self.http.request_channel_messages(int(channel), around and str(int(around)), before and str(int(before)), after and str(int(after)), limit)
         # This looks unnecessary, but this is to ensure they are all numbers.
         if isinstance(messages, list):
-            messages = [Message.create(self, x) for x in messages]
+            return [Message.create(self, x) for x in messages]
         return wrap_to_async(Message, self, messages)
 
     def request_channel_message(self, channel: Channel.TYPING, message: Message.TYPING) -> Message.RESPONSE:
         message = self.http.request_channel_message(int(channel), int(message))
         if isinstance(message, dict):
-            message = Message.create(self, channel)
+            return Message.create(self, channel)
         return wrap_to_async(Message, self, message)
 
     def create_message(self,
@@ -189,7 +192,7 @@ class APIClient:
         try:
             msg = self.http.create_message_with_files(**params) if files else self.http.create_message(**params)
             if isinstance(msg, dict):
-                msg = Message.create(self, msg)
+                return Message.create(self, msg)
             return wrap_to_async(Message, self, msg)
         finally:
             if files:

@@ -56,7 +56,7 @@ class Channel(DiscordObjectBase):
 
         # if self.type.dm and self.
 
-    def modify(self, **kwargs):
+    def modify(self, **kwargs) -> RESPONSE:
         if self.type.group_dm:
             return self.client.modify_group_dm_channel(self.id, **kwargs)
         elif self.type.dm or self.type.guild_store:
@@ -70,7 +70,7 @@ class Channel(DiscordObjectBase):
     def edit(self):
         return self.modify
 
-    def delete(self, *, reason: str = None):
+    def delete(self, *, reason: str = None) -> RESPONSE:
         return self.client.delete_channel(self, reason=reason)
 
     def create_message(self, *args, **kwargs) -> typing.Union["Message", typing.Awaitable["Message"]]:

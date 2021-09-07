@@ -48,4 +48,5 @@ class RatelimitHandler:
 
     async def maybe_global(self):
         if self.global_locker.locked():
-            return await self.global_locker.acquire()
+            async with self.global_locker:
+                return
