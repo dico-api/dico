@@ -1037,6 +1037,14 @@ class APIClient:
         if isinstance(resp, dict):
             return Channel.create(self, resp)
         return wrap_to_async(Channel, self, resp)
+    
+    # Voice
+
+    def list_voice_regions(self) -> VoiceRegion.RESPONSE_AS_LIST:
+        resp = self.http.list_voice_regions()
+        if isinstance(resp, list):
+            return [VoiceRegion(x) for x in resp]
+        return wrap_to_async(VoiceRegion, None, resp, as_create=False)
 
     # Webhook
 

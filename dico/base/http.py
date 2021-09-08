@@ -1544,6 +1544,14 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/users/@me/channels", "POST", {"access_tokens": access_tokens, "nicks": nicks}, is_json=True)
 
+    # Voice Requests
+
+    def list_voice_regions(self):
+        """
+        Sends list voice regions request.
+        """
+        return self.request("/voice/regions", "GET")
+
     # Webhook Requests
 
     def create_webhook(self, channel_id, name: str, avatar: str = None):
