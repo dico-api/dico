@@ -38,6 +38,7 @@ class APIClient:
                  **http_options):
         self.http: HTTPRequestBase = base.create(token, **http_options)
         self.default_allowed_mentions: typing.Optional[AllowedMentions] = default_allowed_mentions
+        self.application: typing.Optional[Application] = None
         self.application_id: typing.Optional[Snowflake] = Snowflake.ensure_snowflake(application_id)
 
     # Channel
@@ -1542,6 +1543,14 @@ class APIClient:
         if isinstance(resp, list):
             return [GuildApplicationCommandPermissions(x) for x in resp]
         return wrap_to_async(GuildApplicationCommandPermissions, None, resp, as_create=False)
+
+    # OAuth2
+
+    def request_current_bot_application_information(self) -> Application.RESPONSE:
+        resp = self.http.request_current_bot_application_information()
+        if isinstance(resp, dict):
+            return Application(self, resp)
+        return wrap_to_async(Application, self, resp, as_create=False)
 
     # Misc
 

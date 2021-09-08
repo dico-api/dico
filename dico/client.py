@@ -11,7 +11,7 @@ from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .exception import WebsocketClosed
 from .handler import EventHandler
-from .model import Intents, AllowedMentions, Snowflake, Application, Activity, Guild, Channel
+from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel
 
 
 class Client(APIClient):
@@ -51,7 +51,6 @@ class Client(APIClient):
         self.intents = intents
         self.ws: typing.Union[None, WebSocketClient] = None
         self.events = EventHandler(self)
-        self.application: typing.Union[None, Application] = None
         self.__wait_futures = {}
         self.application_id = Snowflake.ensure_snowflake(application_id)
         self.__ready_future = asyncio.Future()

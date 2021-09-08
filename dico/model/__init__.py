@@ -1,3 +1,4 @@
+from .application import *
 from .channel import *
 from .emoji import *
 from .event import *

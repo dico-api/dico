@@ -2013,6 +2013,14 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/permissions", "PUT", permissions, is_json=True)
 
+    # OAuth2 Requests
+
+    def request_current_bot_application_information(self):
+        """
+        Sends get current bot application information request.
+        """
+        return self.request("/oauth2/applications/@me", "GET")
+
     # Misc
 
     @abstractmethod
