@@ -198,6 +198,10 @@ class Client(APIClient):
             return self.ws.closed
         return True
 
+    @property
+    def guild_count(self):
+        return self.cache.get_size("guild")
+
     def __setattr__(self, key, value):
         if not key.lower().startswith("on_") or key.lower() in ["on", "on_"]:
             return super().__setattr__(key, value)

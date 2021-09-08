@@ -419,6 +419,8 @@ class Integration:
     RESPONSE_AS_LIST = typing.Union[typing.List["Integration"], typing.Awaitable[typing.List["Integration"]]]
 
     def __init__(self, client, resp):
+        self.client = client
+        self.raw = resp
         self.id = Snowflake(resp["id"])
         self.name = resp["name"]
         self.type = resp["type"]
@@ -441,6 +443,11 @@ class Integration:
 
     def __int__(self):
         return int(self.id)
+
+    @property
+    def role(self):
+        if self.client.has_cache:
+            return self.client.cache.get(self.role_id, "role")
 
 
 class IntegrationExpireBehaviors(TypeBase):

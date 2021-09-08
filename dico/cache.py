@@ -46,6 +46,10 @@ class CacheContainer:
             for x in self.__cache_dict["guild_cache"].values():
                 x.remove(snowflake_id, obj_type)
 
+    def get_size(self, cache_type: str):
+        storage = self.get_storage(cache_type)
+        return storage.size
+
     @property
     def available_cache_types(self):
         return self.__cache_dict.keys()

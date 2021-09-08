@@ -22,9 +22,9 @@ class EventHandler:
     def process_response(self, name, resp):
         model_dict = {
             "READY": Ready,
-            "APPLICATION_COMMAND_CREATE": ApplicationCommandCreate,
-            "APPLICATION_COMMAND_UPDATE": ApplicationCommandUpdate,
-            "APPLICATION_COMMAND_DELETE": ApplicationCommandDelete,
+            # "APPLICATION_COMMAND_CREATE": ApplicationCommandCreate,
+            # "APPLICATION_COMMAND_UPDATE": ApplicationCommandUpdate,
+            # "APPLICATION_COMMAND_DELETE": ApplicationCommandDelete,
             "CHANNEL_CREATE": ChannelCreate,
             "CHANNEL_UPDATE": ChannelUpdate,
             "CHANNEL_DELETE": ChannelDelete,
@@ -41,6 +41,7 @@ class EventHandler:
             "GUILD_BAN_ADD": GuildBanAdd,
             "GUILD_BAN_REMOVE": GuildBanRemove,
             "GUILD_EMOJIS_UPDATE": GuildEmojisUpdate,
+            "GUILD_STICKERS_UPDATE": GuildStickersUpdate,
             "GUILD_INTEGRATIONS_UPDATE": GuildIntegrationsUpdate,
             "GUILD_MEMBER_ADD": GuildMemberAdd,
             "GUILD_MEMBER_REMOVE": GuildBanRemove,
@@ -48,6 +49,9 @@ class EventHandler:
             "GUILD_ROLE_CREATE": GuildRoleCreate,
             "GUILD_ROLE_UPDATE": GuildRoleUpdate,
             "GUILD_ROLE_DELETE": GuildRoleDelete,
+            "INTEGRATION_CREATE": IntegrationCreate,
+            "INTEGRATION_UPDATE": IntegrationUpdate,
+            "INTEGRATION_DELETE": IntegrationDelete,
             "INTERACTION_CREATE": InteractionCreate,
             "INVITE_CREATE": InviteCreate,
             "INVITE_DELETE": InviteDelete,
@@ -65,7 +69,9 @@ class EventHandler:
             "STAGE_INSTANCE_UPDATE": StageInstanceUpdate,
             "TYPING_START": TypingStart,
             "USER_UPDATE": UserUpdate,
-            "VOICE_STATE_UPDATE": VoiceStateUpdate
+            "VOICE_STATE_UPDATE": VoiceStateUpdate,
+            "VOICE_SERVER_UPDATE": VoiceServerUpdate,
+            "WEBHOOKS_UPDATE": WebhooksUpdate
         }
         if name in model_dict:
             ret = model_dict[name].create(self.client, resp)

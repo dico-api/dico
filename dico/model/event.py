@@ -3,13 +3,14 @@ import datetime
 from .channel import Channel, Message, ThreadMember
 from .emoji import Emoji
 from .gateway import Activity
-from .guild import Guild, GuildMember
+from .guild import Guild, GuildMember, Integration
 from .permission import Role
 from .snowflake import Snowflake
 from .stage import StageInstance
+from .sticker import Sticker
 from .user import User
 from .voice import VoiceState
-from .interactions import Interaction, ApplicationCommand, ApplicationCommandOption
+from .interactions import Interaction  # , ApplicationCommand, ApplicationCommandOption
 from ..base.model import EventBase
 
 
@@ -24,6 +25,7 @@ class Ready(EventBase):
         self.application = resp["application"]
 
 
+"""
 class ApplicationCommandCreate(ApplicationCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,7 +42,7 @@ class ApplicationCommandCreate(ApplicationCommand):
 
 ApplicationCommandUpdate = ApplicationCommandCreate
 ApplicationCommandDelete = ApplicationCommandCreate
-
+"""
 
 ChannelCreate = Channel
 
@@ -186,6 +188,18 @@ class GuildEmojisUpdate(EventBase):
             return self.client.get(self.guild_id, "guild")
 
 
+class GuildStickersUpdate(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.guild_id = Snowflake(resp["guild_id"])
+        self.stickers = [Sticker.create(client, x) for x in resp["stickers"]]
+
+    @property
+    def guild(self):
+        if self.client.has_cache:
+            return self.client.get(self.guild_id, "guild")
+
+
 class GuildIntegrationsUpdate(EventBase):
     def __init__(self, client, resp: dict):
         super().__init__(client, resp)
@@ -286,6 +300,37 @@ class GuildRoleDelete(EventBase):
     def role(self):
         if self.client.has_cache:
             return self.guild.get(self.role_id, "role")
+
+
+class IntegrationCreate(Integration):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.guild_id: Snowflake = Snowflake(resp["guild_id"])
+
+    @property
+    def guild(self):
+        if self.client.has_cache:
+            return self.client.cache.get(self.guild_id, "guild")
+
+    @classmethod
+    def create(cls, client, resp: dict):
+        return cls(client, resp)
+
+
+IntegrationUpdate = IntegrationCreate
+
+
+class IntegrationDelete(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.guild_id: Snowflake = Snowflake(resp["guild_id"])
+        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
+
+    @property
+    def guild(self):
+        if self.client.has_cache:
+            return self.client.cache.get(self.guild_id, "guild")
 
 
 InteractionCreate = Interaction
@@ -610,3 +655,33 @@ class UserUpdate(User):
 
 
 VoiceStateUpdate = VoiceState
+
+
+class VoiceServerUpdate(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.token: str = resp["token"]
+        self.guild_id: Snowflake = Snowflake(resp["guild_id"])
+        self.endpoint: typing.Optional[str] = resp.get("endpoint")
+
+    @property
+    def guild(self):
+        if self.client.has_cache:
+            return self.client.get(self.guild_id, "guild")
+
+
+class WebhooksUpdate(EventBase):
+    def __init__(self, client, resp: dict):
+        super().__init__(client, resp)
+        self.guild_id: Snowflake = Snowflake(resp["guild_id"])
+        self.channel_id: Snowflake = Snowflake(resp["channel_id"])
+
+    @property
+    def guild(self):
+        if self.client.has_cache:
+            return self.client.get(self.guild_id, "guild")
+
+    @property
+    def channel(self):
+        if self.client.has_cache:
+            return self.client.get(self.channel_id, "channel")

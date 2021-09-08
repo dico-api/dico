@@ -172,10 +172,15 @@ class WebSocketClient:
             self.ping = self.last_heartbeat_ack - self._ping_start
 
         elif resp.op == gateway.Opcodes.INVALID_SESSION:
-            self.logger.warning("Failed gateway resume, reconnecting to gateway without resuming.")
-            await asyncio.sleep(5)
-            await self.reconnect(fresh=True)
-            return -1
+            await asyncio.sleep(2)  # https://discord.com/developers/docs/topics/gateway#resuming
+            if resp.d:
+                self.logger.warning("Invalid session, reconnecting to gateway.")
+                await self.reconnect()
+                return -1
+            else:
+                self.logger.warning("Invalid session, reconnecting to gateway without resuming.")
+                await self.reconnect(fresh=True)
+                return -1
 
         elif resp.op == gateway.Opcodes.RECONNECT:
             await self.reconnect()
