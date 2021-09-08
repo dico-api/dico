@@ -34,6 +34,7 @@ class Application:
         self.flags = ApplicationFlags.from_value(self.__flags) if self.__flags is not None else self.__flags
 
         self.client.application = self
+        self.client.application_id = self.id
 
     def __int__(self):
         return int(self.id)
