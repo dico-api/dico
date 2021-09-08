@@ -72,7 +72,7 @@ class WebSocketClient:
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
                     self.intended_shutdown = True
-                    if ex.code in self.RECONNECT_CODES or 1000 <= ex.code < 2000 or self.try_reconnect:
+                    if ex.code in self.RECONNECT_CODES or (ex.code is not None and 1000 <= ex.code < 2000) or self.try_reconnect:
                         self.logger.warning("Trying to reconnect...")
                         if ex.code in self.INPUT_WARN:
                             self.logger.warning("Next time, be aware with your websocket request.")
@@ -84,7 +84,10 @@ class WebSocketClient:
                         self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
                     else:
-                        self.logger.error(f"Unexpected websocket disconnection; this client will now be terminated.")
+                        if self.intended_shutdown:
+                            self.logger.info("This client will now be terminated.")
+                        else:
+                            self.logger.error(f"Unexpected websocket disconnection; this client will now be terminated.")
                     break
                 if not resp:
                     # self.logger.warning("Empty response detected, ignoring.")

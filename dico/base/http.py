@@ -1440,6 +1440,55 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/invites/{invite_code}", "DELETE", reason_header=reason)
 
+    # Stage Instance requests
+
+    def create_stage_instance(self, channel_id: str, topic: str, privacy_level: int = None, reason: str = None):
+        """
+        Sends create stage instance request.
+
+        :param channel_id: ID of the stage channel.
+        :param topic: Topic of the stage instance.
+        :param privacy_level: Privacy level of the stage.
+        :param reason: Reason of the action.
+        """
+        body = {"channel_id": channel_id, "topic": topic}
+        if privacy_level is not None:
+            body["privacy_level"] = privacy_level
+        return self.request("/stage-instances", "POST", body, is_json=True, reason_header=reason)
+
+    def request_stage_instance(self, channel_id):
+        """
+        Sends get stage instance request.
+
+        :param channel_id: ID of the channel.
+        """
+        return self.request(f"/stage-instances/{channel_id}", "GET")
+
+    def modify_stage_instance(self, channel_id, topic: str = None, privacy_level: int = None, reason: str = None):
+        """
+        Sends modify stage instance request.
+
+        :param channel_id: ID of the stage channel.
+        :param topic: Topic to change.
+        :param privacy_level: Privacy level to change.
+        :param reason: Reason of the action.
+        """
+        body = {}
+        if topic is not None:
+            body["topic"] = topic
+        if privacy_level is not None:
+            body["privacy_level"] = privacy_level
+        return self.request(f"/stage-instances/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
+
+    def delete_stage_instance(self, channel_id, reason: str = None):
+        """
+        Sends delete stage instance request.
+
+        :param channel_id: ID of the stage channel.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/stage-instances/{channel_id}", "DELETE", reason_header=reason)
+
     # User Requests
 
     def request_user(self, user_id="@me"):

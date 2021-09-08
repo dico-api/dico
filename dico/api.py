@@ -7,7 +7,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
-    VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel
+    VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if typing.TYPE_CHECKING:
@@ -977,6 +977,29 @@ class APIClient:
         if isinstance(resp, dict):
             return Invite(self, resp)
         return wrap_to_async(Invite, self, resp, as_create=False)
+
+    # Stage Instance
+
+    def create_stage_instance(self, channel: Channel.TYPING, topic: str, privacy_level: typing.Union[int, PrivacyLevel] = None, *, reason: str = None) -> StageInstance.RESPONSE:
+        resp = self.http.create_stage_instance(str(int(channel)), topic, int(privacy_level) if privacy_level is not None else privacy_level, reason=reason)
+        if isinstance(resp, dict):
+            return StageInstance.create(self, resp)
+        return wrap_to_async(StageInstance, self, resp)
+
+    def request_stage_instance(self, channel: Channel.TYPING):
+        resp = self.http.request_stage_instance(int(channel))
+        if isinstance(resp, dict):
+            return StageInstance.create(self, resp)
+        return wrap_to_async(StageInstance, self, resp)
+
+    def modify_stage_instance(self, channel: Channel.TYPING, topic: str = None, privacy_level: typing.Union[int, PrivacyLevel] = None, *, reason: str = None) -> StageInstance.RESPONSE:
+        resp = self.http.modify_stage_instance(int(channel), topic, int(privacy_level) if privacy_level is not None else privacy_level, reason=reason)
+        if isinstance(resp, dict):
+            return StageInstance.create(self, resp)
+        return wrap_to_async(StageInstance, self, resp)
+
+    def delete_stage_instance(self, channel: Channel.TYPING, *, reason: str = None):
+        return self.http.delete_stage_instance(int(channel), reason=reason)
 
     # User
 
