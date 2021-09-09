@@ -3,9 +3,10 @@ from .model.snowflake import Snowflake
 
 
 class CacheContainer:
-    def __init__(self, default_expiration_time=None):
+    def __init__(self, default_expiration_time=None, **max_sizes):
         self.default_expiration_time = default_expiration_time
         self.__cache_dict: typing.Dict[str, typing.Union[dict, CacheStorage]] = {"guild_cache": {}}
+        self.max_sizes = max_sizes
 
     def get(self, snowflake_id: typing.Union[str, int, Snowflake], storage_type: str = None, *, ignore_expiration=True):
         if storage_type:
@@ -21,7 +22,7 @@ class CacheContainer:
         if storage_type == "guild_cache":
             return self.__cache_dict["guild_cache"]
         if storage_type not in self.__cache_dict:
-            self.__cache_dict[storage_type] = CacheStorage()
+            self.__cache_dict[storage_type] = CacheStorage(max_size=self.max_sizes.get(storage_type, 0))
         return self.__cache_dict.get(storage_type)
 
     def get_guild_container(self, guild_id: typing.Union[str, int, Snowflake]):
@@ -72,8 +73,9 @@ class GuildCacheContainer(CacheContainer):
 
 
 class CacheStorage:
-    def __init__(self):
+    def __init__(self, max_size: int = 0):
         self.__cache_dict = {}
+        self.max_size = max_size
 
     def get(self, snowflake_id: typing.Union[str, int, Snowflake], *, ignore_expiration=True):
         res = self.__cache_dict.get(Snowflake.ensure_snowflake(snowflake_id))
@@ -83,11 +85,14 @@ class CacheStorage:
     def add(self, snowflake_id: typing.Union[str, int, Snowflake], obj, expire_at=None):
         snowflake_id = Snowflake.ensure_snowflake(snowflake_id)
         self.__cache_dict[snowflake_id] = {"value": obj, "expire_at": expire_at}
+        if 0 < self.max_size < self.size:
+            while self.size > self.max_size:
+                del self.__cache_dict[(*self.__cache_dict.keys(),)[0]]
 
     def remove(self, snowflake_id: typing.Union[str, int, Snowflake]):
         snowflake_id = Snowflake.ensure_snowflake(snowflake_id)
         if snowflake_id in self.__cache_dict:
-            del self.__cache_dict[snowflake_id]
+            self.__cache_dict.popitem()
 
     @property
     def size(self):

@@ -41,12 +41,14 @@ class Client(APIClient):
                  default_allowed_mentions: AllowedMentions = None,
                  loop=None,
                  cache: bool = True,
-                 application_id: typing.Union[str, int, Snowflake] = None):
+                 application_id: typing.Union[str, int, Snowflake] = None,
+                 **cache_max_sizes):
+        cache_max_sizes.setdefault("message", 1000)
         self.loop = loop or asyncio.get_event_loop()
         super().__init__(token, base=AsyncHTTPRequest, default_allowed_mentions=default_allowed_mentions, loop=loop)
         self.token = token
         self.__use_cache = cache
-        self.cache = CacheContainer() if self.__use_cache else None  # The reason only supporting caching with WS is to ensure up-to-date object.
+        self.cache = CacheContainer(**cache_max_sizes) if self.__use_cache else None  # The reason only supporting caching with WS is to ensure up-to-date object.
         self.__ws_class = WebSocketClient
         self.intents = intents
         self.ws: typing.Union[None, WebSocketClient] = None
