@@ -190,6 +190,8 @@ class WebSocketClient:
         if self._reconnecting or self._fresh_reconnecting:
             self.logger.warning("Reconnection is already running, but another reconnection is requested. This request is ignored.")
             return
+        if not self._heartbeat_task.cancelled():
+            self._heartbeat_task.cancel()
         self._reconnecting = not fresh
         self._fresh_reconnecting = fresh
         self.logger.info("Reconnecting to Websocket...")
@@ -210,7 +212,11 @@ class WebSocketClient:
 
     async def run_heartbeat(self):
         while not self._closed:
+            if self._reconnecting or self._fresh_reconnecting:
+                break  # Just making sure
             if not self.last_heartbeat_send <= self.last_heartbeat_ack <= time.time():
+                if self._reconnecting or self._fresh_reconnecting:
+                    break
                 self.logger.warning("Heartbeat timeout, reconnecting...")
                 self.http.loop.create_task(self.reconnect())
                 break
