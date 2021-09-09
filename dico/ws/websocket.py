@@ -52,8 +52,7 @@ class WebSocketClient:
             self.http.loop.run_until_complete(self.close())
 
     async def close(self, code: int = 1000):
-        if not self._heartbeat_task.cancelled():
-            self._heartbeat_task.cancel()
+        await self.cancel_heartbeat()
         self.intended_shutdown = True
         if self._closed:
             return
@@ -190,8 +189,7 @@ class WebSocketClient:
         if self._reconnecting or self._fresh_reconnecting:
             self.logger.warning("Reconnection is already running, but another reconnection is requested. This request is ignored.")
             return
-        if not self._heartbeat_task.cancelled():
-            self._heartbeat_task.cancel()
+        await self.cancel_heartbeat()
         self._reconnecting = not fresh
         self._fresh_reconnecting = fresh
         self.logger.info("Reconnecting to Websocket...")
@@ -211,20 +209,32 @@ class WebSocketClient:
         self._reconnecting = False
 
     async def run_heartbeat(self):
-        while not self._closed:
-            if self._reconnecting or self._fresh_reconnecting:
-                break  # Just making sure
-            if not self.last_heartbeat_send <= self.last_heartbeat_ack <= time.time():
+        try:
+            while not self._closed:
                 if self._reconnecting or self._fresh_reconnecting:
+                    break  # Just making sure
+                if not self.last_heartbeat_send <= self.last_heartbeat_ack <= time.time():
+                    if self._reconnecting or self._fresh_reconnecting:
+                        break
+                    self.logger.warning("Heartbeat timeout, reconnecting...")
+                    self.http.loop.create_task(self.reconnect())
                     break
-                self.logger.warning("Heartbeat timeout, reconnecting...")
-                self.http.loop.create_task(self.reconnect())
-                break
-            data = {"op": gateway.Opcodes.HEARTBEAT, "d": self.seq}
-            self._ping_start = time.time()
-            await self.ws.send_json(data)  # Don't track rate limit for this.
-            self.last_heartbeat_send = time.time()
-            await asyncio.sleep(self.heartbeat_interval/1000)
+                data = {"op": gateway.Opcodes.HEARTBEAT, "d": self.seq}
+                self._ping_start = time.time()
+                await self.ws.send_json(data)  # Don't track rate limit for this.
+                self.last_heartbeat_send = time.time()
+                await asyncio.sleep(self.heartbeat_interval / 1000)
+        except asyncio.CancelledError:
+            return
+
+    async def cancel_heartbeat(self):
+        if self._heartbeat_task.cancelled():
+            return
+        self._heartbeat_task.cancel()
+        try:
+            await self._heartbeat_task
+        except asyncio.CancelledError:
+            pass
 
     async def identify(self):
         data = {
