@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
 
 class CopyableObject:
     def copy(self):
-        return copy.copy(self)
+        return copy.deepcopy(self)
 
 
 class EventBase:
@@ -23,7 +23,7 @@ class EventBase:
         return cls(client, resp)
 
 
-class DiscordObjectBase:
+class DiscordObjectBase(CopyableObject):
     TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase"]
     RESPONSE = typing.Union["DiscordObjectBase", typing.Awaitable["DiscordObjectBase"]]
     RESPONSE_AS_LIST = typing.Union[typing.List["DiscordObjectBase"], typing.Awaitable[typing.List["DiscordObjectBase"]]]
@@ -39,20 +39,33 @@ class DiscordObjectBase:
     def __int__(self):
         return int(self.id)
 
+    def update(self, new_resp, **kwargs):
+        orig = self.raw
+        for k, v in new_resp.items():
+            if orig.get(k) != v:
+                orig[k] = v
+        self.__init__(self.client, orig, **kwargs)
+
     @classmethod
     def create(cls, client, resp, **kwargs):
         ensure_cache_type = kwargs.pop("ensure_cache_type", cls._cache_type)
+        prevent_caching = kwargs.pop("prevent_caching", False)
         maybe_exist = client.has_cache and client.cache.get(resp["id"], ensure_cache_type)
         if maybe_exist:
+            if prevent_caching:
+                maybe_exist = maybe_exist.copy()
+            maybe_exist.update(resp, **kwargs)
+            """
             orig = maybe_exist.raw
             for k, v in resp.items():
                 if orig.get(k) != v:
                     orig[k] = v
             maybe_exist.__init__(client, orig, **kwargs)
+            """
             return maybe_exist
         else:
             ret = cls(client, resp, **kwargs)
-            if client.has_cache:
+            if client.has_cache and not prevent_caching:
                 client.cache.add(ret.id, ret._cache_type, ret)
                 if hasattr(ret, "guild_id") and ret.guild_id:
                     client.cache.get_guild_container(ret.guild_id).add(ret.id, ret._cache_type, ret)

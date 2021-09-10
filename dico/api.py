@@ -97,8 +97,8 @@ class APIClient:
     def delete_channel(self, channel: Channel.TYPING, *, reason: str = None) -> Channel.RESPONSE:
         resp = self.http.delete_channel(int(channel), reason=reason)
         if isinstance(resp, dict):
-            return Channel.create(self, resp)
-        return wrap_to_async(Channel, self, resp)
+            return Channel.create(self, resp, prevent_caching=True)
+        return wrap_to_async(Channel, self, resp, prevent_caching=True)
 
     def request_channel_messages(self,
                                  channel: Channel.TYPING, *,

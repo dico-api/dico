@@ -44,6 +44,8 @@ ApplicationCommandUpdate = ApplicationCommandCreate
 ApplicationCommandDelete = ApplicationCommandCreate
 """
 
+# TODO: refactor update/delete objects
+
 ChannelCreate = Channel
 
 
