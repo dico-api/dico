@@ -36,7 +36,7 @@ class DiscordObjectBase(CopyableObject):
         self.id: Snowflake = Snowflake(resp["id"])
         self.client: APIClient = client
 
-    def __int__(self):
+    def __int__(self) -> int:
         return int(self.id)
 
     def update(self, new_resp, **kwargs):
@@ -87,9 +87,9 @@ class AbstractObject(dict):
 
 
 class FlagBase:
-    def __init__(self, *args, **kwargs):
-        self.values = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
-        self.value = 0
+    def __init__(self, *args: str, **kwargs: bool):
+        self.values: typing.Dict[str, int] = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.value: int = 0
         for x in args:
             if x.upper() not in self.values:
                 raise AttributeError(f"invalid name: `{x}`")
@@ -111,7 +111,7 @@ class FlagBase:
             if self.has(k):
                 yield v
 
-    def has(self, name: str):
+    def has(self, name: str) -> bool:
         if name.upper() not in self.values:
             raise AttributeError(f"invalid name: `{name}`")
         return (self.value & self.values[name.upper()]) == self.values[name.upper()]
@@ -144,8 +144,8 @@ class FlagBase:
 
 class TypeBase:
     def __init__(self, value):
-        self.values = {getattr(self, x): x for x in dir(self) if isinstance(getattr(self, x), int)}
-        self.value = value
+        self.values: typing.Dict[int, str] = {getattr(self, x): x for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.value: int = value
 
         if self.value not in self.values:
             raise AttributeError(f"invalid value: `{value}`")
@@ -159,13 +159,13 @@ class TypeBase:
     def __getattr__(self, item):
         return self.is_type(item)
 
-    def is_type(self, name: str):
+    def is_type(self, name: str) -> bool:
         values = {y: x for x, y in self.values.items()}
         if name.upper() not in values:
             raise AttributeError(f"invalid name: `{name}`")
         return self.value == values[name.upper()]
 
     @classmethod
-    def to_string(cls, value):
+    def to_string(cls, value) -> str:
         values = {getattr(cls, x): x for x in dir(cls) if isinstance(getattr(cls, x), int)}
         return values.get(value)

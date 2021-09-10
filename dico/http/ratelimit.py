@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import typing
 
 
 class __EmptyLocker:
@@ -15,7 +16,7 @@ EmptyLocker = __EmptyLocker()
 
 class RatelimitHandler:
     def __init__(self):
-        self.lockers = {}
+        self.lockers: typing.Dict[str, typing.Optional[dict]] = {}
         self.buckets = {}
         self.global_locker = asyncio.Lock()
 
@@ -27,7 +28,7 @@ class RatelimitHandler:
     def utc(self):
         return datetime.datetime.utcnow()
 
-    def get_locker(self, meth, route):
+    def get_locker(self, meth, route) -> dict:
         locker_key = self.to_locker_key(meth, route)
         if locker_key not in self.lockers:
             self.lockers[locker_key] = None

@@ -12,19 +12,19 @@ from ..base.http import HTTPRequestBase, EmptyObject
 class AsyncHTTPRequest(HTTPRequestBase):
     def __init__(self,
                  token: str,
-                 loop: asyncio.AbstractEventLoop = None,
-                 session: aiohttp.ClientSession = None,
-                 default_retry: int = 3):
-        self.token = token.lstrip("Bot ")
-        self.logger = logging.getLogger("dico.http")
-        self.loop = loop or asyncio.get_event_loop()
-        self.session = session or aiohttp.ClientSession(loop=self.loop)
-        self.default_retry = default_retry
-        self._close_on_del = False
+                 loop: typing.Optional[asyncio.AbstractEventLoop] = None,
+                 session: typing.Optional[aiohttp.ClientSession] = None,
+                 default_retry: typing.Optional[int] = 3):
+        self.token: str = token.lstrip("Bot ")
+        self.logger: logging.Logger = logging.getLogger("dico.http")
+        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
+        self.session: aiohttp.ClientSession = session or aiohttp.ClientSession(loop=self.loop)
+        self.default_retry: int = default_retry
+        self._close_on_del: bool = False
         if not session:
             self._close_on_del = True
-        self._closed = False
-        self.ratelimits = RatelimitHandler()
+        self._closed: bool = False
+        self.ratelimits: RatelimitHandler = RatelimitHandler()
 
     def __del__(self):
         if not self._closed:
@@ -240,7 +240,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "PATCH", form)
 
-    async def download(self, url):
+    async def download(self, url) -> bytes:
         async with self.session.get(url) as resp:
             if resp.status == 200:
                 return await resp.read()

@@ -4,13 +4,16 @@ from .user import User
 from ..base.model import FlagBase, TypeBase
 from ..utils import cdn_url
 
+if typing.TYPE_CHECKING:
+    from ..api import APIClient
+
 
 class Application:
     TYPING = typing.Union[int, str, Snowflake, "Application"]
     RESPONSE = typing.Union["Application", typing.Awaitable["Application"]]
 
     def __init__(self, client, resp):
-        self.client = client
+        self.client: typing.Type[APIClient] = client
         self.id = Snowflake(resp["id"])
         self.name = resp["name"]
         self.icon = resp["icon"]
