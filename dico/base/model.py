@@ -24,7 +24,7 @@ class EventBase:
 
 
 class DiscordObjectBase(CopyableObject):
-    TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase"]
+    TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase", typing.Type["DiscordObjectBase"]]
     RESPONSE = typing.Union["DiscordObjectBase", typing.Awaitable["DiscordObjectBase"]]
     RESPONSE_AS_LIST = typing.Union[typing.List["DiscordObjectBase"], typing.Awaitable[typing.List["DiscordObjectBase"]]]
     _cache_type = None

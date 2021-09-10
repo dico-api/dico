@@ -1,4 +1,5 @@
 from .application import *
+from .audit_log import *
 from .channel import *
 from .emoji import *
 from .event import *

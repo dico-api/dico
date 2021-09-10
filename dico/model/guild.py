@@ -424,7 +424,7 @@ class Integration:
         self.id = Snowflake(resp["id"])
         self.name = resp["name"]
         self.type = resp["type"]
-        self.enabled = resp["enabled"]
+        self.enabled = resp.get("enabled")
         self.syncing = resp.get("syncing")
         self.role_id = Snowflake.optional(resp.get("role_id"))
         self.enable_emoticons = resp.get("enable_emoticons")

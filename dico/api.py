@@ -7,11 +7,12 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ThreadMember, ListThreadsResponse, Component, Role, ApplicationCommandOption, GuildApplicationCommandPermissions, \
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
-    VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance
+    VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
+    AuditLog, AuditLogEvents
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if typing.TYPE_CHECKING:
-    from .base.model import AbstractObject
+    from .base.model import AbstractObject, DiscordObjectBase
 
 
 class APIClient:
@@ -40,6 +41,26 @@ class APIClient:
         self.default_allowed_mentions: typing.Optional[AllowedMentions] = default_allowed_mentions
         self.application: typing.Optional[Application] = None
         self.application_id: typing.Optional[Snowflake] = Snowflake.ensure_snowflake(application_id)
+
+    # Audit Log
+
+    def request_guild_audit_log(self,
+                                guild: Guild.TYPING,
+                                *,
+                                user: User.TYPING = None,
+                                action_type: typing.Union[int, AuditLogEvents] = None,
+                                before: "DiscordObjectBase.TYPING" = None,
+                                limit: int = None) -> AuditLog.RESPONSE:
+        if user is not None:
+            user = str(int(user))
+        if action_type is not None:
+            action_type = int(action_type)
+        if before is not None:
+            before = str(int(before))
+        resp = self.http.request_guild_audit_log(int(guild), user, action_type, before, limit)
+        if isinstance(resp, dict):
+            return AuditLog(self, resp)
+        return wrap_to_async(AuditLog, self, resp, as_create=False)
 
     # Channel
 

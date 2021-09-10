@@ -40,6 +40,20 @@ class HTTPRequestBase(ABC):
         """
         pass
 
+    # Audit Log Requests
+
+    def request_guild_audit_log(self, guild_id, user_id: str = None, action_type: int = None, before: str = None, limit: int = None):
+        params = {}
+        if user_id is not None:
+            params["user_id"] = user_id
+        if action_type is not None:
+            params["action_type"] = action_type
+        if before is not None:
+            params["before"] = before
+        if limit is not None:
+            params["limit"] = limit
+        return self.request(f"/guilds/{guild_id}/audit-logs", "GET", params=params)
+
     # Channel Requests
 
     def request_channel(self, channel_id):
