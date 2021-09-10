@@ -8,7 +8,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
-    AuditLog, AuditLogEvents
+    AuditLog, AuditLogEvents, GuildTemplate
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if typing.TYPE_CHECKING:
@@ -985,6 +985,50 @@ class APIClient:
             request_to_speak_timestamp = request_to_speak_timestamp if isinstance(request_to_speak_timestamp, str) else \
                 request_to_speak_timestamp.isoformat()
         return self.http.modify_user_voice_state(int(guild), str(int(channel)), user, suppress, request_to_speak_timestamp)
+
+    # Guild Template
+
+    def request_guild_template(self, template: GuildTemplate.TYPING) -> GuildTemplate.RESPONSE:
+        resp = self.http.request_guild_template(str(template))
+        if isinstance(resp, dict):
+            return GuildTemplate(self, resp)
+        return wrap_to_async(GuildTemplate, self, resp, as_create=False)
+
+    def create_guild_from_template(self, template: GuildTemplate.TYPING, name: str, *, icon: str = None) -> Guild.RESPONSE:
+        resp = self.http.create_guild_from_template(str(template), name, icon)
+        if isinstance(resp, dict):
+            return Guild.create(self, resp)
+        return wrap_to_async(Guild, self, resp)
+
+    def request_guild_templates(self, guild: Guild.TYPING) -> GuildTemplate.RESPONSE_AS_LIST:
+        resp = self.http.request_guild_templates(int(guild))
+        if isinstance(resp, list):
+            return [GuildTemplate(self, x) for x in resp]
+        return wrap_to_async(GuildTemplate, self, resp, as_create=False)
+
+    def create_guild_template(self, guild: Guild.TYPING, name: str, *, description: str = EmptyObject) -> GuildTemplate.RESPONSE:
+        resp = self.http.create_guild_template(int(guild), name, description)
+        if isinstance(resp, dict):
+            return GuildTemplate(self, resp)
+        return wrap_to_async(GuildTemplate, self, resp, as_create=False)
+
+    def sync_guild_template(self, guild: Guild.TYPING, template: GuildTemplate.TYPING) -> GuildTemplate.RESPONSE:
+        resp = self.http.sync_guild_template(int(guild), str(template))
+        if isinstance(resp, dict):
+            return GuildTemplate(self, resp)
+        return wrap_to_async(GuildTemplate, self, resp, as_create=False)
+
+    def modify_guild_template(self, guild: Guild.TYPING, template: GuildTemplate.TYPING, name: str = None, description: str = EmptyObject) -> GuildTemplate.RESPONSE:
+        resp = self.http.modify_guild_template(int(guild), str(template), name, description)
+        if isinstance(resp, dict):
+            return GuildTemplate(self, resp)
+        return wrap_to_async(GuildTemplate, self, resp, as_create=False)
+
+    def delete_guild_template(self, guild: Guild.TYPING, template: GuildTemplate.TYPING) -> GuildTemplate.RESPONSE:
+        resp = self.http.delete_guild_template(int(guild), str(template))
+        if isinstance(resp, dict):
+            return GuildTemplate(self, resp)
+        return wrap_to_async(GuildTemplate, self, resp, as_create=False)
 
     # Invite
 

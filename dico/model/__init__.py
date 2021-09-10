@@ -6,6 +6,7 @@ from .event import *
 from .extras import *
 from .gateway import *
 from .guild import *
+from .guild_template import *
 from .invite import *
 from .permission import *
 from .snowflake import *

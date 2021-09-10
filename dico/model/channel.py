@@ -12,7 +12,7 @@ from .user import User
 from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
 
 if typing.TYPE_CHECKING:
-    from .gateway import Application
+    from .application import Application
     from .guild import Guild
     from ..api import APIClient
 

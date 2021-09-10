@@ -43,6 +43,15 @@ class HTTPRequestBase(ABC):
     # Audit Log Requests
 
     def request_guild_audit_log(self, guild_id, user_id: str = None, action_type: int = None, before: str = None, limit: int = None):
+        """
+        Sends get guild audit log request.
+
+        :param guild_id: ID of the guild to get audit log.
+        :param user_id: ID of the user who did the action.
+        :param action_type: Type of the action.
+        :param before: Entry ID to get before.
+        :param limit: Maximum number of the audit log to get.
+        """
         params = {}
         if user_id is not None:
             params["user_id"] = user_id
@@ -1427,6 +1436,84 @@ class HTTPRequestBase(ABC):
         if request_to_speak_timestamp is not None:
             body["request_to_speak_timestamp"] = request_to_speak_timestamp
         return self.request(f"/guilds/{guild_id}/voice-states/{user_id}", "PATCH", body, is_json=True)
+
+    # Guild Template Requests
+
+    def request_guild_template(self, template_code):
+        """
+        Sends get guild template request.
+
+        :param template_code: Code of the template.
+        """
+        return self.request(f"/guilds/templates/{template_code}", "GET")
+
+    def create_guild_from_template(self, template_code, name: str, icon: str = None):
+        """
+        Sends create guild from template request.
+
+        :param template_code: Code of the template.
+        :param name: Name of the guild.
+        :param icon: Icon of the guild.
+        """
+        body = {"name": name}
+        if icon is not None:
+            body["icon"] = icon
+        return self.request(f"/guilds/templates/{template_code}", "POST", body, is_json=True)
+
+    def request_guild_templates(self, guild_id):
+        """
+        Sends get guild templates request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/templates", "GET")
+
+    def create_guild_template(self, guild_id, name: str, description: str = EmptyObject):
+        """
+        Sends create guild template request.
+
+        :param guild_id: ID of the guild.
+        :param name: Name of the template to create.
+        :param description: Description of the template
+        """
+        body = {"name": name}
+        if description is not EmptyObject:
+            body["description"] = description
+        return self.request(f"/guilds/{guild_id}/templates", "POST", body, is_json=True)
+
+    def sync_guild_template(self, guild_id, template_code):
+        """
+        Sends sync guild template request.
+
+        :param guild_id: ID of the guild.
+        :param template_code: Code of the template to sync.
+        """
+        return self.request(f"/guilds/{guild_id}/templates/{template_code}", "PUT")
+
+    def modify_guild_template(self, guild_id, template_code, name: str = None, description: str = EmptyObject):
+        """
+        Sends modify guild template request.
+
+        :param guild_id: ID of the guild.
+        :param template_code: Code of the template.
+        :param name: Name to change.
+        :param description: Description to change.
+        """
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if description is not EmptyObject:
+            body["description"] = description
+        return self.request(f"/guilds/{guild_id}/templates/{template_code}", "PATCH", body, is_json=True)
+
+    def delete_guild_template(self, guild_id, template_code):
+        """
+        Sends delete guild template request.
+
+        :param guild_id: ID of the guild.
+        :param template_code: Code of the template.
+        """
+        return self.request(f"/guilds/{guild_id}/templates/{template_code}", "DELETE")
 
     # Invite Requests
 
