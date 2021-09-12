@@ -6,32 +6,42 @@ from .user import User
 from .webhook import Webhook
 from ..base.model import TypeBase
 
+if typing.TYPE_CHECKING:
+    from ..api import APIClient
+    from .channel import Message
+    from .permission import Role
+
 
 class AuditLog:
     RESPONSE = typing.Union["AuditLog", typing.Awaitable["AuditLog"]]
 
-    def __init__(self, client, resp):
-        self.client = client
-        self.raw = resp
-        self.webhooks = [Webhook(client, x) for x in resp["webhooks"]]
-        self.users = [User.create(client, x) for x in resp["users"]]
-        self.audit_log_entries = [AuditLogEntry(client, x) for x in resp["audit_log_entries"]]
-        self.integrations = [Integration(client, x) for x in resp["integrations"]]
-        self.threads = [Channel.create(client, x) for x in resp["threads"]]
+    def __init__(self, client: "APIClient", resp: dict):
+        self.client: "APIClient" = client
+        self.raw: dict = resp
+        self.webhooks: typing.List[Webhook] = [Webhook(client, x) for x in resp["webhooks"]]
+        self.users: typing.List[User] = [User.create(client, x) for x in resp["users"]]
+        self.audit_log_entries: typing.List[AuditLogEntry] = [AuditLogEntry(client, x) for x in resp["audit_log_entries"]]
+        self.integrations: typing.List[Integration] = [Integration(client, x) for x in resp["integrations"]]
+        self.threads: typing.List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
 
 
 class AuditLogEntry:
-    def __init__(self, client, resp):
-        self.client = client
-        self.raw = resp
-        self.target_id = resp.get("target_id")
-        self.changes = [AuditLogChange(client, x) for x in resp.get("changes", [])]
-        self.user_id = Snowflake.optional(resp.get("user_id"))
-        self.id = Snowflake(resp["id"])
-        self.action_type = AuditLogEvents(int(resp["action_type"]))
+    def __init__(self, client: "APIClient", resp: dict):
+        self.client: "APIClient" = client
+        self.raw: dict = resp
+        self.target_id: typing.Optional[str] = resp.get("target_id")  # or is this snowflake?
+        self.changes: typing.List[AuditLogChange] = [AuditLogChange(client, x) for x in resp.get("changes", [])]
+        self.user_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("user_id"))
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.action_type: AuditLogEvents = AuditLogEvents(int(resp["action_type"]))
         self.__options = resp.get("options")
-        self.options = OptionalAuditEntryInfo(self.client, self.__options) if self.__options else self.__options
-        self.reason = resp.get("reason")
+        self.options: typing.Optional[OptionalAuditEntryInfo] = OptionalAuditEntryInfo(self.client, self.__options) if self.__options else self.__options
+        self.reason: typing.Optional[str] = resp.get("reason")
+
+    @property
+    def user(self) -> typing.Optional[User]:
+        if self.user_id and self.client.has_cache:
+            return self.client.get(self.user_id, "user")
 
 
 class AuditLogEvents(TypeBase):
@@ -93,79 +103,79 @@ class AuditLogEvents(TypeBase):
 
 
 class OptionalAuditEntryInfo:
-    def __init__(self, client, resp):
-        self.raw = resp
-        self.client = client
-        self.delete_member_days = resp.get("delete_member_days")
-        self.members_removed = resp.get("members_removed")
-        self.channel_id = Snowflake.optional(resp.get("channel_id"))
-        self.message_id = Snowflake.optional(resp.get("message_id"))
-        self.count = resp.get("count")
-        self.id = Snowflake.optional(resp.get("id"))
-        self.type = resp.get("type")
-        self.role_name = resp.get("role_name")
+    def __init__(self, client: "APIClient", resp: dict):
+        self.raw: dict = resp
+        self.client: "APIClient" = client
+        self.delete_member_days: typing.Optional[str] = resp.get("delete_member_days")
+        self.members_removed: typing.Optional[str] = resp.get("members_removed")
+        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
+        self.message_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("message_id"))
+        self.count: typing.Optional[str] = resp.get("count")
+        self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
+        self.type: typing.Optional[str] = resp.get("type")
+        self.role_name: typing.Optional[str] = resp.get("role_name")
 
     @property
-    def channel(self):
+    def channel(self) -> typing.Optional[Channel]:
         if self.channel_id and self.client.has_cache:
-            return self.client.cache.get(self.channel_id, "channel")
+            return self.client.get(self.channel_id, "channel")
 
     @property
-    def message(self):
+    def message(self) -> typing.Optional["Message"]:
         if self.message_id and self.client.has_cache:
-            return self.client.cache.get(self.message_id, "message")
+            return self.client.get(self.message_id, "message")
 
     @property
-    def overwrite_entry(self):
+    def overwrite_entry(self) -> typing.Optional[typing.Union["Role", User]]:
         if self.id and self.client.has_cache:
-            return self.client.cache.get(self.id, "role" if self.type == "0" else "member" if self.type == "1" else None)
+            return self.client.get(self.id, "role" if self.type == "0" else "user" if self.type == "1" else None)
 
 
 class AuditLogChange:
-    def __init__(self, client, resp):
-        self.raw = resp
-        self.client = client
-        self.key = resp["key"]
-        self.new_value = resp.get("new_value")
-        self.old_value = resp.get("old_value")
+    def __init__(self, client: "APIClient", resp: dict):
+        self.raw: dict = resp
+        self.client: "APIClient" = client
+        self.key: str = resp["key"]
+        self.new_value: typing.Optional[dict] = resp.get("new_value")
+        self.old_value: typing.Optional[dict] = resp.get("old_value")
 
     @property
-    def new(self):
+    def new(self) -> typing.Optional["AuditLogChanges"]:
         if self.new_value:
             return AuditLogChanges(self.client, self.new_value)
 
     @property
-    def old(self):
+    def old(self) -> typing.Optional["AuditLogChanges"]:
         if self.old_value:
             return AuditLogChanges(self.client, self.old_value)
 
 
 class AuditLogChanges:
-    def __init__(self, client, resp):
-        self.raw = resp
-        self.client = client
+    def __init__(self, client: "APIClient", resp: dict):
+        self.raw: dict = resp
+        self.client: "APIClient" = client
 
         # any
-        self.name = resp["name"]
-        self.id = Snowflake(resp["id"])
-        self.type = resp["type"]
+        self.name: str = resp["name"]
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.type: typing.Union[int, str] = resp["type"]
 
-        self.description = resp.get("description")
-        self.icon_hash = resp.get("icon_hash")
-        self.splash_hash = resp.get("splash_hash")
-        self.discovery_splash_hash = resp.get("discovery_splash_hash")
-        self.banner_hash = resp.get("banner_hash")
-        self.owner_id = resp.get("owner_id")
-        self.region = resp.get("region")
-        self.preferred_locale = resp.get("preferred_locale")
-        self.afk_channel_id = resp.get("afk_channel_id")
-        self.afk_timeout = resp.get("afk_timeout")
-        self.rules_channel_id = resp.get("rules_channel_id")
-        self.public_updates_channel_id = resp.get("public_updates_channel_id")
-        self.mfa_level = resp.get("mfa_level")
-        self.verification_level = resp.get("verification_level")
-        self.explicit_content_filter = resp.get("explicit_content_filter")
-        self.default_message_notifications = resp.get("default_message_notifications")
+        self.description: typing.Optional[str] = resp.get("description")
+        self.icon_hash: typing.Optional[str] = resp.get("icon_hash")
+        self.splash_hash: typing.Optional[str] = resp.get("splash_hash")
+        self.discovery_splash_hash: typing.Optional[str] = resp.get("discovery_splash_hash")
+        self.banner_hash: typing.Optional[str] = resp.get("banner_hash")
+        self.owner_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("owner_id"))
+        self.region: typing.Optional[str] = resp.get("region")
+        self.preferred_locale: typing.Optional[str] = resp.get("preferred_locale")
+        self.afk_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("afk_channel_id"))
+        self.afk_timeout: typing.Optional[int] = resp.get("afk_timeout")
+        self.rules_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("rules_channel_id"))
+        self.public_updates_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("public_updates_channel_id"))
+        self.mfa_level: typing.Optional[int] = resp.get("mfa_level")
+        self.verification_level: typing.Optional[int] = resp.get("verification_level")
+        self.explicit_content_filter: typing.Optional[int] = resp.get("explicit_content_filter")
+        self.default_message_notifications: typing.Optional[int] = resp.get("default_message_notifications")
         self.vanity_url_code = resp.get("vanity_url_code")
         self.add = resp.get("$add")
         self.remove = resp.get("$remove")

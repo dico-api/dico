@@ -77,6 +77,10 @@ class CacheStorage:
         self.__cache_dict = {}
         self.max_size = max_size
 
+    def __iter__(self):
+        for x in self.__cache_dict.values():
+            yield x
+
     def get(self, snowflake_id: typing.Union[str, int, Snowflake], *, ignore_expiration=True):
         res = self.__cache_dict.get(Snowflake.ensure_snowflake(snowflake_id))
         if res:  # TODO: add expiration time check
