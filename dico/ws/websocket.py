@@ -108,7 +108,7 @@ class WebSocketClient:
                     break
 
             if self._reconnecting or self._fresh_reconnecting:
-                self.ws = await self.http.session.ws_connect(self.base_url)
+                self.ws = await self.http.session.ws_connect(self.base_url, autoping=False)
                 self._closed = False
                 self.intended_shutdown = False
             else:
@@ -304,7 +304,7 @@ class WebSocketClient:
         gw = gateway.GetGateway(resp)
         extra = "compress=zlib-stream" if compress else ""
         base_url = gw.url+f"?v=9&encoding=json" + extra
-        ws = await http.session.ws_connect(base_url)
+        ws = await http.session.ws_connect(base_url, autoping=False)
         return cls(http, ws, base_url, intents, event_handler, try_reconnect)
 
 
