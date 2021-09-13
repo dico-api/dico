@@ -15,6 +15,7 @@ class WebSocketClient:
     ZLIB_SUFFIX = b'\x00\x00\xff\xff'
     RECONNECT_CODES = [1000, 1001, 1006, 4000, 4001, 4002, 4003, 4005, 4007, 4009]
     INPUT_WARN = [4001, 4002, 4003, 4005]
+    WS_KWARGS = {"autoclose": False, "autoping": False, "timeout": 60}
 
     def __init__(self,
                  http: AsyncHTTPRequest,
@@ -83,6 +84,7 @@ class WebSocketClient:
                         self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
                     else:
+                        await self.close(4000)
                         if self.intended_shutdown:
                             self.logger.info("This client will now be terminated.")
                         else:
@@ -108,7 +110,7 @@ class WebSocketClient:
                     break
 
             if self._reconnecting or self._fresh_reconnecting:
-                self.ws = await self.http.session.ws_connect(self.base_url, autoping=False)
+                self.ws = await self.http.session.ws_connect(self.base_url, **self.WS_KWARGS)
                 self._closed = False
                 self.intended_shutdown = False
             else:
@@ -304,7 +306,7 @@ class WebSocketClient:
         gw = gateway.GetGateway(resp)
         extra = "compress=zlib-stream" if compress else ""
         base_url = gw.url+f"?v=9&encoding=json" + extra
-        ws = await http.session.ws_connect(base_url, autoping=False)
+        ws = await http.session.ws_connect(base_url, **cls.WS_KWARGS)
         return cls(http, ws, base_url, intents, event_handler, try_reconnect)
 
 
