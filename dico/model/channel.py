@@ -14,6 +14,7 @@ from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
 if typing.TYPE_CHECKING:
     from .application import Application
     from .guild import Guild
+    from .invite import Invite
     from ..api import APIClient
 
 
@@ -23,7 +24,7 @@ class Channel(DiscordObjectBase):
     RESPONSE_AS_LIST = typing.Union[typing.List["Channel"], typing.Awaitable[typing.List["Channel"]]]
     _cache_type = "channel"
 
-    def __init__(self, client, resp, *, guild_id=None):
+    def __init__(self, client: "APIClient", resp: dict, *, guild_id: Snowflake.TYPING = None):
         super().__init__(client, resp)
         self.type: ChannelTypes = ChannelTypes(resp["type"])
         self.guild_id: Snowflake = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
@@ -73,7 +74,7 @@ class Channel(DiscordObjectBase):
     def delete(self, *, reason: str = None) -> RESPONSE:
         return self.client.delete_channel(self, reason=reason)
 
-    def create_message(self, *args, **kwargs) -> typing.Union["Message", typing.Awaitable["Message"]]:
+    def create_message(self, *args, **kwargs) -> "Message.RESPONSE":
         if not self.is_messageable():
             raise TypeError("You can't send message in this type of channel.")
         return self.client.create_message(self, *args, **kwargs)
@@ -88,22 +89,22 @@ class Channel(DiscordObjectBase):
     def edit_permissions(self, overwrite, *, reason: str = None):
         return self.client.edit_channel_permissions(self, overwrite, reason=reason)
 
-    def request_invites(self):
+    def request_invites(self) -> "Invite.RESPONSE_AS_LIST":
         return self.client.request_channel_invites(self)
 
-    def create_invite(self, **kwargs):
+    def create_invite(self, **kwargs) -> "Invite.RESPONSE":
         return self.client.create_channel_invite(self, **kwargs)
 
     def delete_permissions(self, overwrite, *, reason: str = None):
         return self.client.delete_channel_permission(self, overwrite, reason=reason)
 
-    def follow(self, target_channel: "Channel.TYPING"):
+    def follow(self, target_channel: "Channel.TYPING") -> "FollowedChannel.RESPONSE":
         return self.client.follow_news_channel(self, target_channel)
 
     def trigger_typing_indicator(self):
         return self.client.trigger_typing_indicator(self)
 
-    def request_pinned_messages(self):
+    def request_pinned_messages(self) -> "Message.RESPONSE_AS_LIST":
         return self.client.request_pinned_messages(self)
 
     def add_recipient(self, user: User.TYPING, access_token: str, nick: str):
@@ -116,7 +117,7 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to remove recipient.")
         return self.client.group_dm_remove_recipient(self, user)
 
-    def start_thread(self, message: "Message.TYPING" = None, *, name: str, auto_archive_duration: int, reason: str = None):
+    def start_thread(self, message: "Message.TYPING" = None, *, name: str, auto_archive_duration: int, reason: str = None) -> "Channel.RESPONSE":
         return self.client.start_thread(self, message, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     def join_thread(self):
@@ -139,21 +140,21 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to remove thread member.")
         return self.client.remove_thread_member(self, user)
 
-    def list_thread_members(self):
+    def list_thread_members(self) -> "ThreadMember.RESPONSE_AS_LIST":
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to list thread members.")
         return self.client.list_thread_members(self)
 
-    def list_active_threads(self):
+    def list_active_threads(self) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_active_threads(self)
 
-    def list_public_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+    def list_public_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_public_archived_threads(self, before=before, limit=limit)
 
-    def list_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+    def list_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_private_archived_threads(self, before=before, limit=limit)
 
-    def list_joined_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+    def list_joined_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_joined_private_archived_threads(self, before=before, limit=limit)
 
     def archive(self, locked: bool = False):
@@ -210,8 +211,8 @@ class VideoQualityModes(TypeBase):
 
 
 class SendOnlyChannel:
-    def __init__(self, client, channel_id):
-        self.client = client
+    def __init__(self, client: "APIClient", channel_id: Snowflake.TYPING):
+        self.client: "APIClient" = client
         self.id: Snowflake = Snowflake.ensure_snowflake(channel_id)
 
     def send(self, *args, **kwargs) -> "Message.RESPONSE":
@@ -227,7 +228,14 @@ class Message(DiscordObjectBase):
     RESPONSE_AS_LIST = typing.Union[typing.List["Message"], typing.Awaitable[typing.List["Message"]]]
     _cache_type = "message"
 
-    def __init__(self, client, resp, *, guild_id=None, webhook_token=None, interaction_token=None, original_response=False):
+    def __init__(self,
+                 client,
+                 resp,
+                 *,
+                 guild_id: Snowflake.TYPING = None,
+                 webhook_token: typing.Optional[str] = None,
+                 interaction_token: typing.Optional[str] = None,
+                 original_response: typing.Optional[bool] = False):
         from .interactions import MessageInteraction, Component  # Prevent circular import.
         super().__init__(client, resp)
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
@@ -273,7 +281,7 @@ class Message(DiscordObjectBase):
 
         # self.stickers: typing.Optional[typing.List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
 
-    def reply(self, content=None, **kwargs) -> typing.Union["Message", typing.Awaitable["Message"]]:
+    def reply(self, content=None, **kwargs) -> "Message.RESPONSE":
         kwargs["message_reference"] = self
         mention = kwargs.pop("mention") if "mention" in kwargs.keys() else True
         allowed_mentions = kwargs.get("allowed_mentions", self.client.default_allowed_mentions or AllowedMentions(replied_user=mention)).copy()
@@ -281,7 +289,7 @@ class Message(DiscordObjectBase):
         kwargs["allowed_mentions"] = allowed_mentions.to_dict(reply=True)
         return self.client.create_message(self.channel_id, content, **kwargs)
 
-    def edit(self, **kwargs):
+    def edit(self, **kwargs) -> "Message.RESPONSE":
         if self.__webhook_token:
             kwargs["webhook_token"] = self.__webhook_token
             return self.client.edit_webhook_message(self.webhook_id, self, **kwargs)
@@ -299,7 +307,7 @@ class Message(DiscordObjectBase):
             return self.client.delete_interaction_response(interaction_token=self.__interaction_token, message="@original" if self.__original_response else self)
         return self.client.delete_message(self.channel_id, self.id, reason=reason)
 
-    def crosspost(self):
+    def crosspost(self) -> "Message.RESPONSE":
         return self.client.crosspost_message(self.channel_id, self.id)
 
     def create_reaction(self, emoji: typing.Union[Emoji, str]):
@@ -314,7 +322,7 @@ class Message(DiscordObjectBase):
     def unpin(self, *, reason: str = None):
         return self.client.unpin_message(self.channel_id, self.id, reason=reason)
 
-    def start_thread(self, *, name: str, auto_archive_duration: int, reason: str = None):
+    def start_thread(self, *, name: str, auto_archive_duration: int, reason: str = None) -> Channel.RESPONSE:
         return self.client.start_thread(self.channel_id, self, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     @property

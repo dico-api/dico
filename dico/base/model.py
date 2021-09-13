@@ -29,12 +29,12 @@ class DiscordObjectBase(CopyableObject):
     RESPONSE_AS_LIST = typing.Union[typing.List["DiscordObjectBase"], typing.Awaitable[typing.List["DiscordObjectBase"]]]
     _cache_type = None
 
-    def __init__(self, client, resp, **kwargs):
+    def __init__(self, client: "APIClient", resp: dict, **kwargs):
         resp.update(kwargs)
         # self._cache_type = None
         self.raw: dict = resp
         self.id: Snowflake = Snowflake(resp["id"])
-        self.client: APIClient = client
+        self.client: "APIClient" = client
 
     def __int__(self) -> int:
         return int(self.id)

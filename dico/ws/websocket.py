@@ -230,6 +230,8 @@ class WebSocketClient:
     async def cancel_heartbeat(self):
         if self._heartbeat_task.cancelled():
             return
+        self.last_heartbeat_ack = 0
+        self.last_heartbeat_send = 0
         self._heartbeat_task.cancel()
         try:
             await self._heartbeat_task
