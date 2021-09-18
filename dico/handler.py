@@ -20,7 +20,7 @@ class EventHandler:
     def remove(self, event: str, func: typing.Callable):
         self.events[event].remove(func)
 
-    def get(self, event: str) -> typing.List[typing.Awaitable]:
+    def get(self, event: str) -> typing.List[typing.Callable[[typing.Any, typing.Any], typing.Awaitable]]:
         return [ensure_coro(x) for x in self.events.get(event, [])]
 
     def process_response(self, name: str, resp: dict):

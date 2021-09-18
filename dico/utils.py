@@ -5,10 +5,13 @@ import typing
 import pathlib
 import inspect
 import traceback
-from .model import Snowflake
 """
 from .model import ChannelTypes, Snowflake
 """
+if typing.TYPE_CHECKING:
+    from .api import APIClient
+    from .model import Emoji, Snowflake
+    from .base.http import RESPONSE
 
 
 async def safe_call(coro: typing.Awaitable, additional_message: typing.Optional[str] = None):
@@ -31,7 +34,7 @@ async def safe_call(coro: typing.Awaitable, additional_message: typing.Optional[
         print(_p, file=sys.stderr)
 
 
-def cdn_url(route: str, *, image_hash: str, extension: str = "webp", size: int = 1024, **snowflake_ids: Snowflake.TYPING) -> str:
+def cdn_url(route: str, *, image_hash: str, extension: str = "webp", size: int = 1024, **snowflake_ids: "Snowflake.TYPING") -> str:
     if not 16 <= size <= 4096:
         raise ValueError("size must be between 16 and 4096.")
     if snowflake_ids:
@@ -39,7 +42,7 @@ def cdn_url(route: str, *, image_hash: str, extension: str = "webp", size: int =
     return f"https://cdn.discordapp.com/{route}/{image_hash}.{extension}?size={size}"
 
 
-def ensure_coro(func):
+def ensure_coro(func: typing.Callable) -> typing.Callable[[typing.Any, typing.Any], typing.Awaitable]:
     async def wrap(*args, **kwargs):
         if inspect.iscoroutinefunction(func):
             return await func(*args, **kwargs)
@@ -48,7 +51,7 @@ def ensure_coro(func):
     return wrap
 
 
-def format_discord_error(resp: dict):
+def format_discord_error(resp: dict) -> str:
     msgs = []
 
     def get_error_message(k, v):
@@ -69,7 +72,7 @@ def format_discord_error(resp: dict):
     return resp["message"] + ((" - " + ' | '.join(msgs)) if msgs else "")
 
 
-def from_emoji(emoji):
+def from_emoji(emoji: typing.Union["Emoji", str]) -> str:
     from .model.emoji import Emoji  # Prevent circular import.
     if isinstance(emoji, Emoji):
         emoji = emoji.name if not emoji.id else f"{emoji.name}:{emoji.id}"
@@ -78,7 +81,7 @@ def from_emoji(emoji):
     return emoji
 
 
-async def wrap_to_async(cls, client, resp, as_create: bool = True, **kwargs):
+async def wrap_to_async(cls: typing.Any, client: "APIClient", resp: typing.Awaitable["RESPONSE"], as_create: bool = True, **kwargs) -> typing.Any:
     resp = await resp
     if isinstance(resp, dict):
         args = (client, resp) if client is not None else (resp,)
@@ -93,7 +96,7 @@ async def wrap_to_async(cls, client, resp, as_create: bool = True, **kwargs):
         return resp
 
 
-def to_image_data(image: typing.Union[io.FileIO, typing.BinaryIO, pathlib.Path, str]):
+def to_image_data(image: typing.Union[io.FileIO, typing.BinaryIO, pathlib.Path, str]) -> str:
     if isinstance(image, str):
         with open(image, "rb") as f:
             img_type = image.split(".")[-1]
@@ -105,7 +108,7 @@ def to_image_data(image: typing.Union[io.FileIO, typing.BinaryIO, pathlib.Path, 
     return f"data:image/{img_type};base64,{img.decode()}"
 
 
-def rgb(red, green, blue):
+def rgb(red: int, green: int, blue: int) -> int:
     return red << 16 | green << 8 | blue
 
 
