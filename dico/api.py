@@ -8,7 +8,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
-    AuditLog, AuditLogEvents, GuildTemplate
+    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if typing.TYPE_CHECKING:
@@ -950,7 +950,7 @@ class APIClient:
             return AbstractObject(resp)
         return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
-    def request_guild_widget_image(self, guild: Guild.TYPING, style: typing.Optional[str] = None) -> bytes:
+    def request_guild_widget_image(self, guild: Guild.TYPING, style: typing.Optional[str] = None) -> BYTES_RESPONSE:
         return self.http.request_guild_widget_image(int(guild), style)
 
     def request_guild_welcome_screen(self, guild: Guild.TYPING) -> WelcomeScreen.RESPONSE:

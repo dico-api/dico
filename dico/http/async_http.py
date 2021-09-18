@@ -103,8 +103,9 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                   embeds: typing.List[dict] = None,
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
-                                  components: typing.List[dict] = None):
-        if not (content or embeds or files):
+                                  components: typing.List[dict] = None,
+                                  sticker_ids: typing.List[str] = None):
+        if not (content or embeds or files or sticker_ids):
             raise ValueError("either content or embed or files must be passed.")
         payload_json = {}
         form = aiohttp.FormData()
@@ -122,6 +123,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["message_reference"] = message_reference
         if components:
             payload_json["components"] = components
+        if sticker_ids:
+            payload_json["sticker_ids"] = sticker_ids
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
         for x in range(len(files)):
             name = f"file{x if len(files) > 1 else ''}"

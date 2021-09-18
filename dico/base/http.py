@@ -235,7 +235,8 @@ class HTTPRequestBase(ABC):
                        embeds: typing.List[dict] = None,
                        allowed_mentions: dict = None,
                        message_reference: dict = None,
-                       components: typing.List[dict] = None):
+                       components: typing.List[dict] = None,
+                       sticker_ids: typing.List[str] = None):
         """
         Sends create message request.
 
@@ -247,9 +248,9 @@ class HTTPRequestBase(ABC):
         :param allowed_mentions: Allowed mentions of the message.
         :param message_reference: Message to reference.
         :param components: Components of the message.
-        :return: Message object dict.
+        :param sticker_ids: List of ID of the stickers.
         """
-        if not (content or embeds):
+        if not (content or embeds or sticker_ids):
             raise ValueError("either content or embed must be passed.")
         body = {}
         if content is not None:
@@ -266,6 +267,8 @@ class HTTPRequestBase(ABC):
             body["message_reference"] = message_reference
         if components is not None:
             body["components"] = components
+        if sticker_ids is not None:
+            body["sticker_ids"] = sticker_ids
         return self.request(f"/channels/{channel_id}/messages", "POST", body, is_json=True)
 
     @abstractmethod
@@ -278,7 +281,8 @@ class HTTPRequestBase(ABC):
                                   embeds: typing.List[dict] = None,
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
-                                  components: typing.List[dict] = None):
+                                  components: typing.List[dict] = None,
+                                  sticker_ids: typing.List[str] = None):
         """
         Sends create message request with files.
 
@@ -291,7 +295,7 @@ class HTTPRequestBase(ABC):
         :param allowed_mentions: Allowed mentions of the message.
         :param message_reference: Message to reference.
         :param components: Components of the message.
-        :return: Message object dict.
+        :param sticker_ids: List of ID of the stickers.
         """
         pass
 

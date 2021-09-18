@@ -10,7 +10,7 @@ class GetGateway:
         self.shards: typing.Optional[int] = resp.get("shards", 0)
         self.session_start_limit: typing.Optional[SessionStartLimit] = SessionStartLimit.optional(resp.get("session_start_limit"))
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {"url": self.url, "shards": self.shards, "session_start_limit": self.session_start_limit}
 
 

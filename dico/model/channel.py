@@ -229,8 +229,8 @@ class Message(DiscordObjectBase):
     _cache_type = "message"
 
     def __init__(self,
-                 client,
-                 resp,
+                 client: "APIClient",
+                 resp: dict,
                  *,
                  guild_id: Snowflake.TYPING = None,
                  webhook_token: typing.Optional[str] = None,
@@ -369,9 +369,9 @@ class MessageTypes(TypeBase):
 
 
 class MessageActivity:
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.type: MessageActivityTypes = MessageActivityTypes(resp["type"])
-        self.party_id: str = resp.get("party_id")  # This is actually set as string in discord docs.
+        self.party_id: typing.Optional[str] = resp.get("party_id")  # This is actually set as string in discord docs.
 
     @classmethod
     def optional(cls, resp):
@@ -398,7 +398,7 @@ class MessageFlags(FlagBase):
 
 
 class MessageReference:
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.message_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("message_id"))
         self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
         self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
@@ -427,7 +427,7 @@ class MessageReference:
 class FollowedChannel:
     RESPONSE = typing.Union["FollowedChannel", typing.Awaitable["FollowedChannel"]]
 
-    def __init__(self, client, resp):
+    def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
         self.channel_id: typing.Optional[Snowflake] = Snowflake(resp["channel_id"])
         self.webhook_id: typing.Optional[Snowflake] = Snowflake(resp["webhook_id"])
@@ -439,7 +439,7 @@ class FollowedChannel:
 
 
 class Reaction:
-    def __init__(self, client, resp):
+    def __init__(self, client: "APIClient", resp: dict):
         self.count: int = resp["count"]
         self.me: bool = resp["me"]
         self.emoji: Emoji = Emoji(client, resp["emoji"])
@@ -480,12 +480,12 @@ class Overwrite(CopyableObject):
 
 
 class ThreadMetadata:
-    def __init__(self, client, resp):
-        self.client: APIClient = client
+    def __init__(self, client: "APIClient", resp: dict):
+        self.client: "APIClient" = client
         self.archived: bool = resp["archived"]
         # self.archiver_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("archiver_id"))
         self.auto_archive_duration: int = resp["auto_archive_duration"]
-        self.archive_timestamp = datetime.datetime.fromisoformat(resp["archive_timestamp"])
+        self.archive_timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["archive_timestamp"])
         self.locked: bool = resp["locked"]
         self.invitable: typing.Optional[bool] = resp.get("invitable")
 
@@ -499,8 +499,8 @@ class ThreadMember:
     RESPONSE = typing.Union["ThreadMember", typing.Awaitable["ThreadMember"]]
     RESPONSE_AS_LIST = typing.Union[typing.List["ThreadMember"], typing.Awaitable[typing.List["ThreadMember"]]]
 
-    def __init__(self, client, resp):
-        self.client: APIClient = client
+    def __init__(self, client: "APIClient", resp: dict):
+        self.client: "APIClient" = client
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
         self.user_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("user_id"))
         self.join_timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["join_timestamp"])
@@ -604,7 +604,7 @@ class Embed(CopyableObject):
 
 
 class EmbedThumbnail(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.url: typing.Optional[str] = resp.get("url")
         self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
         self.height: typing.Optional[int] = resp.get("height")
@@ -629,7 +629,7 @@ class EmbedThumbnail(CopyableObject):
 
 
 class EmbedVideo(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.url: typing.Optional[str] = resp.get("url")
         self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
         self.height: typing.Optional[int] = resp.get("height")
@@ -654,7 +654,7 @@ class EmbedVideo(CopyableObject):
 
 
 class EmbedImage(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.url: typing.Optional[str] = resp.get("url")
         self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
         self.height: typing.Optional[int] = resp.get("height")
@@ -679,7 +679,7 @@ class EmbedImage(CopyableObject):
 
 
 class EmbedProvider(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.name: typing.Optional[str] = resp.get("name")
         self.url: typing.Optional[str] = resp.get("url")
 
@@ -698,7 +698,7 @@ class EmbedProvider(CopyableObject):
 
 
 class EmbedAuthor(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.name: typing.Optional[str] = resp.get("name")
         self.url: typing.Optional[str] = resp.get("url")
         self.icon_url: typing.Optional[str] = resp.get("icon_url")
@@ -723,7 +723,7 @@ class EmbedAuthor(CopyableObject):
 
 
 class EmbedFooter(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.text: typing.Optional[str] = resp["text"]
         self.icon_url: typing.Optional[str] = resp.get("icon_url")
         self.proxy_icon_url: typing.Optional[str] = resp.get("proxy_icon_url")
@@ -743,7 +743,7 @@ class EmbedFooter(CopyableObject):
 
 
 class EmbedField(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.name: typing.Optional[str] = resp["name"]
         self.value: typing.Optional[str] = resp["value"]
         self.inline: typing.Optional[bool] = resp.get("inline", True)
@@ -758,8 +758,8 @@ class EmbedField(CopyableObject):
 
 
 class Attachment:
-    def __init__(self, client, resp):
-        self.client: APIClient = client
+    def __init__(self, client: "APIClient", resp: dict):
+        self.client: "APIClient" = client
         self.id: Snowflake = Snowflake(resp["id"])
         self.filename: str = resp["filename"]
         self.content_type: typing.Optional[str] = resp.get("content_type")
@@ -769,6 +769,7 @@ class Attachment:
         self.height: typing.Optional[int] = resp.get("height")
         self.width: typing.Optional[int] = resp.get("width")
         self.content: typing.Optional[bytes] = None  # Filled after download is called
+        self.ephemeral: typing.Optional[bool] = resp.get("ephemeral")
 
     def download(self) -> typing.Union[bytes, typing.Awaitable[bytes]]:
         dw = self.client.http.download(self.url)
@@ -803,7 +804,7 @@ class Attachment:
 
 
 class ChannelMention:
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.id: Snowflake = Snowflake(resp["id"])
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
         self.type: ChannelTypes = ChannelTypes(resp["type"])
@@ -819,7 +820,7 @@ class AllowedMentions(CopyableObject):
         self.everyone: bool = everyone
         self.users: typing.List[Snowflake.TYPING] = users or []
         self.roles: typing.List[Snowflake.TYPING] = roles or []
-        self.replied_user = replied_user
+        self.replied_user: bool = replied_user
 
     def to_dict(self, *, reply: bool = False) -> dict:
         ret = {"parsed": []}
@@ -839,7 +840,7 @@ class AllowedMentions(CopyableObject):
 class ListThreadsResponse:
     RESPONSE = typing.Union["ListThreadsResponse", typing.Awaitable["ListThreadsResponse"]]
 
-    def __init__(self, client, resp):
+    def __init__(self, client: "APIClient", resp: dict):
         self.threads: typing.List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
         self.members: typing.List[ThreadMember] = [ThreadMember(client, x) for x in resp["members"]]
         self.has_more: typing.Optional[bool] = resp.get("has_more")
