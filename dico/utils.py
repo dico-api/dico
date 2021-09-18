@@ -5,12 +5,13 @@ import typing
 import pathlib
 import inspect
 import traceback
+from .model import Snowflake
 """
 from .model import ChannelTypes, Snowflake
 """
 
 
-async def safe_call(coro, additional_message: typing.Optional[str] = None):
+async def safe_call(coro: typing.Awaitable, additional_message: typing.Optional[str] = None):
     """
     Calls coroutine, ignoring raised exception and only print traceback.
     This is used for event listener call, and intended to be used at creating task.
@@ -30,7 +31,7 @@ async def safe_call(coro, additional_message: typing.Optional[str] = None):
         print(_p, file=sys.stderr)
 
 
-def cdn_url(route, *, image_hash, extension="webp", size=1024, **snowflake_ids):
+def cdn_url(route: str, *, image_hash: str, extension: str = "webp", size: int = 1024, **snowflake_ids: Snowflake.TYPING) -> str:
     if not 16 <= size <= 4096:
         raise ValueError("size must be between 16 and 4096.")
     if snowflake_ids:

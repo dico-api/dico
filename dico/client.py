@@ -38,23 +38,24 @@ class Client(APIClient):
     def __init__(self,
                  token: str, *,
                  intents: Intents = Intents.no_privileged(),
-                 default_allowed_mentions: AllowedMentions = None,
-                 loop=None,
+                 default_allowed_mentions: typing.Optional[AllowedMentions] = None,
+                 loop: typing.Optional[asyncio.AbstractEventLoop] = None,
                  cache: bool = True,
-                 application_id: typing.Union[str, int, Snowflake] = None,
-                 **cache_max_sizes):
+                 application_id: Snowflake.TYPING = None,
+                 **cache_max_sizes: int):
         cache_max_sizes.setdefault("message", 1000)
-        self.loop = loop or asyncio.get_event_loop()
+        self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
         super().__init__(token, base=AsyncHTTPRequest, default_allowed_mentions=default_allowed_mentions, loop=loop)
-        self.token = token
+        self.token: str = token
         self.__use_cache = cache
-        self.cache = CacheContainer(**cache_max_sizes) if self.__use_cache else None  # The reason only supporting caching with WS is to ensure up-to-date object.
+        self.cache: typing.Optional[CacheContainer] = CacheContainer(**cache_max_sizes) if self.__use_cache else None
+        # The reason only supporting caching with WS is to ensure up-to-date object.
         self.__ws_class = WebSocketClient
-        self.intents = intents
+        self.intents: Intents = intents
         self.ws: typing.Union[None, WebSocketClient] = None
-        self.events = EventHandler(self)
+        self.events: EventHandler = EventHandler(self)
         self.__wait_futures = {}
-        self.application_id = Snowflake.ensure_snowflake(application_id)
+        self.application_id: typing.Optional[Snowflake] = Snowflake.ensure_snowflake(application_id)
         self.__ready_future = asyncio.Future()
 
         # Internal events dispatch
@@ -72,7 +73,7 @@ class Client(APIClient):
             if user:
                 user.set_voice_state(voice_state)
 
-    def on_(self, name: str = None, meth=None):
+    def on_(self, name: str = None, meth=None) -> typing.Any:
         """
         Adds new event listener. This can be used as decorator or function.
 
@@ -90,7 +91,7 @@ class Client(APIClient):
         """Alias of :meth:`.on_`"""
         return self.on_
 
-    def wait(self, event_name: str, timeout: float = None, check: typing.Callable[[typing.Any], bool] = None):
+    def wait(self, event_name: str, timeout: float = None, check: typing.Callable[[typing.Any], bool] = None) -> typing.Any:
         """
         Waits for the event dispatch.
 
@@ -171,8 +172,8 @@ class Client(APIClient):
         return self.ws.update_presence(since, activities, status, afk)
 
     def update_voice_state(self,
-                           guild: typing.Union[int, str, Snowflake, Guild],
-                           channel: typing.Union[int, str, Snowflake, Channel] = None,
+                           guild: Guild.TYPING,
+                           channel: Channel.TYPING = None,
                            self_mute: bool = False,
                            self_deaf: bool = False):
         """
@@ -186,11 +187,11 @@ class Client(APIClient):
         return self.ws.update_voice_state(str(int(guild)), str(int(channel)) if channel else None, self_mute, self_deaf)
 
     @property
-    def has_cache(self):
+    def has_cache(self) -> bool:
         return self.__use_cache
 
     @property
-    def websocket_closed(self):
+    def websocket_closed(self) -> bool:
         """
         Whether the bot is disconnected from the Discord websocket.
         :return: bool
@@ -200,7 +201,7 @@ class Client(APIClient):
         return True
 
     @property
-    def guild_count(self):
+    def guild_count(self) -> int:
         return self.cache.get_size("guild")
 
     def __setattr__(self, key, value):

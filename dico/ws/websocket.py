@@ -24,28 +24,28 @@ class WebSocketClient:
                  intents: typing.Union[gateway.Intents, int],
                  event_handler: EventHandler,
                  try_reconnect: bool):
-        self.ws = ws
-        self.http = http
-        self.base_url = base_url
-        self.event_handler = event_handler
-        self.logger = logging.getLogger("dico.ws")
-        self._closed = False
-        self._reconnecting = False
-        self._fresh_reconnecting = False
-        self.heartbeat_interval = 0
-        self.seq = None
-        self.last_heartbeat_ack = 0
-        self.last_heartbeat_send = 0
-        self._heartbeat_task = None
-        self.session_id = None
-        self.intents = intents
-        self.ping = 0.0
-        self._ping_start = 0.0
-        self.try_reconnect = try_reconnect
-        self.ratelimit = WSRatelimit()
-        self.buffer = bytearray()
+        self.ws: aiohttp.ClientWebSocketResponse = ws
+        self.http: AsyncHTTPRequest = http
+        self.base_url: str = base_url
+        self.event_handler: EventHandler = event_handler
+        self.logger: logging.Logger = logging.getLogger("dico.ws")
+        self._closed: bool = False
+        self._reconnecting: bool = False
+        self._fresh_reconnecting: bool = False
+        self.heartbeat_interval: int = 0
+        self.seq: typing.Optional[int] = None
+        self.last_heartbeat_ack: float = 0
+        self.last_heartbeat_send: float = 0
+        self._heartbeat_task: typing.Optional[asyncio.Task] = None
+        self.session_id: typing.Optional[str] = None
+        self.intents: gateway.Intents = intents
+        self.ping: float = 0.0
+        self._ping_start: float = 0.0
+        self.try_reconnect: bool = try_reconnect
+        self.ratelimit: WSRatelimit = WSRatelimit()
+        self.buffer: bytearray = bytearray()
         self.inflator = zlib.decompressobj()
-        self.intended_shutdown = False
+        self.intended_shutdown: bool = False
 
     def __del__(self):
         if not self._closed:
@@ -132,7 +132,7 @@ class WebSocketClient:
             self.seq = res.s
         return res
 
-    async def receive(self, resp: aiohttp.WSMessage):
+    async def receive(self, resp: aiohttp.WSMessage) -> gateway.GatewayResponse:
         # resp = await self.ws.receive()
         self.logger.debug(f"Raw receive {resp.type}: {resp.data}")
         if resp.type == aiohttp.WSMsgType.TEXT:
@@ -150,7 +150,7 @@ class WebSocketClient:
         elif resp.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
             raise WSClosing(resp.data or self.ws.close_code)
 
-    async def process(self, resp):
+    async def process(self, resp) -> typing.Optional[int]:
         if resp.op == gateway.Opcodes.DISPATCH:
             if resp.t == "READY":
                 self.session_id = resp.d.get("session_id", self.session_id)
@@ -297,7 +297,7 @@ class WebSocketClient:
         await self.request(data)
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         return self._closed
 
     @classmethod
@@ -312,8 +312,8 @@ class WebSocketClient:
 
 class WSClosing(Exception):
     """Internal exception class for controlling WS close event. You should not see this exception in normal situation."""
-    def __init__(self, code):
-        self.code = code
+    def __init__(self, code: int):
+        self.code: int = code
 
 
 class Ignore(Exception):

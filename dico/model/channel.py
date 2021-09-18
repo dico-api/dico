@@ -57,6 +57,9 @@ class Channel(DiscordObjectBase):
 
         # if self.type.dm and self.
 
+    def __str__(self) -> str:
+        return self.name
+
     def modify(self, **kwargs) -> RESPONSE:
         if self.type.group_dm:
             return self.client.modify_group_dm_channel(self.id, **kwargs)
@@ -280,6 +283,9 @@ class Message(DiscordObjectBase):
         self.stickers: typing.Optional[typing.List[Sticker]] = [Sticker.create(client, x) for x in resp.get("stickers", [])]
 
         # self.stickers: typing.Optional[typing.List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
+
+    def __str__(self) -> str:
+        return self.content
 
     def reply(self, content=None, **kwargs) -> "Message.RESPONSE":
         kwargs["message_reference"] = self

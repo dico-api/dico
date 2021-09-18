@@ -6,7 +6,7 @@ import asyncio
 import aiohttp
 from .ratelimit import RatelimitHandler
 from .. import exception, __version__
-from ..base.http import HTTPRequestBase, EmptyObject
+from ..base.http import HTTPRequestBase, EmptyObject, RESPONSE
 
 
 class AsyncHTTPRequest(HTTPRequestBase):
@@ -36,7 +36,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
             await self.session.close()
         self._closed = True
 
-    async def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = None, **kwargs) -> dict:
+    async def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = None, **kwargs) -> RESPONSE:
         code = 429  # Empty code in case of rate limit fail.
         resp = {}   # Empty resp in case of rate limit fail.
         retry = (retry if retry > 0 else 1) if retry is not None else self.default_retry
@@ -104,7 +104,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
                                   components: typing.List[dict] = None,
-                                  sticker_ids: typing.List[str] = None):
+                                  sticker_ids: typing.List[str] = None) -> RESPONSE:
         if not (content or embeds or files or sticker_ids):
             raise ValueError("either content or embed or files must be passed.")
         payload_json = {}
@@ -142,7 +142,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                 files: typing.List[io.FileIO] = EmptyObject,
                                 allowed_mentions: dict = EmptyObject,
                                 attachments: typing.List[dict] = EmptyObject,
-                                components: typing.List[dict] = EmptyObject):
+                                components: typing.List[dict] = EmptyObject) -> RESPONSE:
         payload_json = {}
         form = aiohttp.FormData()
         if content is not EmptyObject:
@@ -178,7 +178,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                    embeds: typing.List[dict] = None,
                                    allowed_mentions: dict = None,
                                    components: typing.List[dict] = None,
-                                   flags: int = None):
+                                   flags: int = None) -> RESPONSE:
         if not (content or embeds or files):
             raise ValueError("either content or embeds or files must be passed.")
         payload_json = {}
@@ -221,7 +221,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                              files: typing.List[io.FileIO] = EmptyObject,
                              allowed_mentions: dict = EmptyObject,
                              attachments: typing.List[dict] = EmptyObject,
-                             components: typing.List[dict] = EmptyObject):
+                             components: typing.List[dict] = EmptyObject) -> RESPONSE:
         payload_json = {}
         form = aiohttp.FormData()
         if content is not EmptyObject:

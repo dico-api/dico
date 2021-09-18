@@ -4,6 +4,10 @@ from .user import User
 from ..base.model import DiscordObjectBase, TypeBase
 from ..utils import cdn_url
 
+if typing.TYPE_CHECKING:
+    from .guild import Guild
+    from ..api import APIClient
+
 
 class Sticker(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Sticker"]
@@ -11,7 +15,7 @@ class Sticker(DiscordObjectBase):
     RESPONSE_AS_LIST = typing.Union[typing.List["Sticker"], typing.Awaitable[typing.List["Sticker"]]]
     _cache_type = "sticker"
 
-    def __init__(self, client, resp):
+    def __init__(self, client: "APIClient", resp: dict):
         super().__init__(client, resp)
         self.pack_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("pack_id"))
         self.name: str = resp["name"]
@@ -25,16 +29,16 @@ class Sticker(DiscordObjectBase):
         self.user: typing.Optional[User] = User.create(client, self.__user) if self.__user else self.__user
         self.sort_value: typing.Optional[int] = resp.get("sort_value")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     @property
-    def guild(self):
+    def guild(self) -> typing.Optional["Guild"]:
         if self.client.has_cache:
             return self.client.get(self.guild_id, "guild")  # noqa
 
     @property
-    def pack(self):
+    def pack(self) -> "StickerPack":
         if self.client.has_cache:
             return self.client.get(self.pack_id, "sticker_pack")  # noqa
 
@@ -51,15 +55,15 @@ class StickerFormatTypes(TypeBase):
 
 
 class StickerItem:
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.id: Snowflake = Snowflake(resp["id"])
         self.name: str = resp["name"]
         self.format_type: StickerFormatTypes = StickerFormatTypes(resp["format_type"])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def __int__(self):
+    def __int__(self) -> int:
         return int(self.id)
 
 
@@ -69,7 +73,7 @@ class StickerPack(DiscordObjectBase):
     RESPONSE_AS_LIST = typing.Union[typing.List["StickerPack"], typing.Awaitable[typing.List["StickerPack"]]]
     _cache_type = "sticker_pack"
 
-    def __init__(self, client, resp):
+    def __init__(self, client: "APIClient", resp: dict):
         super().__init__(client, resp)
         self.stickers: typing.List[Sticker] = [Sticker.create(client, x) for x in resp["stickers"]]
         self.name: str = resp["name"]
@@ -78,8 +82,8 @@ class StickerPack(DiscordObjectBase):
         self.description: str = resp["description"]
         self.banner_asset_id: Snowflake = Snowflake(resp["banner_asset_id"])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def banner_url(self, *, extension="webp", size=1024):
+    def banner_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         return cdn_url("app-assets/710982414301790216/store", image_hash=self.banner_asset_id, extension=extension, size=size)

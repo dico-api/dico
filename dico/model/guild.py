@@ -85,19 +85,19 @@ class Guild(DiscordObjectBase):
 
         self.cache: typing.Optional[GuildCacheContainer] = client.cache.get_guild_container(self.id) if client.has_cache else None
 
-    def icon_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
+    def icon_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.icon:
             return cdn_url("icons/{guild_id}", image_hash=self.icon, extension=extension, size=size, guild_id=self.id)
 
-    def splash_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
+    def splash_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.splash:
             return cdn_url("splashes/{guild_id}", image_hash=self.splash, extension=extension, size=size, guild_id=self.id)
 
-    def discovery_splash_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
+    def discovery_splash_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.discovery_splash:
             return cdn_url("discovery-splashes/{guild_id}", image_hash=self.discovery_splash, extension=extension, size=size, guild_id=self.id)
 
-    def banner_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
+    def banner_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.banner:
             return cdn_url("banners/{guild_id}", image_hash=self.banner, extension=extension, size=size, guild_id=self.id)
 
@@ -401,7 +401,7 @@ class GuildMember:
             return PermissionFlags.from_value(0)
 
     @classmethod
-    def create(cls, client, resp, *, user=None, guild_id=None, cache: bool = True):
+    def create(cls, client: "APIClient", resp: dict, *, user: User = None, guild_id: Snowflake = None, cache: bool = True):
         if cache and client.has_cache and (guild_id or resp.get("guild_id")) and (user or resp.get("user")):
             _guild_id = guild_id or resp.get("guild_id")
             _user_id = user.id if isinstance(user, User) else resp["user"]["id"]
@@ -477,7 +477,7 @@ class IntegrationApplication:
         self.__bot = resp.get("bot")
         self.bot: typing.Optional[User] = User.create(client, self.__bot) if self.__bot else self.__bot
 
-    def icon_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
+    def icon_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         return cdn_url("app-icons/{application_id}", image_hash=self.icon, extension=extension, size=size, application_id=self.id)
 
 

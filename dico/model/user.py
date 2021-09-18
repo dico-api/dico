@@ -4,8 +4,9 @@ from ..base.model import DiscordObjectBase, FlagBase, TypeBase
 from ..utils import cdn_url
 
 if typing.TYPE_CHECKING:
-    from .channel import Channel
+    from .channel import Channel, Message
     from .voice import VoiceState
+    from ..api import APIClient
 
 
 class User(DiscordObjectBase):
@@ -14,7 +15,7 @@ class User(DiscordObjectBase):
     RESPONSE_AS_LIST = typing.Union[typing.List["User"], typing.Awaitable[typing.List["User"]]]
     _cache_type = "user"
 
-    def __init__(self, client, resp):
+    def __init__(self, client: "APIClient", resp: dict):
         super().__init__(client, resp)
         self.username: typing.Optional[str] = resp.get("username")
         self.discriminator: typing.Optional[str] = resp.get("discriminator")
@@ -34,20 +35,20 @@ class User(DiscordObjectBase):
         self.voice_state: typing.Optional["VoiceState"] = self.raw.get("voice_state")  # Filled later.
         self.dm_channel_id: typing.Optional[Snowflake] = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.username}#{self.discriminator}"
 
     @property
     def mention(self) -> str:
         return f"<@{self.id}>"
 
-    def avatar_url(self, *, extension="webp", size=1024) -> str:
+    def avatar_url(self, *, extension: str = "webp", size: int = 1024) -> str:
         if self.avatar:
             return cdn_url("avatars/{user_id}", image_hash=self.avatar, extension=extension, size=size, user_id=self.id)
         else:
             return cdn_url("embed/avatars", image_hash=self.discriminator % 5, extension=extension)
 
-    def banner_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
+    def banner_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.banner:
             return cdn_url("banners/{user_id}", image_hash=self.banner, extension=extension, size=size, user_id=self.id)
 
@@ -72,7 +73,7 @@ class User(DiscordObjectBase):
         self.dm_channel_id = channel.id
         return channel
 
-    def create_message(self, *args, **kwargs):
+    def create_message(self, *args, **kwargs) -> "Message.RESPONSE":
         if self.dm_channel_id is None:
             from .channel import Channel
             channel = self.create_dm()

@@ -281,7 +281,7 @@ class Opcodes:
     HEARTBEAT_ACK = 11
 
     @staticmethod
-    def as_string(code: int):
+    def as_string(code: int) -> str:
         opcodes = {0: "Dispatch",
                    1: "Heartbeat",
                    2: "Identify",

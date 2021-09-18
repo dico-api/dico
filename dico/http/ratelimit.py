@@ -17,8 +17,8 @@ EmptyLocker = __EmptyLocker()
 class RatelimitHandler:
     def __init__(self):
         self.lockers: typing.Dict[str, typing.Optional[dict]] = {}
-        self.buckets = {}
-        self.global_locker = asyncio.Lock()
+        self.buckets: dict = {}
+        self.global_locker: asyncio.Lock = asyncio.Lock()
 
     @staticmethod
     def to_locker_key(meth, route):

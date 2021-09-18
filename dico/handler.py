@@ -1,25 +1,29 @@
+import typing
 from .utils import ensure_coro
 from .model.event import *
 
+if typing.TYPE_CHECKING:
+    from .client import Client
+
 
 class EventHandler:
-    def __init__(self, client):
-        self.events = {}
-        self.client = client
+    def __init__(self, client: "Client"):
+        self.events: typing.Dict[str, typing.List[typing.Callable]] = {}
+        self.client: "Client" = client
 
-    def add(self, event, func):
+    def add(self, event: str, func: typing.Callable):
         if event not in self.events:
             self.events[event] = []
 
         self.events[event].append(func)
 
-    def remove(self, event, func):
+    def remove(self, event: str, func: typing.Callable):
         self.events[event].remove(func)
 
-    def get(self, event) -> list:
+    def get(self, event: str) -> typing.List[typing.Awaitable]:
         return [ensure_coro(x) for x in self.events.get(event, [])]
 
-    def process_response(self, name, resp):
+    def process_response(self, name: str, resp: dict):
         model_dict = {
             "READY": Ready,
             # "APPLICATION_COMMAND_CREATE": ApplicationCommandCreate,
@@ -79,7 +83,7 @@ class EventHandler:
             ret = resp
         return ret
 
-    def dispatch_from_raw(self, name, resp):
+    def dispatch_from_raw(self, name: str, resp: dict):
         ret = self.process_response(name, resp)
         if hasattr(ret, "_dont_dispatch") and ret._dont_dispatch:
             return

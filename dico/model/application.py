@@ -12,7 +12,7 @@ class Application:
     TYPING = typing.Union[int, str, Snowflake, "Application"]
     RESPONSE = typing.Union["Application", typing.Awaitable["Application"]]
 
-    def __init__(self, client: "APIClient", resp):
+    def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
         self.id: Snowflake = Snowflake(resp["id"])
         self.name: str = resp["name"]
@@ -45,11 +45,11 @@ class Application:
     def __str__(self) -> str:
         return self.name
 
-    def icon_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
+    def icon_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.icon:
             return cdn_url("app-icons/{application_id}", image_hash=self.icon, extension=extension, size=size, application_id=self.id)
 
-    def cover_image_url(self, *, extension="webp", size=1024) -> typing.Optional[str]:
+    def cover_image_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.cover_image:
             return cdn_url("app-icons/{application_id}", image_hash=self.cover_image, extension=extension, size=size, application_id=self.id)
 

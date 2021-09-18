@@ -8,7 +8,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
-    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE
+    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if typing.TYPE_CHECKING:
@@ -151,7 +151,9 @@ class APIClient:
                        allowed_mentions: typing.Union[AllowedMentions, dict] = None,
                        message_reference: typing.Union[Message, MessageReference, dict] = None,
                        component: typing.Union[dict, Component] = None,
-                       components: typing.List[typing.Union[dict, Component]] = None) -> Message.RESPONSE:
+                       components: typing.List[typing.Union[dict, Component]] = None,
+                       sticker: Sticker.TYPING = None,
+                       stickers: typing.List[Sticker.TYPING] = None) -> Message.RESPONSE:
         """
         Sends message create request to API.
 
@@ -174,6 +176,8 @@ class APIClient:
         :param message_reference: Message to reply.
         :param component: Component of the message.
         :param components: List of  components of the message.
+        :param sticker: Sticker of the message.
+        :param stickers: Stickers of the message. Up to 3.
         :return: Union[:class:`.model.channel.Message`, Coroutine[dict]]
         """
         if files and file:
@@ -201,6 +205,12 @@ class APIClient:
             components = [component]
         if components:
             components = [*map(lambda n: n if isinstance(n, dict) else n.to_dict(), components)]
+        if sticker and stickers:
+            raise TypeError("you can't pass both sticker and stickers.")
+        if sticker:
+            stickers = [sticker]
+        if stickers:
+            stickers = [*map(int, stickers)]
         params = {"channel_id": int(channel),
                   "content": content,
                   "embeds": embeds,
@@ -208,7 +218,8 @@ class APIClient:
                   "message_reference": message_reference,
                   "tts": tts,
                   "allowed_mentions": self.get_allowed_mentions(allowed_mentions),
-                  "components": components}
+                  "components": components,
+                  "sticker_ids": stickers}
         if files:
             params["files"] = files
         try:

@@ -1,3 +1,5 @@
+import typing
+
 from .utils import format_discord_error
 
 
@@ -11,26 +13,26 @@ class WebsocketClosed(DicoException):
 
 class WebsocketRateLimited(DicoException):
     """Websocket is rate limit, try again later."""
-    def __init__(self, left):
-        self.left = left
+    def __init__(self, left: float):
+        self.left: float = left
         super().__init__(f"Please try again after {self.left} seconds.")
 
 
 class DownloadFailed(DicoException):
     """Downloading something has failed."""
-    def __init__(self, url, code, resp):
-        self.url = url
-        self.code = code
-        self.resp = resp
+    def __init__(self, url: str, code: int, resp: typing.Any):
+        self.url: str = url
+        self.code: int = code
+        self.resp: typing.Any = resp
         super().__init__(f"Download failed with {self.code}: {self.url}")
 
 
 class HTTPError(DicoException):
     """Special exception class for HTTP."""
-    def __init__(self, route, code, resp):
-        self.route = route
-        self.code = code
-        self.resp = resp
+    def __init__(self, route: str, code: int, resp: typing.Any):
+        self.route: str = route
+        self.code: int = code
+        self.resp: typing.Any = resp
         super().__init__(format_discord_error(self.resp))
 
 

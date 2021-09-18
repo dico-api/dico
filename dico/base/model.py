@@ -13,10 +13,10 @@ class CopyableObject:
 
 
 class EventBase:
-    def __init__(self, client, resp: dict):
-        self.raw = resp
-        self.client = client
-        self._dont_dispatch = False
+    def __init__(self, client: "APIClient", resp: dict):
+        self.raw: dict = resp
+        self.client: "APIClient" = client
+        self._dont_dispatch: bool = False
 
     @classmethod
     def create(cls, client, resp: dict):
@@ -47,7 +47,7 @@ class DiscordObjectBase(CopyableObject):
         self.__init__(self.client, orig, **kwargs)
 
     @classmethod
-    def create(cls, client, resp, **kwargs):
+    def create(cls, client: "APIClient", resp: dict, **kwargs):
         ensure_cache_type = kwargs.pop("ensure_cache_type", cls._cache_type)
         prevent_caching = kwargs.pop("prevent_caching", False)
         maybe_exist = client.has_cache and client.cache.get(resp["id"], ensure_cache_type)
@@ -100,7 +100,7 @@ class FlagBase:
             if v:
                 self.value |= self.values[k.upper()]
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
     def __getattr__(self, item):
@@ -129,10 +129,10 @@ class FlagBase:
         elif not value and has_value:
             self.value &= ~self.values[key]
 
-    def add(self, value):
+    def add(self, value: str):
         return self.__setattr__(value, True)
 
-    def remove(self, value):
+    def remove(self, value: str):
         return self.__setattr__(value, False)
 
     @classmethod
@@ -150,10 +150,10 @@ class TypeBase:
         if self.value not in self.values:
             raise AttributeError(f"invalid value: `{value}`")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.values[self.value]
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
     def __getattr__(self, item):
@@ -166,6 +166,6 @@ class TypeBase:
         return self.value == values[name.upper()]
 
     @classmethod
-    def to_string(cls, value) -> str:
+    def to_string(cls, value: int) -> str:
         values = {getattr(cls, x): x for x in dir(cls) if isinstance(getattr(cls, x), int)}
         return values.get(value)
