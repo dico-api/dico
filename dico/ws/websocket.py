@@ -134,6 +134,11 @@ class WebSocketClient:
                     continue
                 return
 
+    async def receive_once(self):
+        msg = await self.ws.receive()
+        resp = await self.receive(msg)
+        await self.process(resp)
+
     async def request(self, *args, **kwargs):
         async with self.ratelimit.maybe_limited():  # Will raise exception if rate limited, else wait until previous request is done.
             return await self.ws.send_json(*args, **kwargs)

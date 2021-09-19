@@ -138,6 +138,10 @@ class Client(APIClient):
                 if not fut.cancelled():
                     fut.set_result(args)
 
+    def get_shard_id(self, guild: Guild.TYPING):
+        if self.__shards:
+            return get_shard_id(int(guild), len(self.__shards))
+
     def get_shard(self, guild: Guild.TYPING) -> typing.Optional[WebSocketClient]:
         if self.__shards:
             shard_id = get_shard_id(int(guild), len(self.__shards))
@@ -163,14 +167,15 @@ class Client(APIClient):
         if self.monoshard:
             gateway = await self.request_gateway()
             shard_count = self.shard_count or gateway.shards
-            coros = []
+            if self.shard_count is None:
+                self.shard_count = gateway.shards
             for x in range(shard_count):
                 ws = await self.__ws_class.connect_without_request(
                     gateway, self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress, shard=[x, shard_count]
                 )
                 self.__shards[x] = ws
-                coros.append(ws.run())
-            await asyncio.gather(*coros)
+                await ws.receive_once()
+                self.loop.create_task(ws.run())
         else:
             self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress)
             await self.ws.run()
@@ -256,8 +261,8 @@ class Client(APIClient):
             return 0.0
 
     @property
-    def shards(self) -> typing.Optional[typing.List[WebSocketClient]]:
-        return self.__shards
+    def shards(self) -> typing.Optional[typing.Tuple[WebSocketClient]]:
+        return tuple(self.__shards.values()) if self.__shards else None
 
     def __setattr__(self, key, value):
         if not key.lower().startswith("on_") or key.lower() in ["on", "on_"]:
@@ -289,7 +294,8 @@ class Client(APIClient):
             This must be placed at the end of the code.
         """
         try:
-            self.loop.run_until_complete(self.start(reconnect_on_unknown_disconnect, compress))
+            self.loop.create_task(self.start(reconnect_on_unknown_disconnect, compress))
+            self.loop.run_forever()
         except KeyboardInterrupt:
             print("Detected KeyboardInterrupt, exiting...", file=sys.stderr)
         except Exception as ex:
