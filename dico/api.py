@@ -8,7 +8,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
-    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker
+    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if typing.TYPE_CHECKING:
@@ -89,7 +89,7 @@ class APIClient:
         if permission_overwrites:
             permission_overwrites = [x.to_dict() for x in permission_overwrites]
         if parent:
-            parent = int(parent)
+            parent = int(parent)  # noqa
         channel = self.http.modify_guild_channel(int(channel), name, channel_type, position, topic, nsfw, rate_limit_per_user,
                                                  bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode, reason=reason)
         if isinstance(channel, dict):
@@ -760,7 +760,7 @@ class APIClient:
         if deaf is not EmptyObject:
             kwargs["deaf"] = deaf
         if channel is not EmptyObject:
-            kwargs["channel_id"] = int(channel) if channel else channel
+            kwargs["channel_id"] = int(channel) if channel else channel  # noqa
         resp = self.http.modify_guild_member(int(guild), int(user), **kwargs, reason=reason)
         if isinstance(resp, dict):
             return GuildMember.create(self, resp, guild_id=int(guild))
@@ -942,7 +942,7 @@ class APIClient:
         return wrap_to_async(GuildWidget, None, resp, as_create=False)
 
     def modify_guild_widget(self, guild: Guild.TYPING, *, enabled: bool = None, channel: Channel.TYPING = EmptyObject, reason: str = None) -> GuildWidget.RESPONSE:
-        resp = self.http.modify_guild_widget(int(guild), enabled, channel, reason=reason)
+        resp = self.http.modify_guild_widget(int(guild), enabled, channel, reason=reason)  # noqa
         if isinstance(resp, dict):
             return GuildWidget(resp)
         return wrap_to_async(GuildWidget, None, resp, as_create=False)
@@ -1627,6 +1627,14 @@ class APIClient:
         if isinstance(resp, dict):
             return Application(self, resp)
         return wrap_to_async(Application, self, resp, as_create=False)
+
+    # Gateway
+
+    def request_gateway(self, *, bot: bool = True) -> typing.Union[GetGateway, typing.Awaitable[GetGateway]]:
+        resp = self.http.request_gateway(bot)
+        if isinstance(resp, dict):
+            return GetGateway(resp)
+        return wrap_to_async(GetGateway, None, resp, as_create=False)
 
     # Misc
 

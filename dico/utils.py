@@ -81,7 +81,7 @@ def from_emoji(emoji: typing.Union["Emoji", str]) -> str:
     return emoji
 
 
-async def wrap_to_async(cls: typing.Any, client: "APIClient", resp: typing.Awaitable["RESPONSE"], as_create: bool = True, **kwargs) -> typing.Any:
+async def wrap_to_async(cls: typing.Any, client: typing.Optional["APIClient"], resp: typing.Awaitable["RESPONSE"], as_create: bool = True, **kwargs) -> typing.Any:
     resp = await resp
     if isinstance(resp, dict):
         args = (client, resp) if client is not None else (resp,)
@@ -110,6 +110,10 @@ def to_image_data(image: typing.Union[io.FileIO, typing.BinaryIO, pathlib.Path, 
 
 def rgb(red: int, green: int, blue: int) -> int:
     return red << 16 | green << 8 | blue
+
+
+def get_shard_id(guild_id: "Snowflake.TYPING", num_shards: int):
+    return (int(guild_id) >> 22) % num_shards
 
 
 """

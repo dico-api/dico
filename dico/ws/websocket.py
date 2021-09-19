@@ -23,12 +23,19 @@ class WebSocketClient:
                  base_url: str,
                  intents: typing.Union[gateway.Intents, int],
                  event_handler: EventHandler,
-                 try_reconnect: bool):
+                 try_reconnect: bool,
+                 compress: typing.Optional[bool] = None,
+                 large_threshold: typing.Optional[int] = None,
+                 shard: typing.Optional[typing.List[int]] = None,
+                 presence: typing.Optional[dict] = None):
         self.ws: aiohttp.ClientWebSocketResponse = ws
         self.http: AsyncHTTPRequest = http
         self.base_url: str = base_url
         self.event_handler: EventHandler = event_handler
-        self.logger: logging.Logger = logging.getLogger("dico.ws")
+        logger_name = "dico.ws"
+        if shard:
+            logger_name += f".shard{shard[0]}"
+        self.logger: logging.Logger = logging.getLogger(logger_name)
         self._closed: bool = False
         self._reconnecting: bool = False
         self._fresh_reconnecting: bool = False
@@ -46,6 +53,11 @@ class WebSocketClient:
         self.buffer: bytearray = bytearray()
         self.inflator = zlib.decompressobj()
         self.intended_shutdown: bool = False
+
+        self.compress: typing.Optional[bool] = compress
+        self.large_threshold: typing.Optional[int] = large_threshold
+        self.shard: typing.Optional[typing.List[int]] = shard
+        self.presence: typing.Optional[dict] = presence
 
     def __del__(self):
         if not self._closed:
@@ -253,6 +265,14 @@ class WebSocketClient:
                 }
             }
         }
+        if self.compress is not None:
+            data["d"]["compress"] = self.compress
+        if self.large_threshold is not None:
+            data["d"]["large_threshold"] = self.large_threshold
+        if self.shard is not None:
+            data["d"]["shard"] = self.shard
+        if self.presence is not None:
+            data["d"]["presence"] = self.presence
         await self.request(data)
 
     async def request_guild_members(self, guild_id: str, *, query: str = None, limit: int = None, presences: bool = None, user_ids: typing.List[str] = None, nonce: bool = None):
@@ -301,13 +321,37 @@ class WebSocketClient:
         return self._closed
 
     @classmethod
-    async def connect(cls, http, intents, event_handler, try_reconnect, compress):
+    async def connect(cls,
+                      http,
+                      intents,
+                      event_handler,
+                      try_reconnect,
+                      compress,
+                      large_threshold: typing.Optional[int] = None,
+                      shard: typing.Optional[typing.List[int]] = None,
+                      presence: typing.Optional[dict] = None):
         resp = await http.request("/gateway/bot", "GET")
         gw = gateway.GetGateway(resp)
         extra = "compress=zlib-stream" if compress else ""
         base_url = gw.url+f"?v=9&encoding=json" + extra
         ws = await http.session.ws_connect(base_url, **cls.WS_KWARGS)
-        return cls(http, ws, base_url, intents, event_handler, try_reconnect)
+        return cls(http, ws, base_url, intents, event_handler, try_reconnect, None, large_threshold, shard, presence)
+
+    @classmethod
+    async def connect_without_request(cls,
+                                      gw_response: gateway.GetGateway,
+                                      http,
+                                      intents,
+                                      event_handler,
+                                      try_reconnect,
+                                      compress,
+                                      large_threshold: typing.Optional[int] = None,
+                                      shard: typing.Optional[typing.List[int]] = None,
+                                      presence: typing.Optional[dict] = None):
+        extra = "compress=zlib-stream" if compress else ""
+        base_url = gw_response.url+f"?v=9&encoding=json" + extra
+        ws = await http.session.ws_connect(base_url, **cls.WS_KWARGS)
+        return cls(http, ws, base_url, intents, event_handler, try_reconnect, None, large_threshold, shard, presence)
 
 
 class WSClosing(Exception):

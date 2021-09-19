@@ -12,6 +12,7 @@ from .cache import CacheContainer
 from .exception import WebsocketClosed
 from .handler import EventHandler
 from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel
+from .utils import get_shard_id
 
 
 class Client(APIClient):
@@ -42,6 +43,8 @@ class Client(APIClient):
                  loop: typing.Optional[asyncio.AbstractEventLoop] = None,
                  cache: bool = True,
                  application_id: Snowflake.TYPING = None,
+                 monoshard: bool = False,
+                 shard_count: typing.Optional[int] = None,
                  **cache_max_sizes: int):
         cache_max_sizes.setdefault("message", 1000)
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
@@ -57,6 +60,9 @@ class Client(APIClient):
         self.__wait_futures = {}
         self.application_id: typing.Optional[Snowflake] = Snowflake.ensure_snowflake(application_id)
         self.__ready_future = asyncio.Future()
+        self.monoshard: bool = monoshard
+        self.shard_count: typing.Optional[int] = shard_count
+        self.__shards = {} if self.monoshard else None
 
         # Internal events dispatch
         self.events.add("READY", self.__ready)
@@ -132,6 +138,11 @@ class Client(APIClient):
                 if not fut.cancelled():
                     fut.set_result(args)
 
+    def get_shard(self, guild: Guild.TYPING) -> typing.Optional[WebSocketClient]:
+        if self.__shards:
+            shard_id = get_shard_id(int(guild), len(self.__shards))
+            return self.__shards.get(shard_id)
+
     async def wait_ready(self):
         if not self.__ready_future.done():
             await self.__ready_future
@@ -149,15 +160,31 @@ class Client(APIClient):
         .. warning::
             You can call this only once.
         """
-        self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress)
-        await self.ws.run()
+        if self.monoshard:
+            gateway = await self.request_gateway()
+            shard_count = self.shard_count or gateway.shards
+            coros = []
+            for x in range(shard_count):
+                ws = await self.__ws_class.connect_without_request(
+                    gateway, self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress, shard=[x, shard_count]
+                )
+                self.__shards[x] = ws
+                coros.append(ws.run())
+            await asyncio.gather(*coros)
+        else:
+            self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress)
+            await self.ws.run()
 
     async def close(self):
         """Clears all connections and closes session."""
-        await self.ws.close()
+        if self.ws:
+            await self.ws.close()
+        elif self.__shards:
+            for x in self.__shards.values():
+                await x.close()
         await self.http.close()
 
-    def update_presence(self, *, since: int = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
+    async def update_presence(self, *, since: int = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
         """
         Updates the bot presence.
 
@@ -169,7 +196,11 @@ class Client(APIClient):
         :param afk: Whether the bot is AFK.
         """
         activities = [x.to_dict() if not isinstance(x, dict) else x for x in activities]
-        return self.ws.update_presence(since, activities, status, afk)
+        if self.ws:
+            await self.ws.update_presence(since, activities, status, afk)
+        elif self.__shards:
+            for x in self.__shards.values():
+                await x.update_presence(since, activities, status, afk)
 
     def update_voice_state(self,
                            guild: Guild.TYPING,
@@ -184,25 +215,49 @@ class Client(APIClient):
         :param self_mute: Whether the bot is self-muted.
         :param self_deaf: Whether the bot is self-deaf.
         """
-        return self.ws.update_voice_state(str(int(guild)), str(int(channel)) if channel else None, self_mute, self_deaf)
+        if self.ws:
+            ws = self.ws
+        elif self.__shards:
+            ws = self.get_shard(guild)
+            if not ws:
+                raise AttributeError(f"shard for guild {guild.id} not found.")
+        else:
+            raise AttributeError(f"shard for guild {guild.id} not found.")
+        return ws.update_voice_state(str(int(guild)), str(int(channel)) if channel else None, self_mute, self_deaf)
 
     @property
     def has_cache(self) -> bool:
         return self.__use_cache
 
     @property
-    def websocket_closed(self) -> bool:
+    def websocket_closed(self) -> typing.Union[bool, typing.List[bool]]:
         """
-        Whether the bot is disconnected from the Discord websocket.
-        :return: bool
+        Whether the bot is disconnected from the Discord websocket. If the bot is sharded, then it will return list of bools.
+        :return: Union[bool, List[bool]]
         """
         if self.ws:
             return self.ws.closed
+        elif self.__shards:
+            return [x.closed for x in self.__shards.values()]
         return True
 
     @property
     def guild_count(self) -> int:
         return self.cache.get_size("guild")
+
+    @property
+    def ping(self) -> float:
+        if self.ws:
+            return self.ws.ping
+        elif self.__shards:
+            pings = [x.ping for x in self.__shards.values()]
+            return sum(pings) / len(pings)
+        else:
+            return 0.0
+
+    @property
+    def shards(self) -> typing.Optional[typing.List[WebSocketClient]]:
+        return self.__shards
 
     def __setattr__(self, key, value):
         if not key.lower().startswith("on_") or key.lower() in ["on", "on_"]:

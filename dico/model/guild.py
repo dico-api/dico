@@ -401,7 +401,7 @@ class GuildMember:
             return PermissionFlags.from_value(0)
 
     @classmethod
-    def create(cls, client: "APIClient", resp: dict, *, user: User = None, guild_id: Snowflake = None, cache: bool = True):
+    def create(cls, client: "APIClient", resp: dict, *, user: User = None, guild_id: Snowflake.TYPING = None, cache: bool = True):
         if cache and client.has_cache and (guild_id or resp.get("guild_id")) and (user or resp.get("user")):
             _guild_id = guild_id or resp.get("guild_id")
             _user_id = user.id if isinstance(user, User) else resp["user"]["id"]

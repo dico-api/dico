@@ -2128,6 +2128,17 @@ class HTTPRequestBase(ABC):
         """
         return self.request("/oauth2/applications/@me", "GET")
 
+    # Gateway Requests
+
+    def request_gateway(self, bot: bool = True):
+        """
+        Sends get gateway request.
+
+        :param bot: Whether it should be bot.
+        """
+        extra = "/bot" if bot else ""
+        return self.request("/gateway"+extra, "GET")
+
     # Misc
 
     @abstractmethod
