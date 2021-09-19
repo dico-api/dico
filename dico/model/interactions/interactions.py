@@ -45,7 +45,7 @@ class Interaction:
     @property
     def message(self) -> typing.Optional[Message]:
         if self.type.application_command:
-            raise AttributeError("message is exclusive to Components.")
+            raise AttributeError("message is exclusive to components.")
         return self._message
 
     @property
@@ -53,6 +53,10 @@ class Interaction:
         if not self.type.application_command or self.data.type.chat_input:
             raise AttributeError("target is exclusive to context menu.")
         return self.data.resolved.get(self.data.target_id)
+
+    @property
+    def author(self) -> typing.Optional[typing.Union[GuildMember, User]]:
+        return self.member or self.user
 
     @classmethod
     def create(cls, client, resp):
