@@ -148,7 +148,7 @@ class TypeBase:
         self.value: int = value
 
         if self.value not in self.values:
-            raise AttributeError(f"invalid value: `{value}`")
+            raise AttributeError(f"invalid value: {value}")
 
     def __str__(self) -> str:
         return self.values[self.value]
