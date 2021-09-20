@@ -15,12 +15,15 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   dico.model.application
+   dico.model.audit_log
    dico.model.channel
    dico.model.emoji
    dico.model.event
    dico.model.extras
    dico.model.gateway
    dico.model.guild
+   dico.model.guild_template
    dico.model.invite
    dico.model.permission
    dico.model.snowflake

@@ -17,23 +17,29 @@ from .utils import get_shard_id
 
 class Client(APIClient):
     """
-    Client with async request handler and websocket support.
+    Client with async request handler and websocket connection.
 
     :param token: Token of the client.
     :param intents: Intents to use. Default everything except privileged.
     :param default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object to use. Default None.
     :param loop: asyncio Event loop object to use. Default automatic.
     :param application_id: Application ID if needed.
+    :param monoshard: Whether to mono-shard this bot.
+    :param shard_count: Count of shards to launch, if monoshard is True.
+    :param cache_max_sizes: Max sizes of the cache per types. Message limit is set to 1000 by default.
 
     :ivar http: HTTP request client.
     :ivar default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object of the client.
     :ivar loop: asyncio Event loop object of the client.
+    :ivar token: Application token of the client.
     :ivar cache: :class:`.cache.Intents` of the client.
     :ivar intents: :class:`.model.gateway.Intents` of the client.
-    :ivar ws: Websocket client of the client.
+    :ivar ws: :class:`.ws.websocket.WebSocketClient` of the client.
     :ivar events: :class:`.handler.EventHandler` of the client.
-    :ivar application: :class.model.gateway.Application: of the client.
+    :ivar application: :class:`.model.gateway.Application` of the client.
     :ivar application_id: ID of the application. Can be ``None`` if Ready event is not called, and if it is, you must pass parameter application_id for all methods that has it.
+    :ivar monoshard: Whether mono-shard is enabled.
+    :ivar shard_count: Current shard count of the bot.
     """
 
     def __init__(self,
@@ -42,13 +48,13 @@ class Client(APIClient):
                  default_allowed_mentions: typing.Optional[AllowedMentions] = None,
                  loop: typing.Optional[asyncio.AbstractEventLoop] = None,
                  cache: bool = True,
-                 application_id: Snowflake.TYPING = None,
+                 application_id: typing.Optional[Snowflake.TYPING] = None,
                  monoshard: bool = False,
                  shard_count: typing.Optional[int] = None,
                  **cache_max_sizes: int):
         cache_max_sizes.setdefault("message", 1000)
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
-        super().__init__(token, base=AsyncHTTPRequest, default_allowed_mentions=default_allowed_mentions, loop=loop)
+        super().__init__(token, base=AsyncHTTPRequest, default_allowed_mentions=default_allowed_mentions, loop=loop, application_id=application_id)
         self.token: str = token
         self.__use_cache = cache
         self.cache: typing.Optional[CacheContainer] = CacheContainer(**cache_max_sizes) if self.__use_cache else None
@@ -58,7 +64,6 @@ class Client(APIClient):
         self.ws: typing.Union[None, WebSocketClient] = None
         self.events: EventHandler = EventHandler(self)
         self.__wait_futures = {}
-        self.application_id: typing.Optional[Snowflake] = Snowflake.ensure_snowflake(application_id)
         self.__ready_future = asyncio.Future()
         self.monoshard: bool = monoshard
         self.shard_count: typing.Optional[int] = shard_count
@@ -79,9 +84,24 @@ class Client(APIClient):
             if user:
                 user.set_voice_state(voice_state)
 
-    def on_(self, name: str = None, meth=None) -> typing.Any:
+    def on_(self, name: typing.Optional[str] = None, meth: typing.Optional[typing.Union[typing.Callable, typing.Coroutine]] = None) -> typing.Any:
         """
         Adds new event listener. This can be used as decorator or function.
+
+        Example:
+
+        .. code-block:: python
+
+            @client.on_("message_create")  # Also can use "@client.on(...)" or "@client.on_message_create", and event name is default name of the function.
+            async def on_message_create(message: dico.Message):
+                ...
+
+            def initial_actions(ready: dico.Ready):  # Both coroutine and normal function can be used.
+                ...
+            client.on_("ready", initial_actions)  # Alias is "client.on(..., ...)"
+
+            client.on_ready = lambda r: print("Ready!")  # You may also directly assign event.
+
 
         :param name: Name of the event. Case-insensitive. Default name of the function.
         :param meth: Method or Coroutine, if you don't want to use as decorator.
@@ -97,7 +117,7 @@ class Client(APIClient):
         """Alias of :meth:`.on_`"""
         return self.on_
 
-    def wait(self, event_name: str, timeout: float = None, check: typing.Callable[[typing.Any], bool] = None) -> typing.Any:
+    def wait(self, event_name: str, timeout: typing.Optional[float] = None, check: typing.Optional[typing.Callable[[typing.Any], bool]] = None) -> typing.Any:
         """
         Waits for the event dispatch.
 
@@ -105,8 +125,8 @@ class Client(APIClient):
         :param timeout: Timeout time in second. If not passed, it will wait forever.
         :param check: Check function of the event. If passed, it will wait until the event result passes the check.
         :return: Payload of the event.
-        :raises: TimeoutError - Timeout occurred.
-        :raises: WebsocketClosed - Websocket is closed, so waiting is canceled.
+        :raises TimeoutError: Timeout occurred.
+        :raises WebsocketClosed: Websocket is closed, therefore further action could not be performed.
         """
         async def wrap():
             while not self.websocket_closed:
@@ -123,7 +143,7 @@ class Client(APIClient):
             raise WebsocketClosed
         return asyncio.wait_for(wrap(), timeout=timeout)
 
-    def dispatch(self, name, *args):
+    def dispatch(self, name: str, *args: typing.Any):
         """
         Dispatches new event.
 
@@ -138,16 +158,29 @@ class Client(APIClient):
                 if not fut.cancelled():
                     fut.set_result(args)
 
-    def get_shard_id(self, guild: Guild.TYPING):
+    def get_shard_id(self, guild: Guild.TYPING) -> int:
+        """
+        Gets shard ID from guild.
+
+        :param guild: Guild to get shard ID.
+        :return: ID of the shard.
+        """
         if self.__shards:
             return get_shard_id(int(guild), len(self.__shards))
 
     def get_shard(self, guild: Guild.TYPING) -> typing.Optional[WebSocketClient]:
+        """
+        Gets shard from guild.
+
+        :param guild: Guild to get shard.
+        :return: :class:`.ws.websocket.WebSocketClient`
+        """
         if self.__shards:
             shard_id = get_shard_id(int(guild), len(self.__shards))
             return self.__shards.get(shard_id)
 
     async def wait_ready(self):
+        """Waits until bot is ready."""
         if not self.__ready_future.done():
             await self.__ready_future
 
@@ -189,7 +222,7 @@ class Client(APIClient):
                 await x.close()
         await self.http.close()
 
-    async def update_presence(self, *, since: int = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
+    async def update_presence(self, *, since: typing.Optional[int] = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
         """
         Updates the bot presence.
 
@@ -209,7 +242,7 @@ class Client(APIClient):
 
     def update_voice_state(self,
                            guild: Guild.TYPING,
-                           channel: Channel.TYPING = None,
+                           channel: typing.Optional[Channel.TYPING] = None,
                            self_mute: bool = False,
                            self_deaf: bool = False):
         """
@@ -232,14 +265,12 @@ class Client(APIClient):
 
     @property
     def has_cache(self) -> bool:
+        """Whether the caching is enabled."""
         return self.__use_cache
 
     @property
     def websocket_closed(self) -> typing.Union[bool, typing.List[bool]]:
-        """
-        Whether the bot is disconnected from the Discord websocket. If the bot is sharded, then it will return list of bools.
-        :return: Union[bool, List[bool]]
-        """
+        """ Whether the bot is disconnected from the Discord websocket. If the bot is sharded, then it will return list of bools."""
         if self.ws:
             return self.ws.closed
         elif self.__shards:
@@ -248,10 +279,12 @@ class Client(APIClient):
 
     @property
     def guild_count(self) -> int:
+        """Total count of guilds this bot is in."""
         return self.cache.get_size("guild")
 
     @property
     def ping(self) -> float:
+        """Websocket ping of the bot. If it is sharded, then it will return average ping between shards."""
         if self.ws:
             return self.ws.ping
         elif self.__shards:
@@ -262,6 +295,7 @@ class Client(APIClient):
 
     @property
     def shards(self) -> typing.Optional[typing.Tuple[WebSocketClient]]:
+        """Tuple of shards this bot has."""
         return tuple(self.__shards.values()) if self.__shards else None
 
     def __setattr__(self, key, value):

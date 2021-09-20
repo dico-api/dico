@@ -38,7 +38,7 @@ class HTTPRequestBase(ABC):
     def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = 3, **kwargs) -> RESPONSE:
         """
         This function includes requesting REST API.
-        :return:
+        :return: Response.
         """
         pass
 

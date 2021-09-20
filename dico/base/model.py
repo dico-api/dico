@@ -29,7 +29,7 @@ class DiscordObjectBase(CopyableObject):
     RESPONSE_AS_LIST = typing.Union[typing.List["DiscordObjectBase"], typing.Awaitable[typing.List["DiscordObjectBase"]]]
     _cache_type = None
 
-    def __init__(self, client: "APIClient", resp: dict, **kwargs):
+    def __init__(self, client: "APIClient", resp: dict, **kwargs: typing.Any):
         resp.update(kwargs)
         # self._cache_type = None
         self.raw: dict = resp
@@ -39,7 +39,7 @@ class DiscordObjectBase(CopyableObject):
     def __int__(self) -> int:
         return int(self.id)
 
-    def update(self, new_resp, **kwargs):
+    def update(self, new_resp: dict, **kwargs: typing.Any):
         orig = self.raw
         for k, v in new_resp.items():
             if orig.get(k) != v:
@@ -47,7 +47,7 @@ class DiscordObjectBase(CopyableObject):
         self.__init__(self.client, orig, **kwargs)
 
     @classmethod
-    def create(cls, client: "APIClient", resp: dict, **kwargs):
+    def create(cls, client: "APIClient", resp: dict, **kwargs: typing.Any):
         ensure_cache_type = kwargs.pop("ensure_cache_type", cls._cache_type)
         prevent_caching = kwargs.pop("prevent_caching", False)
         maybe_exist = client.has_cache and client.cache.get(resp["id"], ensure_cache_type)
@@ -76,7 +76,7 @@ class AbstractObject(dict):
     RESPONSE = typing.Union["AbstractObject", typing.Awaitable["AbstractObject"]]
     RESPONSE_AS_LIST = typing.Union[typing.List["AbstractObject"], typing.Awaitable[typing.List["AbstractObject"]]]
 
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         super().__init__(**resp)
 
     def __getattr__(self, item):

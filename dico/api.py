@@ -27,7 +27,8 @@ class APIClient:
 
     :ivar http: HTTP request client.
     :ivar default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object of the API client.
-    :ivar application_id: ID of the application. Can be ``None``, and if it is, you must pass parameter application_id for all methods that has it.
+    :ivar application: :class.model.gateway.Application: of the client.
+    :ivar application_id: ID of the application. Can be ``None``, and if it is, you must pass parameter application_id for all methods that requires it.
     """
 
     def __init__(self,

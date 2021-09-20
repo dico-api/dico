@@ -10,11 +10,28 @@ from ..base.http import HTTPRequestBase, EmptyObject, RESPONSE
 
 
 class AsyncHTTPRequest(HTTPRequestBase):
+    """
+    Async HTTP request client.
+
+    .. warning::
+        This module isn't intended to be directly used. It is recommended to request via APIClient.
+
+    :param token: Application token to use.
+    :param loop: AsyncIO loop instance to use. Default ``asyncio.get_event_loop()``.
+    :param session: Optional ClientSession to use.
+    :param default_retry: Maximum retry count. Default 3.
+
+    :ivar token: Application token of the client.
+    :ivar logger: Logger instance of the client.
+    :ivar session: ClientSession of the client.
+    :ivar default_retry: Maximum retry count of the client.
+    :ivar ratelimits: :class:`.ratelimit.RatelimitHandler` of the client.
+    """
     def __init__(self,
                  token: str,
                  loop: typing.Optional[asyncio.AbstractEventLoop] = None,
                  session: typing.Optional[aiohttp.ClientSession] = None,
-                 default_retry: typing.Optional[int] = 3):
+                 default_retry: int = 3):
         self.token: str = token.lstrip("Bot ")
         self.logger: logging.Logger = logging.getLogger("dico.http")
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
@@ -36,7 +53,27 @@ class AsyncHTTPRequest(HTTPRequestBase):
             await self.session.close()
         self._closed = True
 
-    async def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = None, **kwargs) -> RESPONSE:
+    async def request(self,
+                      route: str,
+                      meth: str,
+                      body: typing.Optional[typing.Any] = None,
+                      *,
+                      is_json: bool = False,
+                      reason_header: typing.Optional[str] = None,
+                      retry: int = None,
+                      **kwargs) -> RESPONSE:
+        """
+        Sends request to Discord API.
+
+        :param route: Route to request.
+        :param meth: Method to use.
+        :param body: Body of the request.
+        :param is_json: Whether the body is JSON.
+        :param reason_header: Reason to show in audit log.
+        :param retry: Retry count in rate limited situation.
+        :param kwargs: Extra options to add.
+        :return: Response.
+        """
         code = 429  # Empty code in case of rate limit fail.
         resp = {}   # Empty resp in case of rate limit fail.
         retry = (retry if retry > 0 else 1) if retry is not None else self.default_retry
@@ -58,7 +95,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 raise exception.Unknown(route, code, resp)
         raise exception.RateLimited(route, code, resp)
 
-    async def _request(self, route: str, meth: str, body: typing.Any = None, is_json: bool = False, reason_header: str = None, **kwargs) \
+    async def _request(self, route: str, meth: str, body: typing.Optional[typing.Any] = None, is_json: bool = False, reason_header: str = None, **kwargs) \
             -> typing.Tuple[int, typing.Union[dict, typing.Any]]:
         await self.ratelimits.maybe_global()
         locker = self.ratelimits.get_locker(meth, route)
