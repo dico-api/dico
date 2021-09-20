@@ -2,6 +2,7 @@ import typing
 from .snowflake import Snowflake
 from .user import User
 from ..base.model import DiscordObjectBase, TypeBase
+from ..base.http import EmptyObject
 from ..utils import cdn_url
 
 if typing.TYPE_CHECKING:
@@ -32,14 +33,35 @@ class Sticker(DiscordObjectBase):
     def __str__(self) -> str:
         return self.name
 
+    def modify(self,
+               *,
+               name: typing.Optional[str] = None,
+               description: typing.Optional[str] = EmptyObject,
+               tags: typing.Optional[str] = None,
+               reason: typing.Optional[str] = None):
+        if self.guild_id:
+            return self.client.modify_guild_sticker(self.guild_id, self, name=name, description=description, tags=tags, reason=reason)
+        else:
+            raise TypeError("unable to edit this sticker.")
+
+    @property
+    def edit(self):
+        return self.modify
+
+    def delete(self, *, reason: typing.Optional[str] = None):
+        if self.guild_id:
+            return self.client.delete_guild_sticker(self.guild_id, self, reason=reason)
+        else:
+            raise TypeError("unable to edit this sticker.")
+
     @property
     def guild(self) -> typing.Optional["Guild"]:
-        if self.client.has_cache:
+        if self.client.has_cache and self.guild_id:
             return self.client.get(self.guild_id, "guild")  # noqa
 
     @property
     def pack(self) -> "StickerPack":
-        if self.client.has_cache:
+        if self.client.has_cache and self.pack_id:
             return self.client.get(self.pack_id, "sticker_pack")  # noqa
 
 

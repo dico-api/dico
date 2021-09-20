@@ -126,11 +126,12 @@ class AsyncHTTPRequest(HTTPRequestBase):
         if sticker_ids:
             payload_json["sticker_ids"] = sticker_ids
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
-        for x in range(len(files)):
-            name = f"file{x if len(files) > 1 else ''}"
-            sel = files[x]
-            f = sel.read()
-            form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
+        if files is not None:
+            for x in range(len(files)):
+                name = f"file{x if len(files) > 1 else ''}"
+                sel = files[x]
+                f = sel.read()
+                form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/channels/{channel_id}/messages", "POST", form)
 
     def edit_message_with_files(self,
@@ -158,12 +159,21 @@ class AsyncHTTPRequest(HTTPRequestBase):
         if components is not EmptyObject:
             payload_json["components"] = components
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
-        for x in range(len(files)):
-            name = f"file{x if len(files) > 1 else ''}"
-            sel = files[x]
-            f = sel.read()
-            form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
+        if files is not EmptyObject:
+            for x in range(len(files)):
+                name = f"file{x if len(files) > 1 else ''}"
+                sel = files[x]
+                f = sel.read()
+                form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", form)
+
+    def create_guild_sticker(self, guild_id, name: str, description: str, tags: str, file: io.FileIO, reason: str = None) -> RESPONSE:
+        form = aiohttp.FormData()
+        form.add_field("name", name)
+        form.add_field("description", description)
+        form.add_field("tags", tags)
+        form.add_field("file", file.read(), filename=file.name, content_type="application/octet-stream")
+        return self.request(f"/guilds/{guild_id}/stickers", "POST", form, reason_header=reason)
 
     def execute_webhook_with_files(self,
                                    webhook_id,
@@ -205,11 +215,12 @@ class AsyncHTTPRequest(HTTPRequestBase):
         if thread_id is not None:
             params["thread_id"] = thread_id
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
-        for x in range(len(files)):
-            name = f"file{x if len(files) > 1 else ''}"
-            sel = files[x]
-            f = sel.read()
-            form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
+        if files is not None:
+            for x in range(len(files)):
+                name = f"file{x if len(files) > 1 else ''}"
+                sel = files[x]
+                f = sel.read()
+                form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "POST", form, params=params)
 
     def edit_webhook_message(self,
@@ -235,7 +246,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
         if components is not EmptyObject:
             payload_json["components"] = components
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
-        if files:
+        if files is not EmptyObject:
             for x in range(len(files)):
                 name = f"file{x if len(files) > 1 else ''}"
                 sel = files[x]

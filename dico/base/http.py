@@ -1596,6 +1596,83 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/stage-instances/{channel_id}", "DELETE", reason_header=reason)
 
+    # Sticker Requests
+
+    def request_sticker(self, sticker_id) -> RESPONSE:
+        """
+        Sends get sticker request.
+
+        :param sticker_id: ID of the sticker.
+        """
+        return self.request(f"/stickers/{sticker_id}", "GET")
+
+    def list_nitro_sticker_packs(self) -> RESPONSE:
+        """
+        Sends list nitro sticker packs request.
+        """
+        return self.request("/sticker-packs", "GET")
+
+    def list_guild_stickers(self, guild_id) -> RESPONSE:
+        """
+        Sends list guild stickers request.
+
+        :param guild_id: ID of the guild.
+        """
+        return self.request(f"/guilds/{guild_id}/stickers", "GET")
+
+    def request_guild_sticker(self, guild_id, sticker_id) -> RESPONSE:
+        """
+        Sends get guild sticker request.
+
+        :param guild_id: ID of the guild.
+        :param sticker_id: ID of the sticker to request.
+        """
+        return self.request(f"/guilds/{guild_id}/stickers/{sticker_id}", "GET")
+
+    @abstractmethod
+    def create_guild_sticker(self, guild_id, name: str, description: str, tags: str, file: io.FileIO, reason: str = None) -> RESPONSE:
+        """
+        Sends create guild sticker request.
+
+        :param guild_id: ID of the guild.
+        :param name: Name of the sticker.
+        :param description: Description of the sticker.
+        :param tags: Autocomplete text.
+        :param file: Sticker file to upload. Max 500 KB.
+        :param reason: Reason of the action.
+        """
+        pass
+
+    def modify_guild_sticker(self, guild_id, sticker_id, name: str = None, description: str = EmptyObject, tags: str = None, reason: str = None) -> RESPONSE:
+        """
+        Sends modify guild sticker request.
+
+        :param guild_id: ID of the guild.
+        :param sticker_id: ID of the sticker to modify.
+        :param name: Name to modify.
+        :param description: Description to modify. Can be None.
+        :param tags: Tags to edit.
+        :param reason: Reason of the action.
+        """
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if description is not EmptyObject:
+            body["description"] = description
+        if tags is not None:
+            body["tags"] = tags
+        return self.request(f"/guilds/{guild_id}/stickers/{sticker_id}", "PATCH", body, is_json=True, reason_header=reason)
+
+    def delete_guild_sticker(self, guild_id, sticker_id, reason: str = None):
+        """
+        Sends delete guild sticker request.
+
+        :param guild_id: ID of the guild.
+        :param sticker_id: ID of sticker to delete.
+        :param reason: Reason of the action.
+        """
+        return self.request(f"/guilds/{guild_id}/stickers/{sticker_id}", "DELETE", reason_header=reason)
+
     # User Requests
 
     def request_user(self, user_id="@me") -> RESPONSE:
@@ -2130,7 +2207,7 @@ class HTTPRequestBase(ABC):
 
     # Gateway Requests
 
-    def request_gateway(self, bot: bool = True):
+    def request_gateway(self, bot: bool = True) -> RESPONSE:
         """
         Sends get gateway request.
 

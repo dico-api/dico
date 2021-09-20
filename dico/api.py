@@ -1078,6 +1078,60 @@ class APIClient:
     def delete_stage_instance(self, channel: Channel.TYPING, *, reason: str = None):
         return self.http.delete_stage_instance(int(channel), reason=reason)
 
+    # Sticker
+
+    def request_sticker(self, sticker: Sticker.TYPING) -> Sticker.RESPONSE:
+        resp = self.http.request_sticker(int(sticker))
+        if isinstance(resp, dict):
+            return Sticker.create(self, resp)
+        return wrap_to_async(Sticker, self, resp)
+
+    def list_nitro_sticker_packs(self) -> "AbstractObject.RESPONSE":
+        from .base.model import AbstractObject
+        resp = self.http.list_nitro_sticker_packs()
+        if isinstance(resp, dict):
+            return AbstractObject(resp)
+        return wrap_to_async(AbstractObject, None, resp, as_create=False)
+
+    def list_guild_stickers(self, guild: Guild.TYPING) -> Sticker.RESPONSE_AS_LIST:
+        resp = self.http.list_guild_stickers(int(guild))
+        if isinstance(resp, list):
+            return [Sticker.create(self, x) for x in resp]
+        return wrap_to_async(Sticker, self, resp)
+
+    def request_guild_sticker(self, guild: Guild.TYPING, sticker: Sticker.TYPING) -> Sticker.RESPONSE:
+        resp = self.http.request_guild_sticker(int(guild), int(sticker))
+        if isinstance(resp, dict):
+            return Sticker.create(self, resp)
+        return wrap_to_async(Sticker, self, resp)
+
+    def create_guild_sticker(self, guild: Guild.TYPING, *, name: str, description: str, tags: str, file: FILE_TYPE, reason: typing.Optional[str] = None) -> Sticker.RESPONSE:
+        if not isinstance(file, io.FileIO):
+            file = open(file, "rb")
+        try:
+            resp = self.http.create_guild_sticker(int(guild), name, description, tags, file, reason=reason)
+            if isinstance(resp, dict):
+                return Sticker.create(self, resp)
+            return wrap_to_async(Sticker, self, resp)
+        finally:
+            file.close()
+
+    def modify_guild_sticker(self,
+                             guild: Guild.TYPING,
+                             sticker: Sticker.TYPING,
+                             *,
+                             name: typing.Optional[str] = None,
+                             description: typing.Optional[str] = EmptyObject,
+                             tags: typing.Optional[str] = None,
+                             reason: typing.Optional[str] = None) -> Sticker.RESPONSE:
+        resp = self.http.modify_guild_sticker(int(guild), int(sticker), name, description, tags, reason=reason)
+        if isinstance(resp, dict):
+            return Sticker.create(self, resp)
+        return wrap_to_async(Sticker, self, resp)
+
+    def delete_guild_sticker(self, guild: Guild.TYPING, sticker: Sticker.TYPING, *, reason: typing.Optional[str] = None):
+        return self.http.delete_guild_sticker(int(guild), int(sticker), reason=reason)
+
     # User
 
     def request_user(self, user: User.TYPING = "@me") -> User.RESPONSE:

@@ -42,6 +42,12 @@ class Interaction:
     def create_followup_message(self, **kwargs) -> Message.RESPONSE:
         return self.client.create_followup_message(self, **kwargs)
 
+    def request_original_response(self) -> Message.RESPONSE:
+        return self.client.request_interaction_response(self)
+
+    def request_response(self, message: Message.TYPING = "@original") -> Message.RESPONSE:
+        return self.client.request_interaction_response(self, message)
+
     @property
     def message(self) -> typing.Optional[Message]:
         if self.type.application_command:
