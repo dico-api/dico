@@ -589,6 +589,8 @@ class Embed(CopyableObject):
             ret["type"] = self.type
         if self.description:
             ret["description"] = self.description
+        if self.url:
+            ret["url"] = self.url
         if self.timestamp:
             ret["timestamp"] = str(self.timestamp)
         if self.color:
