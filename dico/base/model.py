@@ -104,6 +104,8 @@ class FlagBase:
         return self.value
 
     def __getattr__(self, item):
+        if item.startswith("__"):
+            return self.__getattribute__(item)
         return self.has(item)
 
     def __iter__(self):
@@ -157,6 +159,8 @@ class TypeBase:
         return self.value
 
     def __getattr__(self, item):
+        if item.startswith("__"):
+            return self.__getattribute__(item)
         return self.is_type(item)
 
     def is_type(self, name: str) -> bool:

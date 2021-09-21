@@ -318,7 +318,7 @@ class APIClient:
                      channel: Channel.TYPING,
                      message: Message.TYPING,
                      *,
-                     content: str = None,
+                     content: str = EmptyObject,
                      embed: typing.Union[Embed, dict] = EmptyObject,
                      embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
                      file: FILE_TYPE = EmptyObject,
