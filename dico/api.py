@@ -19,6 +19,20 @@ class APIClient:
     """
     REST API handling client.
 
+    Example:
+
+    .. code-block:: python
+
+        import dico
+
+        # For request-based:
+        api = dico.APIClient("TOKEN", base=dico.HTTPRequest)
+
+        # For aiohttp-based:
+        api = dico.APIClient("TOKEN", base=dico.AsyncHTTPRequest)
+
+        ...
+
     .. note::
         Most of the object parameters accept Snowflake or int or str. Refer each object's ``TYPING`` attribute.
 

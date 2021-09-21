@@ -218,7 +218,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
         form.add_field("name", name)
         form.add_field("description", description)
         form.add_field("tags", tags)
-        form.add_field("file", file.read(), filename=file.name, content_type="application/octet-stream")
+        form.add_field("file", file, filename=file.name, content_type="application/octet-stream")
         return self.request(f"/guilds/{guild_id}/stickers", "POST", form, reason_header=reason)
 
     def execute_webhook_with_files(self,

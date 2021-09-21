@@ -10,6 +10,7 @@ __version__ = "0.0.20"
 
 from .api import APIClient
 from .client import Client
+from .http import AsyncHTTPRequest, HTTPRequest
 from .model.channel import *
 from .model.event import *
 from .model.gateway import Intents, Activity, ActivityTypes
