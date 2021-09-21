@@ -3,6 +3,10 @@ import typing
 from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, FlagBase
 
+if typing.TYPE_CHECKING:
+    from .guild import Guild
+    from ..api import APIClient
+
 
 class PermissionFlags(FlagBase):
     CREATE_INSTANT_INVITE = 0x0000000001
@@ -46,26 +50,28 @@ class PermissionFlags(FlagBase):
 
 class Role(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Role"]
+    RESPONSE = typing.Union["Role", typing.Awaitable["Role"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Role"], typing.Awaitable[typing.List["Role"]]]
+    _cache_type = "role"
 
-    def __init__(self, client, resp, *, guild_id=None):
+    def __init__(self, client: "APIClient", resp: dict, *, guild_id: Snowflake = None):
         super().__init__(client, resp)
-        self.guild_id = Snowflake.optional(guild_id)  # This isn't actually in payload, but role is always created at the guild, so why not?
-        self._cache_type = "role"
-        self.name = resp["name"]
-        self.color = resp["color"]
-        self.hoist = resp["hoist"]
-        self.position = resp["position"]
-        self.permissions = PermissionFlags.from_value(int(resp["permissions"]))
-        self.managed = resp["managed"]
-        self.mentionable = resp["mentionable"]
-        self.tags = RoleTags.optional(resp.get("tags"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(guild_id)  # This isn't actually in payload, but role is always created at the guild, so why not?
+        self.name: str = resp["name"]
+        self.color: int = resp["color"]
+        self.hoist: bool = resp["hoist"]
+        self.position: int = resp["position"]
+        self.permissions: PermissionFlags = PermissionFlags.from_value(int(resp["permissions"]))
+        self.managed: bool = resp["managed"]
+        self.mentionable: bool = resp["mentionable"]
+        self.tags: typing.Optional[RoleTags] = RoleTags.optional(resp.get("tags"))
 
     @property
-    def guild(self):
+    def guild(self) -> typing.Optional["Guild"]:
         if self.client.has_cache:
             return self.client.get(self.guild_id, "guild")
 
-    def to_position_param(self, position: int = None):
+    def to_position_param(self, position: int = None) -> dict:
         body = {"id": str(self.id)}
         if position is not None:
             body["position"] = position
@@ -76,10 +82,10 @@ class Role(DiscordObjectBase):
 
 
 class RoleTags:
-    def __init__(self, resp):
-        self.bot_id = Snowflake.optional(resp.get("bot_id"))
-        self.integration_id = Snowflake.optional(resp.get("integration_id"))
-        self.premium_subscriber = resp.get("premium_subscriber")
+    def __init__(self, resp: dict):
+        self.bot_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("bot_id"))
+        self.integration_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("integration_id"))
+        self.premium_subscriber: bool = "premium_subscriber" in resp
 
     @classmethod
     def optional(cls, resp):

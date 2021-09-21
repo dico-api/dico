@@ -7,6 +7,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   dico.ws.ratelimit
    dico.ws.websocket
 
 Module contents

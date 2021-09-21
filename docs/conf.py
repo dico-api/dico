@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'dico'
-copyright = '2021, eunwoo1104'
+copyright = '2021, dico-api'
 author = 'eunwoo1104'
 
 

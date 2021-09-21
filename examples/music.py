@@ -33,11 +33,11 @@ async def on_message(message: dico.MessageCreate):
         if vv:
             return await message.reply(embed=dico.Embed(description=vv, color=0xe74c3c))
         lava.player_manager.create(int(message.guild_id), region="ko")
-        await client.ws.update_voice_state(str(message.guild_id), str(voice_state.channel_id), False, False)
+        await client.update_voice_state(message.guild_id, voice_state.channel_id)
 
     if message.content.startswith("!disconnect"):
         msg = await message.reply(embed=dico.Embed(description="Please wait, disconnecting..."))
-        await client.ws.update_voice_state(str(message.guild_id), None, False, False)
+        await client.update_voice_state(message.guild_id)
         await msg.edit(embed=dico.Embed(description="Successfully disconnected from voice channel!", color=color_accept))
         player = lava.player_manager.get(int(message.guild_id))
         if player:

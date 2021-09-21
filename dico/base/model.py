@@ -9,46 +9,63 @@ if typing.TYPE_CHECKING:
 
 class CopyableObject:
     def copy(self):
-        return copy.copy(self)
+        return copy.deepcopy(self)
 
 
 class EventBase:
-    def __init__(self, client, resp: dict):
-        self.raw = resp
-        self.client = client
-        self._dont_dispatch = False
+    def __init__(self, client: "APIClient", resp: dict):
+        self.raw: dict = resp
+        self.client: "APIClient" = client
+        self._dont_dispatch: bool = False
 
     @classmethod
     def create(cls, client, resp: dict):
         return cls(client, resp)
 
 
-class DiscordObjectBase:
-    TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase"]
+class DiscordObjectBase(CopyableObject):
+    TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase", typing.Type["DiscordObjectBase"]]
+    RESPONSE = typing.Union["DiscordObjectBase", typing.Awaitable["DiscordObjectBase"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["DiscordObjectBase"], typing.Awaitable[typing.List["DiscordObjectBase"]]]
+    _cache_type = None
 
-    def __init__(self, client, resp, **kwargs):
+    def __init__(self, client: "APIClient", resp: dict, **kwargs: typing.Any):
         resp.update(kwargs)
-        self._cache_type = None
+        # self._cache_type = None
         self.raw: dict = resp
         self.id: Snowflake = Snowflake(resp["id"])
-        self.client: APIClient = client
+        self.client: "APIClient" = client
 
-    def __int__(self):
+    def __int__(self) -> int:
         return int(self.id)
 
+    def update(self, new_resp: dict, **kwargs: typing.Any):
+        orig = self.raw
+        for k, v in new_resp.items():
+            if orig.get(k) != v:
+                orig[k] = v
+        self.__init__(self.client, orig, **kwargs)
+
     @classmethod
-    def create(cls, client, resp, **kwargs):
-        maybe_exist = client.has_cache and client.cache.get(resp["id"], kwargs.pop("ensure_cache_type") if "ensure_cache_type" in kwargs else None)
+    def create(cls, client: "APIClient", resp: dict, **kwargs: typing.Any):
+        ensure_cache_type = kwargs.pop("ensure_cache_type", cls._cache_type)
+        prevent_caching = kwargs.pop("prevent_caching", False)
+        maybe_exist = client.has_cache and client.cache.get(resp["id"], ensure_cache_type)
         if maybe_exist:
+            if prevent_caching:
+                maybe_exist = maybe_exist.copy()
+            maybe_exist.update(resp, **kwargs)
+            """
             orig = maybe_exist.raw
             for k, v in resp.items():
                 if orig.get(k) != v:
                     orig[k] = v
             maybe_exist.__init__(client, orig, **kwargs)
+            """
             return maybe_exist
         else:
             ret = cls(client, resp, **kwargs)
-            if client.has_cache:
+            if client.has_cache and not prevent_caching:
                 client.cache.add(ret.id, ret._cache_type, ret)
                 if hasattr(ret, "guild_id") and ret.guild_id:
                     client.cache.get_guild_container(ret.guild_id).add(ret.id, ret._cache_type, ret)
@@ -56,7 +73,10 @@ class DiscordObjectBase:
 
 
 class AbstractObject(dict):
-    def __init__(self, resp):
+    RESPONSE = typing.Union["AbstractObject", typing.Awaitable["AbstractObject"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["AbstractObject"], typing.Awaitable[typing.List["AbstractObject"]]]
+
+    def __init__(self, resp: dict):
         super().__init__(**resp)
 
     def __getattr__(self, item):
@@ -67,9 +87,9 @@ class AbstractObject(dict):
 
 
 class FlagBase:
-    def __init__(self, *args, **kwargs):
-        self.values = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
-        self.value = 0
+    def __init__(self, *args: str, **kwargs: bool):
+        self.values: typing.Dict[str, int] = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.value: int = 0
         for x in args:
             if x.upper() not in self.values:
                 raise AttributeError(f"invalid name: `{x}`")
@@ -80,7 +100,7 @@ class FlagBase:
             if v:
                 self.value |= self.values[k.upper()]
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
     def __getattr__(self, item):
@@ -91,7 +111,7 @@ class FlagBase:
             if self.has(k):
                 yield v
 
-    def has(self, name: str):
+    def has(self, name: str) -> bool:
         if name.upper() not in self.values:
             raise AttributeError(f"invalid name: `{name}`")
         return (self.value & self.values[name.upper()]) == self.values[name.upper()]
@@ -109,10 +129,10 @@ class FlagBase:
         elif not value and has_value:
             self.value &= ~self.values[key]
 
-    def add(self, value):
+    def add(self, value: str):
         return self.__setattr__(value, True)
 
-    def remove(self, value):
+    def remove(self, value: str):
         return self.__setattr__(value, False)
 
     @classmethod
@@ -124,28 +144,28 @@ class FlagBase:
 
 class TypeBase:
     def __init__(self, value):
-        self.values = {getattr(self, x): x for x in dir(self) if isinstance(getattr(self, x), int)}
-        self.value = value
+        self.values: typing.Dict[int, str] = {getattr(self, x): x for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.value: int = value
 
         if self.value not in self.values:
-            raise AttributeError(f"invalid value: `{value}`")
+            raise AttributeError(f"invalid value: {value}")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.values[self.value]
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
     def __getattr__(self, item):
         return self.is_type(item)
 
-    def is_type(self, name: str):
+    def is_type(self, name: str) -> bool:
         values = {y: x for x, y in self.values.items()}
         if name.upper() not in values:
             raise AttributeError(f"invalid name: `{name}`")
         return self.value == values[name.upper()]
 
     @classmethod
-    def to_string(cls, value):
+    def to_string(cls, value: int) -> str:
         values = {getattr(cls, x): x for x in dir(cls) if isinstance(getattr(cls, x), int)}
         return values.get(value)

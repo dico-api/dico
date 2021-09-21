@@ -12,17 +12,20 @@ from .user import User
 from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
 
 if typing.TYPE_CHECKING:
-    from .gateway import Application
+    from .application import Application
     from .guild import Guild
+    from .invite import Invite
     from ..api import APIClient
 
 
 class Channel(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Channel"]
+    RESPONSE = typing.Union["Channel", typing.Awaitable["Channel"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Channel"], typing.Awaitable[typing.List["Channel"]]]
+    _cache_type = "channel"
 
-    def __init__(self, client, resp, *, guild_id=None):
+    def __init__(self, client: "APIClient", resp: dict, *, guild_id: Snowflake.TYPING = None):
         super().__init__(client, resp)
-        self._cache_type = "channel"
         self.type: ChannelTypes = ChannelTypes(resp["type"])
         self.guild_id: Snowflake = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
         self.position: typing.Optional[int] = resp.get("position")
@@ -52,7 +55,12 @@ class Channel(DiscordObjectBase):
         self.__permissions = resp.get("permissions")
         self.permissions: typing.Optional[PermissionFlags] = PermissionFlags.from_value(int(self.__permissions)) if self.__permissions else self.__permissions
 
-    def modify(self, **kwargs):
+        # if self.type.dm and self.
+
+    def __str__(self) -> str:
+        return self.name
+
+    def modify(self, **kwargs) -> RESPONSE:
         if self.type.group_dm:
             return self.client.modify_group_dm_channel(self.id, **kwargs)
         elif self.type.dm or self.type.guild_store:
@@ -66,10 +74,10 @@ class Channel(DiscordObjectBase):
     def edit(self):
         return self.modify
 
-    def delete(self, *, reason: str = None):
+    def delete(self, *, reason: str = None) -> RESPONSE:
         return self.client.delete_channel(self, reason=reason)
 
-    def create_message(self, *args, **kwargs) -> typing.Union["Message", typing.Awaitable["Message"]]:
+    def create_message(self, *args, **kwargs) -> "Message.RESPONSE":
         if not self.is_messageable():
             raise TypeError("You can't send message in this type of channel.")
         return self.client.create_message(self, *args, **kwargs)
@@ -84,22 +92,22 @@ class Channel(DiscordObjectBase):
     def edit_permissions(self, overwrite, *, reason: str = None):
         return self.client.edit_channel_permissions(self, overwrite, reason=reason)
 
-    def request_invites(self):
+    def request_invites(self) -> "Invite.RESPONSE_AS_LIST":
         return self.client.request_channel_invites(self)
 
-    def create_invite(self, **kwargs):
+    def create_invite(self, **kwargs) -> "Invite.RESPONSE":
         return self.client.create_channel_invite(self, **kwargs)
 
     def delete_permissions(self, overwrite, *, reason: str = None):
         return self.client.delete_channel_permission(self, overwrite, reason=reason)
 
-    def follow(self, target_channel: "Channel.TYPING"):
+    def follow(self, target_channel: "Channel.TYPING") -> "FollowedChannel.RESPONSE":
         return self.client.follow_news_channel(self, target_channel)
 
     def trigger_typing_indicator(self):
         return self.client.trigger_typing_indicator(self)
 
-    def request_pinned_messages(self):
+    def request_pinned_messages(self) -> "Message.RESPONSE_AS_LIST":
         return self.client.request_pinned_messages(self)
 
     def add_recipient(self, user: User.TYPING, access_token: str, nick: str):
@@ -112,7 +120,7 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to remove recipient.")
         return self.client.group_dm_remove_recipient(self, user)
 
-    def start_thread(self, message: "Message.TYPING" = None, *, name: str, auto_archive_duration: int, reason: str = None):
+    def start_thread(self, message: "Message.TYPING" = None, *, name: str, auto_archive_duration: int, reason: str = None) -> "Channel.RESPONSE":
         return self.client.start_thread(self, message, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     def join_thread(self):
@@ -135,21 +143,21 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to remove thread member.")
         return self.client.remove_thread_member(self, user)
 
-    def list_thread_members(self):
+    def list_thread_members(self) -> "ThreadMember.RESPONSE_AS_LIST":
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to list thread members.")
         return self.client.list_thread_members(self)
 
-    def list_active_threads(self):
+    def list_active_threads(self) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_active_threads(self)
 
-    def list_public_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+    def list_public_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_public_archived_threads(self, before=before, limit=limit)
 
-    def list_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+    def list_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_private_archived_threads(self, before=before, limit=limit)
 
-    def list_joined_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None):
+    def list_joined_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_joined_private_archived_threads(self, before=before, limit=limit)
 
     def archive(self, locked: bool = False):
@@ -208,13 +216,34 @@ class VideoQualityModes(TypeBase):
     FULL = 2
 
 
+class SendOnlyChannel:
+    def __init__(self, client: "APIClient", channel_id: Snowflake.TYPING):
+        self.client: "APIClient" = client
+        self.id: Snowflake = Snowflake.ensure_snowflake(channel_id)
+
+    def send(self, *args, **kwargs) -> "Message.RESPONSE":
+        return self.client.create_message(self.id, *args, **kwargs)
+
+    def __getattr__(self, item):
+        return None
+
+
 class Message(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Message"]
+    RESPONSE = typing.Union["Message", typing.Awaitable["Message"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Message"], typing.Awaitable[typing.List["Message"]]]
+    _cache_type = "message"
 
-    def __init__(self, client, resp, *, guild_id=None, webhook_token=None, interaction_token=None, original_response=False):
+    def __init__(self,
+                 client: "APIClient",
+                 resp: dict,
+                 *,
+                 guild_id: Snowflake.TYPING = None,
+                 webhook_token: typing.Optional[str] = None,
+                 interaction_token: typing.Optional[str] = None,
+                 original_response: typing.Optional[bool] = False):
         from .interactions import MessageInteraction, Component  # Prevent circular import.
         super().__init__(client, resp)
-        self._cache_type = "message"
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id") or guild_id)
         self.author: User = User.create(client, resp["author"])
@@ -258,7 +287,10 @@ class Message(DiscordObjectBase):
 
         # self.stickers: typing.Optional[typing.List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
 
-    def reply(self, content=None, **kwargs) -> typing.Union["Message", typing.Awaitable["Message"]]:
+    def __str__(self) -> str:
+        return self.content
+
+    def reply(self, content=None, **kwargs) -> "Message.RESPONSE":
         kwargs["message_reference"] = self
         mention = kwargs.pop("mention") if "mention" in kwargs.keys() else True
         allowed_mentions = kwargs.get("allowed_mentions", self.client.default_allowed_mentions or AllowedMentions(replied_user=mention)).copy()
@@ -266,7 +298,7 @@ class Message(DiscordObjectBase):
         kwargs["allowed_mentions"] = allowed_mentions.to_dict(reply=True)
         return self.client.create_message(self.channel_id, content, **kwargs)
 
-    def edit(self, **kwargs):
+    def edit(self, **kwargs) -> "Message.RESPONSE":
         if self.__webhook_token:
             kwargs["webhook_token"] = self.__webhook_token
             return self.client.edit_webhook_message(self.webhook_id, self, **kwargs)
@@ -284,7 +316,7 @@ class Message(DiscordObjectBase):
             return self.client.delete_interaction_response(interaction_token=self.__interaction_token, message="@original" if self.__original_response else self)
         return self.client.delete_message(self.channel_id, self.id, reason=reason)
 
-    def crosspost(self):
+    def crosspost(self) -> "Message.RESPONSE":
         return self.client.crosspost_message(self.channel_id, self.id)
 
     def create_reaction(self, emoji: typing.Union[Emoji, str]):
@@ -299,7 +331,7 @@ class Message(DiscordObjectBase):
     def unpin(self, *, reason: str = None):
         return self.client.unpin_message(self.channel_id, self.id, reason=reason)
 
-    def start_thread(self, *, name: str, auto_archive_duration: int, reason: str = None):
+    def start_thread(self, *, name: str, auto_archive_duration: int, reason: str = None) -> Channel.RESPONSE:
         return self.client.start_thread(self.channel_id, self, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     @property
@@ -308,12 +340,16 @@ class Message(DiscordObjectBase):
             return self.client.get(self.guild_id, "guild")
 
     @property
-    def channel(self) -> typing.Optional[Channel]:
+    def channel(self) -> typing.Union[Channel, SendOnlyChannel]:
+        send_only = SendOnlyChannel(self.client, self.channel_id)
         if self.channel_id and self.client.has_cache:
             if self.guild_id:
-                return self.guild.get(self.channel_id, "channel") or self.client.get(self.channel_id, "channel")
+                return self.guild.get(self.channel_id, "channel") or self.client.get(self.channel_id, "channel") or send_only
             else:
-                return self.client.get(self.channel_id, "channel")
+                return self.client.get(self.channel_id, "channel") or send_only
+        elif self.author and self.client.has_cache:
+            return self.client.get(self.author.dm_channel_id, "channel") or send_only
+        return send_only
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id}>"
@@ -342,12 +378,13 @@ class MessageTypes(TypeBase):
     APPLICATION_COMMAND = 20
     THREAD_STARTER_MESSAGE = 21
     GUILD_INVITE_REMINDER = 22
+    CONTEXT_MENU_COMMAND = 23
 
 
 class MessageActivity:
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.type: MessageActivityTypes = MessageActivityTypes(resp["type"])
-        self.party_id: str = resp.get("party_id")  # This is actually set as string in discord docs.
+        self.party_id: typing.Optional[str] = resp.get("party_id")  # This is actually set as string in discord docs.
 
     @classmethod
     def optional(cls, resp):
@@ -374,7 +411,7 @@ class MessageFlags(FlagBase):
 
 
 class MessageReference:
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.message_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("message_id"))
         self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
         self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
@@ -401,7 +438,9 @@ class MessageReference:
 
 
 class FollowedChannel:
-    def __init__(self, client, resp):
+    RESPONSE = typing.Union["FollowedChannel", typing.Awaitable["FollowedChannel"]]
+
+    def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
         self.channel_id: typing.Optional[Snowflake] = Snowflake(resp["channel_id"])
         self.webhook_id: typing.Optional[Snowflake] = Snowflake(resp["webhook_id"])
@@ -413,7 +452,7 @@ class FollowedChannel:
 
 
 class Reaction:
-    def __init__(self, client, resp):
+    def __init__(self, client: "APIClient", resp: dict):
         self.count: int = resp["count"]
         self.me: bool = resp["me"]
         self.emoji: Emoji = Emoji(client, resp["emoji"])
@@ -454,12 +493,12 @@ class Overwrite(CopyableObject):
 
 
 class ThreadMetadata:
-    def __init__(self, client, resp):
-        self.client: APIClient = client
+    def __init__(self, client: "APIClient", resp: dict):
+        self.client: "APIClient" = client
         self.archived: bool = resp["archived"]
         # self.archiver_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("archiver_id"))
         self.auto_archive_duration: int = resp["auto_archive_duration"]
-        self.archive_timestamp = datetime.datetime.fromisoformat(resp["archive_timestamp"])
+        self.archive_timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["archive_timestamp"])
         self.locked: bool = resp["locked"]
         self.invitable: typing.Optional[bool] = resp.get("invitable")
 
@@ -470,8 +509,11 @@ class ThreadMetadata:
 
 
 class ThreadMember:
-    def __init__(self, client, resp):
-        self.client: APIClient = client
+    RESPONSE = typing.Union["ThreadMember", typing.Awaitable["ThreadMember"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["ThreadMember"], typing.Awaitable[typing.List["ThreadMember"]]]
+
+    def __init__(self, client: "APIClient", resp: dict):
+        self.client: "APIClient" = client
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
         self.user_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("user_id"))
         self.join_timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["join_timestamp"])
@@ -553,6 +595,8 @@ class Embed(CopyableObject):
             ret["type"] = self.type
         if self.description:
             ret["description"] = self.description
+        if self.url:
+            ret["url"] = self.url
         if self.timestamp:
             ret["timestamp"] = str(self.timestamp)
         if self.color:
@@ -575,7 +619,7 @@ class Embed(CopyableObject):
 
 
 class EmbedThumbnail(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.url: typing.Optional[str] = resp.get("url")
         self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
         self.height: typing.Optional[int] = resp.get("height")
@@ -600,7 +644,7 @@ class EmbedThumbnail(CopyableObject):
 
 
 class EmbedVideo(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.url: typing.Optional[str] = resp.get("url")
         self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
         self.height: typing.Optional[int] = resp.get("height")
@@ -625,7 +669,7 @@ class EmbedVideo(CopyableObject):
 
 
 class EmbedImage(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.url: typing.Optional[str] = resp.get("url")
         self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
         self.height: typing.Optional[int] = resp.get("height")
@@ -650,7 +694,7 @@ class EmbedImage(CopyableObject):
 
 
 class EmbedProvider(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.name: typing.Optional[str] = resp.get("name")
         self.url: typing.Optional[str] = resp.get("url")
 
@@ -669,7 +713,7 @@ class EmbedProvider(CopyableObject):
 
 
 class EmbedAuthor(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.name: typing.Optional[str] = resp.get("name")
         self.url: typing.Optional[str] = resp.get("url")
         self.icon_url: typing.Optional[str] = resp.get("icon_url")
@@ -694,7 +738,7 @@ class EmbedAuthor(CopyableObject):
 
 
 class EmbedFooter(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.text: typing.Optional[str] = resp["text"]
         self.icon_url: typing.Optional[str] = resp.get("icon_url")
         self.proxy_icon_url: typing.Optional[str] = resp.get("proxy_icon_url")
@@ -714,7 +758,7 @@ class EmbedFooter(CopyableObject):
 
 
 class EmbedField(CopyableObject):
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.name: typing.Optional[str] = resp["name"]
         self.value: typing.Optional[str] = resp["value"]
         self.inline: typing.Optional[bool] = resp.get("inline", True)
@@ -729,8 +773,8 @@ class EmbedField(CopyableObject):
 
 
 class Attachment:
-    def __init__(self, client, resp):
-        self.client: APIClient = client
+    def __init__(self, client: "APIClient", resp: dict):
+        self.client: "APIClient" = client
         self.id: Snowflake = Snowflake(resp["id"])
         self.filename: str = resp["filename"]
         self.content_type: typing.Optional[str] = resp.get("content_type")
@@ -740,6 +784,7 @@ class Attachment:
         self.height: typing.Optional[int] = resp.get("height")
         self.width: typing.Optional[int] = resp.get("width")
         self.content: typing.Optional[bytes] = None  # Filled after download is called
+        self.ephemeral: typing.Optional[bool] = resp.get("ephemeral")
 
     def download(self) -> typing.Union[bytes, typing.Awaitable[bytes]]:
         dw = self.client.http.download(self.url)
@@ -774,7 +819,7 @@ class Attachment:
 
 
 class ChannelMention:
-    def __init__(self, resp):
+    def __init__(self, resp: dict):
         self.id: Snowflake = Snowflake(resp["id"])
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
         self.type: ChannelTypes = ChannelTypes(resp["type"])
@@ -790,7 +835,7 @@ class AllowedMentions(CopyableObject):
         self.everyone: bool = everyone
         self.users: typing.List[Snowflake.TYPING] = users or []
         self.roles: typing.List[Snowflake.TYPING] = roles or []
-        self.replied_user = replied_user
+        self.replied_user: bool = replied_user
 
     def to_dict(self, *, reply: bool = False) -> dict:
         ret = {"parsed": []}
@@ -808,7 +853,9 @@ class AllowedMentions(CopyableObject):
 
 
 class ListThreadsResponse:
-    def __init__(self, client, resp):
+    RESPONSE = typing.Union["ListThreadsResponse", typing.Awaitable["ListThreadsResponse"]]
+
+    def __init__(self, client: "APIClient", resp: dict):
         self.threads: typing.List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
         self.members: typing.List[ThreadMember] = [ThreadMember(client, x) for x in resp["members"]]
         self.has_more: typing.Optional[bool] = resp.get("has_more")

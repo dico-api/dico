@@ -1,7 +1,6 @@
 import typing
 import datetime
 from .snowflake import Snowflake
-from .user import User
 from ..base.model import FlagBase, TypeBase
 
 
@@ -11,7 +10,7 @@ class GetGateway:
         self.shards: typing.Optional[int] = resp.get("shards", 0)
         self.session_start_limit: typing.Optional[SessionStartLimit] = SessionStartLimit.optional(resp.get("session_start_limit"))
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {"url": self.url, "shards": self.shards, "session_start_limit": self.session_start_limit}
 
 
@@ -70,42 +69,6 @@ class GatewayResponse:
 
     def to_dict(self):
         return {"op": self.op, "d": self.d, "s": self.s, "t": self.t}
-
-
-class Application:
-    TYPING = typing.Union[int, str, Snowflake, "Application"]
-
-    def __init__(self, client, resp):
-        self.id = Snowflake(resp["id"])
-        self.name = resp["name"]
-        self.icon = resp["icon"]
-        self.description = resp["description"]
-        self.rpc_origins = resp.get("rpc_origins")
-        self.bot_public = resp["bot_public"]
-        self.bot_require_code_grant = resp["bot_require_code_grant"]
-        self.terms_of_service_url = resp.get("terms_of_service_url")
-        self.privacy_policy_url = resp.get("privacy_policy_url")
-        self.owner = User.create(client, resp["owner"])
-        self.summary = resp["summary"]
-        self.verify_key = resp["verify_key"]
-        self.team = resp["team"]
-        self.guild_id = resp["guild_id"]
-        self.primary_sku_id = resp["primary_sku_id"]
-        self.slug = resp["slug"]
-        self.cover_image = resp["cover_image"]
-        self.flags = ApplicationFlags.from_value(resp["flags"])
-
-    def __int__(self):
-        return int(self.id)
-
-
-class ApplicationFlags(FlagBase):
-    GATEWAY_PRESENCE = 1 << 12
-    GATEWAY_PRESENCE_LIMITED = 1 << 13
-    GATEWAY_GUILD_MEMBERS = 1 << 14
-    GATEWAY_GUILD_MEMBERS_LIMITED = 1 << 15
-    VERIFICATION_PENDING_GUILD_LIMIT = 1 << 16
-    EMBEDDED = 1 << 17
 
 
 class Activity:
@@ -318,7 +281,7 @@ class Opcodes:
     HEARTBEAT_ACK = 11
 
     @staticmethod
-    def as_string(code: int):
+    def as_string(code: int) -> str:
         opcodes = {0: "Dispatch",
                    1: "Heartbeat",
                    2: "Identify",

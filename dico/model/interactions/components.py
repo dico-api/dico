@@ -7,9 +7,9 @@ from ...base.model import TypeBase
 
 class Component:
     def __init__(self, component_type: typing.Union[int, "ComponentTypes"]):
-        self.type = ComponentTypes(component_type) if isinstance(component_type, int) else component_type
+        self.type: ComponentTypes = ComponentTypes(component_type) if isinstance(component_type, int) else component_type
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {"type": self.type.value}
 
     @staticmethod
@@ -33,9 +33,9 @@ class ComponentTypes(TypeBase):
 class ActionRow(Component):
     def __init__(self, *components: typing.Union[Component, dict]):
         super().__init__(ComponentTypes.ACTION_ROW)
-        self.components = [Component.auto_detect(x) if isinstance(x, dict) else x for x in components or []]
+        self.components: typing.List[Component] = [Component.auto_detect(x) if isinstance(x, dict) else x for x in components or []]
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {"type": self.type.value, "components": [x.to_dict() for x in self.components]}
 
     @classmethod
@@ -47,23 +47,23 @@ class Button(Component):
     def __init__(self,
                  *,
                  style: typing.Union["ButtonStyles", int],
-                 label: str = None,
-                 emoji: typing.Union[Emoji, dict, "PartialEmoji", str] = None,
-                 custom_id: str = None,
-                 url: str = None,
-                 disabled: bool = False,
+                 label: typing.Optional[str] = None,
+                 emoji: typing.Optional[typing.Union[Emoji, dict, "PartialEmoji", str]] = None,
+                 custom_id: typing.Optional[str] = None,
+                 url: typing.Optional[str] = None,
+                 disabled: typing.Optional[bool] = False,
                  **_):  # Dummy.
         super().__init__(ComponentTypes.BUTTON)
-        self.style = ButtonStyles(style) if isinstance(style, int) else style
-        self.label = label
-        self.emoji = PartialEmoji(emoji) if isinstance(emoji, dict) else \
+        self.style: ButtonStyles = ButtonStyles(style) if isinstance(style, int) else style
+        self.label: typing.Optional[str] = label
+        self.emoji: typing.Optional[PartialEmoji] = PartialEmoji(emoji) if isinstance(emoji, dict) else \
             PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else \
             PartialEmoji.from_str(emoji) if isinstance(emoji, str) else emoji
-        self.custom_id = custom_id
-        self.url = url
-        self.disabled = disabled
+        self.custom_id: typing.Optional[str] = custom_id
+        self.url: typing.Optional[str] = url
+        self.disabled: bool = disabled
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {"type": self.type.value}
         if self.style is not None:
             ret["style"] = self.style.value
@@ -97,20 +97,20 @@ class SelectMenu(Component):
                  *,
                  custom_id: str,
                  options: typing.List[typing.Union["SelectOption", dict]],
-                 placeholder: str = None,
-                 min_values: int = None,
-                 max_values: int = None,
-                 disabled: bool = None,
+                 placeholder: typing.Optional[str] = None,
+                 min_values: typing.Optional[int] = None,
+                 max_values: typing.Optional[int] = None,
+                 disabled: typing.Optional[bool] = None,
                  **_):  # Dummy.
         super().__init__(ComponentTypes.SELECT_MENU)
-        self.custom_id = custom_id
-        self.options = [SelectOption.create(x) if isinstance(x, dict) else x for x in options]
-        self.placeholder = placeholder
-        self.min_values = min_values
-        self.max_values = max_values
-        self.disabled = disabled
+        self.custom_id: str = custom_id
+        self.options: typing.List[SelectOption] = [SelectOption.create(x) if isinstance(x, dict) else x for x in options]
+        self.placeholder: typing.Optional[str] = placeholder
+        self.min_values: typing.Optional[int] = min_values
+        self.max_values: typing.Optional[int] = max_values
+        self.disabled: typing.Optional[bool] = disabled
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {"type": self.type.value}
         if self.custom_id is not None:
             ret["custom_id"] = self.custom_id
@@ -136,18 +136,18 @@ class SelectOption:
                  *,
                  label: str,
                  value: str,
-                 description: str = None,
-                 emoji: typing.Union["PartialEmoji", Emoji, dict, str] = None,
-                 default: bool = None):
-        self.label = label
-        self.value = value
-        self.description = description
-        self.emoji = PartialEmoji(emoji) if isinstance(emoji, dict) else \
+                 description: typing.Optional[str] = None,
+                 emoji: typing.Optional[typing.Union["PartialEmoji", Emoji, dict, str]] = None,
+                 default: typing.Optional[bool] = None):
+        self.label: str = label
+        self.value: str = value
+        self.description: typing.Optional[str] = description
+        self.emoji: typing.Optional[PartialEmoji] = PartialEmoji(emoji) if isinstance(emoji, dict) else \
             PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else \
             PartialEmoji.from_str(emoji) if isinstance(emoji, str) else emoji
-        self.default = default
+        self.default: typing.Optional[bool] = default
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         ret = {"label": self.label, "value": self.value}
         if self.description is not None:
             ret["description"] = self.description
@@ -163,12 +163,12 @@ class SelectOption:
 
 
 class PartialEmoji:
-    def __init__(self, resp):
-        self.name = resp["name"]
-        self.id = Snowflake.optional(resp.get("id"))
-        self.animated = resp.get("animated", False)
+    def __init__(self, resp: dict):
+        self.name: str = resp["name"]
+        self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
+        self.animated: bool = resp.get("animated", False)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         resp = {"name": self.name}
         if self.id:
             resp["id"] = str(self.id)

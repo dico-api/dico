@@ -11,6 +11,7 @@ Yet another Discord API wrapper for Python, aimed to follow Discord API format a
 ## Features
 - Discord v9 API (including Threads, components, context menus, etc.)
 - Full interaction support
+- API-Only supported
 - More soon™
 
 ## Installation

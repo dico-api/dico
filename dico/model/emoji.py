@@ -4,12 +4,15 @@ from .snowflake import Snowflake
 
 if typing.TYPE_CHECKING:
     from .permission import Role
+    from ..api import APIClient
 
 
 class Emoji:
     TYPING = typing.Union[int, str, Snowflake, "Emoji"]
+    RESPONSE = typing.Union["Emoji", typing.Awaitable["Emoji"]]
+    RESPONSE_AS_LIST = typing.Union[typing.List["Emoji"], typing.Awaitable[typing.List["Emoji"]]]
 
-    def __init__(self, client, resp):
+    def __init__(self, client: "APIClient", resp: dict):
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
         self.name: str = resp["name"]
         self.roles: typing.Optional[typing.List["Role"]] = [client.get(x) for x in resp.get("roles", [])] if client.has_cache else [Snowflake.optional(x) for x in resp.get("roles", [])]
@@ -20,10 +23,10 @@ class Emoji:
         self.animated: typing.Optional[bool] = resp.get("animated")
         self.available: typing.Optional[bool] = resp.get("available")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"<:{self.name}:{self.id}>" if self.id else self.name
 
-    def __int__(self):
+    def __int__(self) -> int:
         return int(self.id)
 
     def __repr__(self) -> str:
