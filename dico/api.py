@@ -8,7 +8,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
-    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway
+    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway, VideoQualityModes
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if typing.TYPE_CHECKING:
@@ -19,16 +19,19 @@ class APIClient:
     """
     REST API handling client.
 
-    :param token: Token of the client.
-    :param base: HTTP request handler to use. Must inherit :class:`.base.http.HTTPRequestBase`.
-    :param default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object to use. Default None.
-    :param application_id: ID of the application. Required if you use interactions.
-    :param **http_options: Options of HTTP request handler.
+    .. note::
+        Most of the object parameters accept Snowflake or int or str. Refer each object's ``TYPING`` attribute.
 
-    :ivar http: HTTP request client.
-    :ivar default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object of the API client.
-    :ivar application: :class.model.gateway.Application: of the client.
-    :ivar application_id: ID of the application. Can be ``None``, and if it is, you must pass parameter application_id for all methods that requires it.
+    :param str token: Token of the client.
+    :param Type[HTTPRequestBase] base: HTTP request handler to use. Must inherit :class:`.base.http.HTTPRequestBase`.
+    :param Optional[AllowedMentions] default_allowed_mentions: Default allowed mentions object to use. Default None.
+    :param Optional[Snowflake] application_id: ID of the application. Required if you use interactions.
+    :param http_options: Options of HTTP request handler.
+
+    :ivar HTTPRequestBase ~.http: HTTP request client.
+    :ivar Optional[AllowedMentions] ~.default_allowed_mentions: Default allowed mentions object of the API client.
+    :ivar Optional[Application] ~.application: Application object of the client.
+    :ivar Optional[Snowflake] ~.application_id: ID of the application. Can be ``None``, and if it is, you must pass parameter application_id for all methods that requires it.
     """
 
     def __init__(self,
@@ -48,10 +51,20 @@ class APIClient:
     def request_guild_audit_log(self,
                                 guild: Guild.TYPING,
                                 *,
-                                user: User.TYPING = None,
-                                action_type: typing.Union[int, AuditLogEvents] = None,
-                                before: "DiscordObjectBase.TYPING" = None,
-                                limit: int = None) -> AuditLog.RESPONSE:
+                                user: typing.Optional[User.TYPING] = None,
+                                action_type: typing.Optional[typing.Union[int, AuditLogEvents]] = None,
+                                before: typing.Optional["DiscordObjectBase.TYPING"] = None,
+                                limit: typing.Optional[int] = None) -> AuditLog.RESPONSE:
+        """
+        Requests guild audit log.
+
+        :param Guild guild: Guild to request audit log.
+        :param Optional[User] user: Moderator who did the action. Default all.
+        :param Optional[AuditLogEvents] action_type: Type of the audit log to get.
+        :param Optional[DiscordObjectBase] before: Entry object to get before. Can be any object which includes ID.
+        :param Optional[int] limit: Limit of the number of the audit logs to get.
+        :return: :class:`.model.audit_log.AuditLog`
+        """
         if user is not None:
             user = str(int(user))
         if action_type is not None:
@@ -66,6 +79,12 @@ class APIClient:
     # Channel
 
     def request_channel(self, channel: Channel.TYPING) -> Channel.RESPONSE:
+        """
+        Requests channel object.
+
+        :param Channel channel: Channel to get.
+        :return: :class:`.model.channel.Channel`
+        """
         channel = self.http.request_channel(int(channel))
         if isinstance(channel, dict):
             return Channel.create(self, channel)
@@ -74,25 +93,47 @@ class APIClient:
     def modify_guild_channel(self,
                              channel: Channel.TYPING,
                              *,
-                             name: str = None,
-                             channel_type: int = None,
-                             position: int = EmptyObject,
-                             topic: str = EmptyObject,
-                             nsfw: bool = EmptyObject,
-                             rate_limit_per_user: int = EmptyObject,
-                             bitrate: int = EmptyObject,
-                             user_limit: int = EmptyObject,
-                             permission_overwrites: typing.List[Overwrite] = EmptyObject,
-                             parent: Channel.TYPING = EmptyObject,
-                             rtc_region: str = EmptyObject,
-                             video_quality_mode: int = EmptyObject,
-                             reason: str = None) -> Channel.RESPONSE:
+                             name: typing.Optional[str] = None,
+                             channel_type: typing.Optional[typing.Union[int, ChannelTypes]] = None,
+                             position: typing.Optional[int] = EmptyObject,
+                             topic: typing.Optional[str] = EmptyObject,
+                             nsfw: typing.Optional[bool] = EmptyObject,
+                             rate_limit_per_user: typing.Optional[int] = EmptyObject,
+                             bitrate: typing.Optional[int] = EmptyObject,
+                             user_limit: typing.Optional[int] = EmptyObject,
+                             permission_overwrites: typing.Optional[typing.List[Overwrite]] = EmptyObject,
+                             parent: typing.Optional[Channel.TYPING] = EmptyObject,
+                             rtc_region: typing.Optional[str] = EmptyObject,
+                             video_quality_mode: typing.Optional[typing.Union[int, VideoQualityModes]] = EmptyObject,
+                             reason: typing.Optional[str] = None) -> Channel.RESPONSE:
+        """
+        Modifies guild channel.
+
+        .. note::
+            All keyword-only arguments except name, channel_type, and reason accept None.
+
+        :param Channel channel: Channel to edit.
+        :param Optional[str] name: Name of the channel to change.
+        :param Optional[ChannelTypes] channel_type: Type of the channel to change.
+        :param Optional[int] position: Position of the channel to change.
+        :param Optional[str] topic: Topic of the channel to change.
+        :param Optional[bool] nsfw: Whether this channel is NSFW.
+        :param Optional[int] rate_limit_per_user: Slowmode of the channel to change.
+        :param Optional[int] bitrate: Bitrate of the channel to change.
+        :param Optional[int] user_limit: User limit of the channel to change.
+        :param Optional[List[Overwrite]] permission_overwrites: List of permission overwrites to change.
+        :param Optional[Channel] parent: Parent category of the channel to change.
+        :param Optional[str] rtc_region: RTC region of the channel to change. Pass None to set to automatic.
+        :param Optional[VideoQualityModes] video_quality_mode: Video quality mode of the camera to change.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`.model.channel.Channel`
+        """
         if permission_overwrites:
             permission_overwrites = [x.to_dict() for x in permission_overwrites]
         if parent:
             parent = int(parent)  # noqa
-        channel = self.http.modify_guild_channel(int(channel), name, channel_type, position, topic, nsfw, rate_limit_per_user,
-                                                 bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode, reason=reason)
+        channel = self.http.modify_guild_channel(int(channel), name, int(channel_type), position, topic, nsfw, rate_limit_per_user,
+                                                 bitrate, user_limit, permission_overwrites, parent, rtc_region, int(video_quality_mode), reason=reason)
         if isinstance(channel, dict):
             return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)

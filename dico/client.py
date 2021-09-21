@@ -19,27 +19,28 @@ class Client(APIClient):
     """
     Client with async request handler and websocket connection.
 
-    :param token: Token of the client.
-    :param intents: Intents to use. Default everything except privileged.
-    :param default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object to use. Default None.
-    :param loop: asyncio Event loop object to use. Default automatic.
-    :param application_id: Application ID if needed.
-    :param monoshard: Whether to mono-shard this bot.
-    :param shard_count: Count of shards to launch, if monoshard is True.
+    :param str token: Token of the client.
+    :param Intents intents: Intents to use. Default everything except privileged.
+    :param Optional[AllowedMentions] default_allowed_mentions: Default allowed mentions object to use. Default None.
+    :param Optional[asyncio.AbstractEventLoop] loop: asyncio Event loop object to use. Default automatic.
+    :param bool cache: Whether to enable caching. Default True.
+    :param Optional[Snowflake] application_id: Application ID if needed.
+    :param bool monoshard: Whether to mono-shard this bot.
+    :param Optional[int] shard_count: Count of shards to launch, if monoshard is True.
     :param cache_max_sizes: Max sizes of the cache per types. Message limit is set to 1000 by default.
 
-    :ivar http: HTTP request client.
-    :ivar default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object of the client.
-    :ivar loop: asyncio Event loop object of the client.
-    :ivar token: Application token of the client.
-    :ivar cache: :class:`.cache.Intents` of the client.
-    :ivar intents: :class:`.model.gateway.Intents` of the client.
-    :ivar ws: :class:`.ws.websocket.WebSocketClient` of the client.
-    :ivar events: :class:`.handler.EventHandler` of the client.
-    :ivar application: :class:`.model.gateway.Application` of the client.
-    :ivar application_id: ID of the application. Can be ``None`` if Ready event is not called, and if it is, you must pass parameter application_id for all methods that has it.
-    :ivar monoshard: Whether mono-shard is enabled.
-    :ivar shard_count: Current shard count of the bot.
+    :ivar AsyncHTTPRequest ~.http: HTTP request client.
+    :ivar Optional[AllowedMentions] ~.default_allowed_mentions: Default :class:`.model.channel.AllowedMentions` object of the client.
+    :ivar asyncio.AbstractEventLoop ~.loop: asyncio Event loop object of the client.
+    :ivar str ~.token: Application token of the client.
+    :ivar Optional[CacheContainer] ~.cache: Cache container of the client.
+    :ivar Intents ~.intents: Intents of the client.
+    :ivar Optional[WebSocketClient] ~.ws: Websocket client of the client.
+    :ivar EventHandler ~.events: Event handler of the client.
+    :ivar Optional[Application] ~.application: Application object of the client.
+    :ivar Optional[Snowflake] ~.application_id: ID of the application. Can be ``None`` if Ready event is not called, and if it is, you must pass parameter application_id for all methods that has it.
+    :ivar bool ~.monoshard: Whether mono-sharding is enabled.
+    :ivar Optional[int] ~.shard_count: Current shard count of the bot.
     """
 
     def __init__(self,
@@ -61,7 +62,7 @@ class Client(APIClient):
         # The reason only supporting caching with WS is to ensure up-to-date object.
         self.__ws_class = WebSocketClient
         self.intents: Intents = intents
-        self.ws: typing.Union[None, WebSocketClient] = None
+        self.ws: typing.Optional[WebSocketClient] = None
         self.events: EventHandler = EventHandler(self)
         self.__wait_futures = {}
         self.__ready_future = asyncio.Future()
@@ -103,8 +104,9 @@ class Client(APIClient):
             client.on_ready = lambda r: print("Ready!")  # You may also directly assign event.
 
 
-        :param name: Name of the event. Case-insensitive. Default name of the function.
+        :param Optional[str] name: Name of the event. Case-insensitive. Default name of the function.
         :param meth: Method or Coroutine, if you don't want to use as decorator.
+        :type meth: Optional[Union[Callable, Coroutine]]
         """
         def wrap(func=None):
             func = func or meth
@@ -121,9 +123,10 @@ class Client(APIClient):
         """
         Waits for the event dispatch.
 
-        :param event_name: Name of the event. Case insensitive.
-        :param timeout: Timeout time in second. If not passed, it will wait forever.
+        :param str event_name: Name of the event. Case insensitive.
+        :param Optional[float] timeout: Timeout time in second. If not passed, it will wait forever.
         :param check: Check function of the event. If passed, it will wait until the event result passes the check.
+        :type check: Optional[Callable[[Any], bool]]
         :return: Payload of the event.
         :raises TimeoutError: Timeout occurred.
         :raises WebsocketClosed: Websocket is closed, therefore further action could not be performed.
@@ -147,8 +150,8 @@ class Client(APIClient):
         """
         Dispatches new event.
 
-        :param name: Name of the event.
-        :param args: Arguments of the event.
+        :param str name: Name of the event.
+        :param Any args: Arguments of the event.
         """
         [self.loop.create_task(utils.safe_call(x(*args))) for x in self.events.get(name.upper())]
         # [self.__wait_futures[name.upper()].pop(x).set_result(args) for x in range(len(self.__wait_futures.get(name.upper(), [])))]
@@ -162,7 +165,7 @@ class Client(APIClient):
         """
         Gets shard ID from guild.
 
-        :param guild: Guild to get shard ID.
+        :param Guild guild: Guild to get shard ID.
         :return: ID of the shard.
         """
         if self.__shards:
@@ -172,7 +175,7 @@ class Client(APIClient):
         """
         Gets shard from guild.
 
-        :param guild: Guild to get shard.
+        :param Guild guild: Guild to get shard.
         :return: :class:`.ws.websocket.WebSocketClient`
         """
         if self.__shards:
@@ -186,16 +189,24 @@ class Client(APIClient):
 
     @property
     def get(self):
-        """Alias of ``.cache.get``."""
+        """
+        Alias of ``.cache.get``.
+
+        .. note::
+            These shortcuts are also available: ``get_guild``, ``get_channel``, ``get_role``, ``get_user``, ``get_sticker``, ``get_message``
+        """
         if self.has_cache:
             return self.cache.get
 
-    async def start(self, reconnect_on_unknown_disconnect: bool = False, compress: bool = True):
+    async def start(self, reconnect_on_unknown_disconnect: bool = False, compress: bool = False):
         """
         Starts websocket connection.
 
         .. warning::
             You can call this only once.
+
+        :param bool reconnect_on_unknown_disconnect: Whether to reconnect on unknown websocket error.
+        :param bool compress: Whether to enable zlib compress.
         """
         if self.monoshard:
             gateway = await self.request_gateway()
@@ -220,7 +231,7 @@ class Client(APIClient):
         elif self.__shards:
             for x in self.__shards.values():
                 await x.close()
-        await self.http.close()
+        await self.http.close()  # noqa
 
     async def update_presence(self, *, since: typing.Optional[int] = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
         """
@@ -228,10 +239,11 @@ class Client(APIClient):
 
         All parameters must be passed as keyword.
 
-        :param since: Time as millisecond when the bot was idle since.
+        :param Optional[int] since: Time as millisecond when the bot was idle since.
         :param activities: List of activities.
-        :param status: Status of the bot.
-        :param afk: Whether the bot is AFK.
+        :type activities: List[Union[Activity, dict]]
+        :param str status: Status of the bot. Default ``online``.
+        :param bool afk: Whether the bot is AFK.
         """
         activities = [x.to_dict() if not isinstance(x, dict) else x for x in activities]
         if self.ws:
@@ -248,19 +260,19 @@ class Client(APIClient):
         """
         Changes the voice state of the bot in guild. (Connecting/Disconnecting from the guild, etc...)
 
-        :param guild: Guild to change presence.
-        :param channel: Voice channel to connect. Pass nothing or None to disconnect from the channel.
-        :param self_mute: Whether the bot is self-muted.
-        :param self_deaf: Whether the bot is self-deaf.
+        :param Guild guild: Guild to change presence.
+        :param Optional[Channel] channel: Voice channel to connect. Pass nothing or None to disconnect from the channel.
+        :param bool self_mute: Whether the bot is self-muted.
+        :param bool self_deaf: Whether the bot is self-deaf.
         """
         if self.ws:
             ws = self.ws
         elif self.__shards:
             ws = self.get_shard(guild)
             if not ws:
-                raise AttributeError(f"shard for guild {guild.id} not found.")
+                raise AttributeError(f"shard for guild {int(guild)} not found.")
         else:
-            raise AttributeError(f"shard for guild {guild.id} not found.")
+            raise AttributeError(f"shard for guild {int(guild)} not found.")
         return ws.update_voice_state(str(int(guild)), str(int(channel)) if channel else None, self_mute, self_deaf)
 
     @property
@@ -278,9 +290,10 @@ class Client(APIClient):
         return True
 
     @property
-    def guild_count(self) -> int:
+    def guild_count(self) -> typing.Optional[int]:
         """Total count of guilds this bot is in."""
-        return self.cache.get_size("guild")
+        if self.has_cache:
+            return self.cache.get_size("guild")
 
     @property
     def ping(self) -> float:
@@ -326,6 +339,9 @@ class Client(APIClient):
 
         .. warning::
             This must be placed at the end of the code.
+
+        :param bool reconnect_on_unknown_disconnect: Whether to reconnect on unknown websocket error.
+        :param bool compress: Whether to enable zlib compress.
         """
         try:
             self.loop.create_task(self.start(reconnect_on_unknown_disconnect, compress))

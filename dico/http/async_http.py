@@ -6,7 +6,10 @@ import asyncio
 import aiohttp
 from .ratelimit import RatelimitHandler
 from .. import exception, __version__
-from ..base.http import HTTPRequestBase, EmptyObject, RESPONSE
+from ..base.http import HTTPRequestBase, EmptyObject, _R
+
+
+ASYNC_RESPONSE = typing.Awaitable[_R]
 
 
 class AsyncHTTPRequest(HTTPRequestBase):
@@ -49,6 +52,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
             self.loop.run_until_complete(self.close())
 
     async def close(self):
+        """Closes session and marks this client as closed."""
         if self._close_on_del:
             await self.session.close()
         self._closed = True
@@ -61,7 +65,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                       is_json: bool = False,
                       reason_header: typing.Optional[str] = None,
                       retry: int = None,
-                      **kwargs) -> RESPONSE:
+                      **kwargs) -> _R:
         """
         Sends request to Discord API.
 
@@ -73,6 +77,11 @@ class AsyncHTTPRequest(HTTPRequestBase):
         :param retry: Retry count in rate limited situation.
         :param kwargs: Extra options to add.
         :return: Response.
+        :raises BadRequest: This request is incorrect.
+        :raises Forbidden: You do not have permission for this action.
+        :raises DiscordError: Something is wrong with Discord right now.
+        :raises Unknown: We are unable to handle this error, sorry.
+        :raises RateLimited: We are rate limited, please try again later.
         """
         code = 429  # Empty code in case of rate limit fail.
         resp = {}   # Empty resp in case of rate limit fail.
@@ -141,7 +150,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
                                   components: typing.List[dict] = None,
-                                  sticker_ids: typing.List[str] = None) -> RESPONSE:
+                                  sticker_ids: typing.List[str] = None) -> ASYNC_RESPONSE:
         if not (content or embeds or files or sticker_ids):
             raise ValueError("either content or embed or files must be passed.")
         payload_json = {}
@@ -180,7 +189,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                 files: typing.List[io.FileIO] = EmptyObject,
                                 allowed_mentions: dict = EmptyObject,
                                 attachments: typing.List[dict] = EmptyObject,
-                                components: typing.List[dict] = EmptyObject) -> RESPONSE:
+                                components: typing.List[dict] = EmptyObject) -> ASYNC_RESPONSE:
         payload_json = {}
         form = aiohttp.FormData()
         if content is not EmptyObject:
@@ -204,7 +213,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                 form.add_field(name, f, filename=sel.name, content_type="application/octet-stream")
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", form)
 
-    def create_guild_sticker(self, guild_id, name: str, description: str, tags: str, file: io.FileIO, reason: str = None) -> RESPONSE:
+    def create_guild_sticker(self, guild_id, name: str, description: str, tags: str, file: io.FileIO, reason: str = None) -> ASYNC_RESPONSE:
         form = aiohttp.FormData()
         form.add_field("name", name)
         form.add_field("description", description)
@@ -225,7 +234,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                    embeds: typing.List[dict] = None,
                                    allowed_mentions: dict = None,
                                    components: typing.List[dict] = None,
-                                   flags: int = None) -> RESPONSE:
+                                   flags: int = None) -> ASYNC_RESPONSE:
         if not (content or embeds or files):
             raise ValueError("either content or embeds or files must be passed.")
         payload_json = {}
@@ -269,7 +278,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                              files: typing.List[io.FileIO] = EmptyObject,
                              allowed_mentions: dict = EmptyObject,
                              attachments: typing.List[dict] = EmptyObject,
-                             components: typing.List[dict] = EmptyObject) -> RESPONSE:
+                             components: typing.List[dict] = EmptyObject) -> ASYNC_RESPONSE:
         payload_json = {}
         form = aiohttp.FormData()
         if content is not EmptyObject:
@@ -303,5 +312,5 @@ class AsyncHTTPRequest(HTTPRequestBase):
                token: str,
                loop: asyncio.AbstractEventLoop = None,
                session: aiohttp.ClientSession = None,
-               default_retry: int = 3):
+               default_retry: int = 3) -> "AsyncHTTPRequest":
         return cls(token, loop, session, default_retry)
