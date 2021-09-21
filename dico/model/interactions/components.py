@@ -2,10 +2,10 @@ import typing
 
 from ..emoji import Emoji
 from ..snowflake import Snowflake
-from ...base.model import TypeBase
+from ...base.model import TypeBase, CopyableObject
 
 
-class Component:
+class Component(CopyableObject):
     def __init__(self, component_type: typing.Union[int, "ComponentTypes"]):
         self.type: ComponentTypes = ComponentTypes(component_type) if isinstance(component_type, int) else component_type
 
