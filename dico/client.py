@@ -155,11 +155,18 @@ class Client(APIClient):
         """
         [self.loop.create_task(utils.safe_call(x(*args))) for x in self.events.get(name.upper())]
         # [self.__wait_futures[name.upper()].pop(x).set_result(args) for x in range(len(self.__wait_futures.get(name.upper(), [])))]
+        """
         for x in range(len(self.__wait_futures.get(name.upper(), []))):
             with suppress(IndexError):  # temporary fix, we might need to use while instead
                 fut: asyncio.Future = self.__wait_futures[name.upper()].pop(x)
                 if not fut.cancelled():
                     fut.set_result(args)
+        """
+        tgt = self.__wait_futures.get(name.upper(), [])
+        while tgt:
+            fut: asyncio.Future = tgt.pop(0)
+            if not fut.cancelled():
+                fut.set_result(args)
 
     def get_shard_id(self, guild: Guild.TYPING) -> int:
         """
