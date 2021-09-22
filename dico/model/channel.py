@@ -193,6 +193,9 @@ class Channel(DiscordObjectBase):
     def is_thread_channel(self) -> bool:
         return self.type.guild_news_thread or self.type.guild_public_thread or self.type.guild_private_thread
 
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} id={self.id} name={self.name}>'
+
 
 class ChannelTypes(TypeBase):
     GUILD_TEXT = 0
@@ -347,6 +350,9 @@ class Message(DiscordObjectBase):
         elif self.author and self.client.has_cache:
             return self.client.get(self.author.dm_channel_id, "channel") or send_only
         return send_only
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id}>"
 
 
 class MessageTypes(TypeBase):

@@ -64,6 +64,9 @@ class Sticker(DiscordObjectBase):
         if self.client.has_cache and self.pack_id:
             return self.client.get(self.pack_id, "sticker_pack")  # noqa
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
+
 
 class StickerTypes(TypeBase):
     STANDARD = 1
@@ -88,6 +91,9 @@ class StickerItem:
     def __int__(self) -> int:
         return int(self.id)
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
+
 
 class StickerPack(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "StickerPack"]
@@ -109,3 +115,6 @@ class StickerPack(DiscordObjectBase):
 
     def banner_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         return cdn_url("app-assets/710982414301790216/store", image_hash=self.banner_asset_id, extension=extension, size=size)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"

@@ -270,6 +270,9 @@ class Guild(DiscordObjectBase):
         if self.cache:
             return self.get(self.owner_id, "member") or self.get(self.owner_id, "user")
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
+
 
 class DefaultMessageNotificationLevel(TypeBase):
     ALL_MESSAGES = 0

@@ -77,6 +77,9 @@ class Role(DiscordObjectBase):
             body["position"] = position
         return body
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
+
 
 class RoleTags:
     def __init__(self, resp: dict):

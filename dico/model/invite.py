@@ -44,6 +44,9 @@ class Invite:
     def url(self) -> str:
         return f"https://discord.gg/{self.code}"
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} code={self.code}>"
+
 
 class InviteTargetTypes(TypeBase):
     STREAM = 1

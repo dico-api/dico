@@ -58,7 +58,7 @@ class User(DiscordObjectBase):
 
     def get_voice_state(self) -> "VoiceState":
         return self.voice_state
-
+      
     def create_dm(self) -> "Channel.RESPONSE":
         from .channel import Channel
         channel = self.client.create_dm(self)
@@ -89,6 +89,9 @@ class User(DiscordObjectBase):
     @property
     def send(self):
         return self.create_message
+    
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id}>"
 
 
 class UserFlags(FlagBase):

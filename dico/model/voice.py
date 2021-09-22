@@ -49,6 +49,8 @@ class VoiceState:
     def create(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>"
 
 class VoiceRegion:
     RESPONSE = typing.Union["VoiceRegion", typing.Awaitable["VoiceRegion"]]
@@ -61,7 +63,10 @@ class VoiceRegion:
         self.optimal: bool = resp["optimal"]
         self.deprecated: bool = resp["deprecated"]
         self.custom: bool = resp["custom"]
-
+         
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
+          
 
 class VoiceOpcodes:
     IDENTIFY = 0
