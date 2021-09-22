@@ -1,6 +1,6 @@
 import io
-import typing
 import datetime
+from typing import TYPE_CHECKING, Optional, Union, Type, List, Dict, Awaitable
 from .base.http import HTTPRequestBase, EmptyObject
 from .model import Channel, Message, MessageReference, AllowedMentions, Snowflake, Embed, Attachment, Overwrite, \
     Emoji, User, Interaction, InteractionResponse, Webhook, Guild, ApplicationCommand, Invite, Application, FollowedChannel, \
@@ -11,7 +11,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway, VideoQualityModes
 from .utils import from_emoji, wrap_to_async, to_image_data
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from .base.model import AbstractObject, DiscordObjectBase
 
 
@@ -51,24 +51,24 @@ class APIClient:
     def __init__(self,
                  token: str,
                  *,
-                 base: typing.Type[HTTPRequestBase],
-                 default_allowed_mentions: typing.Optional[AllowedMentions] = None,
-                 application_id: typing.Optional[Snowflake.TYPING] = None,
+                 base: Type[HTTPRequestBase],
+                 default_allowed_mentions: Optional[AllowedMentions] = None,
+                 application_id: Optional[Snowflake.TYPING] = None,
                  **http_options):
         self.http: HTTPRequestBase = base.create(token, **http_options)
-        self.default_allowed_mentions: typing.Optional[AllowedMentions] = default_allowed_mentions
-        self.application: typing.Optional[Application] = None
-        self.application_id: typing.Optional[Snowflake] = Snowflake.ensure_snowflake(application_id)
+        self.default_allowed_mentions: Optional[AllowedMentions] = default_allowed_mentions
+        self.application: Optional[Application] = None
+        self.application_id: Optional[Snowflake] = Snowflake.ensure_snowflake(application_id)
 
     # Audit Log
 
     def request_guild_audit_log(self,
                                 guild: Guild.TYPING,
                                 *,
-                                user: typing.Optional[User.TYPING] = None,
-                                action_type: typing.Optional[typing.Union[int, AuditLogEvents]] = None,
-                                before: typing.Optional["DiscordObjectBase.TYPING"] = None,
-                                limit: typing.Optional[int] = None) -> AuditLog.RESPONSE:
+                                user: Optional[User.TYPING] = None,
+                                action_type: Optional[Union[int, AuditLogEvents]] = None,
+                                before: Optional["DiscordObjectBase.TYPING"] = None,
+                                limit: Optional[int] = None) -> AuditLog.RESPONSE:
         """
         Requests guild audit log.
 
@@ -107,19 +107,19 @@ class APIClient:
     def modify_guild_channel(self,
                              channel: Channel.TYPING,
                              *,
-                             name: typing.Optional[str] = None,
-                             channel_type: typing.Optional[typing.Union[int, ChannelTypes]] = None,
-                             position: typing.Optional[int] = EmptyObject,
-                             topic: typing.Optional[str] = EmptyObject,
-                             nsfw: typing.Optional[bool] = EmptyObject,
-                             rate_limit_per_user: typing.Optional[int] = EmptyObject,
-                             bitrate: typing.Optional[int] = EmptyObject,
-                             user_limit: typing.Optional[int] = EmptyObject,
-                             permission_overwrites: typing.Optional[typing.List[Overwrite]] = EmptyObject,
-                             parent: typing.Optional[Channel.TYPING] = EmptyObject,
-                             rtc_region: typing.Optional[str] = EmptyObject,
-                             video_quality_mode: typing.Optional[typing.Union[int, VideoQualityModes]] = EmptyObject,
-                             reason: typing.Optional[str] = None) -> Channel.RESPONSE:
+                             name: Optional[str] = None,
+                             channel_type: Optional[Union[int, ChannelTypes]] = None,
+                             position: Optional[int] = EmptyObject,
+                             topic: Optional[str] = EmptyObject,
+                             nsfw: Optional[bool] = EmptyObject,
+                             rate_limit_per_user: Optional[int] = EmptyObject,
+                             bitrate: Optional[int] = EmptyObject,
+                             user_limit: Optional[int] = EmptyObject,
+                             permission_overwrites: Optional[List[Overwrite]] = EmptyObject,
+                             parent: Optional[Channel.TYPING] = EmptyObject,
+                             rtc_region: Optional[str] = EmptyObject,
+                             video_quality_mode: Optional[Union[int, VideoQualityModes]] = EmptyObject,
+                             reason: Optional[str] = None) -> Channel.RESPONSE:
         """
         Modifies guild channel.
 
@@ -152,37 +152,77 @@ class APIClient:
             return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
-    def modify_group_dm_channel(self, channel: Channel.TYPING, *, name: str = None, icon: bin = None, reason: str = None) -> Channel.RESPONSE:
+    def modify_group_dm_channel(self, channel: Channel.TYPING, *, name: Optional[str] = None, icon: Optional[bytes] = None, reason: Optional[str] = None) -> Channel.RESPONSE:
+        """
+        Modifies group DM channel.
+
+        :param Channel channel: DM Channel to modify.
+        :param Optional[str] name: Name to change.
+        :param Optional[bin] icon: Icon as bytes to change.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`.model.channel.Channel`
+        """
         channel = self.http.modify_group_dm_channel(int(channel), name, icon, reason=reason)
         if isinstance(channel, dict):
             return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
     def modify_thread_channel(self,
-                              channel: Channel.TYPING, *,
-                              name: str = None,
-                              archived: bool = None,
-                              auto_archive_duration: int = None,
-                              locked: bool = None,
-                              rate_limit_per_user: int = EmptyObject,
-                              reason: str = None) -> Channel.RESPONSE:
+                              channel: Channel.TYPING,
+                              *,
+                              name: Optional[str] = None,
+                              archived: Optional[bool] = None,
+                              auto_archive_duration: Optional[int] = None,
+                              locked: Optional[bool] = None,
+                              rate_limit_per_user: Optional[int] = EmptyObject,
+                              reason: Optional[str] = None) -> Channel.RESPONSE:
+        """
+        Modifies thread channel.
+
+        :param Channel channel: Thread channel to modify.
+        :param Optional[str] name: Name to change.
+        :param archived: Whether this thread is archived.
+        :param Optional[int] auto_archive_duration: Auto archive duration to set.
+        :param Optional[bool] locked: Whether this thread is locked.
+        :param Optional[int] rate_limit_per_user: Slowmode time to change. Set to None to remove.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`.model.channel.Channel`
+        """
         channel = self.http.modify_thread_channel(int(channel), name, archived, auto_archive_duration, locked, rate_limit_per_user, reason=reason)
         if isinstance(channel, dict):
             return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
 
-    def delete_channel(self, channel: Channel.TYPING, *, reason: str = None) -> Channel.RESPONSE:
+    def delete_channel(self, channel: Channel.TYPING, *, reason: Optional[str] = None) -> Channel.RESPONSE:
+        """
+        Deletes channel.
+
+        :param Channel channel: Channel to delete.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`.model.channel.Channel`
+        """
         resp = self.http.delete_channel(int(channel), reason=reason)
         if isinstance(resp, dict):
             return Channel.create(self, resp, prevent_caching=True)
         return wrap_to_async(Channel, self, resp, prevent_caching=True)
 
     def request_channel_messages(self,
-                                 channel: Channel.TYPING, *,
-                                 around: Message.TYPING = None,
-                                 before: Message.TYPING = None,
-                                 after: Message.TYPING = None,
-                                 limit: int = 50) -> Message.RESPONSE_AS_LIST:
+                                 channel: Channel.TYPING,
+                                 *,
+                                 around: Optional[Message.TYPING] = None,
+                                 before: Optional[Message.TYPING] = None,
+                                 after: Optional[Message.TYPING] = None,
+                                 limit: Optional[int] = None) -> Message.RESPONSE_AS_LIST:
+        """
+        Requests list of messages in the channel.
+
+        :param Channel channel: Channel to request messages.
+        :param Optional[Message] around: Target message to get around.
+        :param Optional[Message] before: Target message to get before.
+        :param Optional[Message] after: Target message to get after.
+        :param Optional[int] limit: Limit of numbers of messages to request. Default 50.
+        :return: List[:class:`.model.channel.Message`]
+        """
         messages = self.http.request_channel_messages(int(channel), around and str(int(around)), before and str(int(before)), after and str(int(after)), limit)
         # This looks unnecessary, but this is to ensure they are all numbers.
         if isinstance(messages, list):
@@ -190,28 +230,35 @@ class APIClient:
         return wrap_to_async(Message, self, messages)
 
     def request_channel_message(self, channel: Channel.TYPING, message: Message.TYPING) -> Message.RESPONSE:
+        """
+        Requests message from channel.
+
+        :param Channel channel: Channel to request message.
+        :param Message message: Message to request.
+        :return: :class:`.model.channel.Message`
+        """
         message = self.http.request_channel_message(int(channel), int(message))
         if isinstance(message, dict):
-            return Message.create(self, channel)
+            return Message.create(self, message)
         return wrap_to_async(Message, self, message)
 
     def create_message(self,
                        channel: Channel.TYPING,
-                       content: str = None,
+                       content: Optional[str] = None,
                        *,
-                       embed: typing.Union[Embed, dict] = None,
-                       embeds: typing.List[typing.Union[Embed, dict]] = None,
-                       file: FILE_TYPE = None,
-                       files: typing.List[FILE_TYPE] = None,
-                       tts: bool = False,
-                       allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                       message_reference: typing.Union[Message, MessageReference, dict] = None,
-                       component: typing.Union[dict, Component] = None,
-                       components: typing.List[typing.Union[dict, Component]] = None,
-                       sticker: Sticker.TYPING = None,
-                       stickers: typing.List[Sticker.TYPING] = None) -> Message.RESPONSE:
+                       embed: Optional[Union[Embed, dict]] = None,
+                       embeds: Optional[List[Union[Embed, dict]]] = None,
+                       file: Optional[FILE_TYPE] = None,
+                       files: Optional[List[FILE_TYPE]] = None,
+                       tts: Optional[bool] = False,
+                       allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
+                       message_reference: Optional[Union[Message, MessageReference, dict]] = None,
+                       component: Optional[Union[dict, Component]] = None,
+                       components: Optional[List[Union[dict, Component]]] = None,
+                       sticker: Optional[Sticker.TYPING] = None,
+                       stickers: Optional[List[Sticker.TYPING]] = None) -> Message.RESPONSE:
         """
-        Sends message create request to API.
+        Creates message to channel.
 
         .. note::
             - FileIO object passed to ``file`` or ``files`` parameter will be automatically closed when requesting,
@@ -221,20 +268,28 @@ class APIClient:
             - You must pass at least one of ``content`` or ``embed`` or ``file`` or ``files`` parameter.
             - You can't use ``file`` and ``files`` at the same time.
 
-        :param channel: Channel to create message. Accepts both :class:`.model.channel.Channel` and channel ID.
-        :param content: Content of the message.
+        :param Channel channel: Channel to create message.
+        :param Optional[str] content: Content of the message.
         :param embed: Embed of the message.
+        :type embed: Optional[Union[Embed, dict]]
         :param embeds: List of embeds of the message.
+        :type embeds: Optional[List[Union[Embed, dict]]]
         :param file: File of the message.
+        :type file: Optional[Union[io.FileIO, pathlib.Path, str]]
         :param files: Files of the message.
-        :param tts: Whether to speak message.
+        :type files: Optional[List[Union[io.FileIO, pathlib.Path, str]]]
+        :param Optional[bool] tts: Whether to speak message.
         :param allowed_mentions: :class:`.model.channel.AllowedMentions` to use for this request.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
         :param message_reference: Message to reply.
+        :type message_reference: Optional[Union[Message, MessageReference, dict]]
         :param component: Component of the message.
+        :type component: Optional[Union[dict, Component]]
         :param components: List of  components of the message.
-        :param sticker: Sticker of the message.
-        :param stickers: Stickers of the message. Up to 3.
-        :return: Union[:class:`.model.channel.Message`, Coroutine[dict]]
+        :type components: Optional[List[Union[dict, Component]]]
+        :param Optional[Sticker] sticker: Sticker of the message.
+        :param Optional[List[Sticker]] stickers: Stickers of the message. Up to 3.
+        :return: :class:`.model.channel.Message`
         """
         if files and file:
             raise TypeError("you can't pass both file and files.")
@@ -290,6 +345,13 @@ class APIClient:
     def crosspost_message(self,
                           channel: Channel.TYPING,
                           message: Message.TYPING) -> Message.RESPONSE:
+        """
+        Crossposts message.
+
+        :param Channel channel: Channel of the message to crosspost.
+        :param Message message: Message to crosspost.
+        :return: :class:`.model.channel.Message`
+        """
         msg = self.http.crosspost_message(int(channel), int(message))
         if isinstance(msg, dict):
             return Message.create(self, msg)
@@ -298,20 +360,37 @@ class APIClient:
     def create_reaction(self,
                         channel: Channel.TYPING,
                         message: Message.TYPING,
-                        emoji: typing.Union[str, Emoji]):
+                        emoji: Union[str, Emoji]):
+        """
+        Creates reaction to the message.
+
+        :param Channel channel: Channel of the message to create reaction.
+        :param Message message: Message to create reaction.
+        :param emoji: Emoji for creating reaction.
+        :type emoji: Union[str, Emoji]
+        """
         return self.http.create_reaction(int(channel), int(message), from_emoji(emoji))
 
     def delete_reaction(self,
                         channel: Channel.TYPING,
                         message: Message.TYPING,
-                        emoji: typing.Union[str, Emoji],
+                        emoji: Union[str, Emoji],
                         user: User.TYPING = "@me"):
+        """
+        Deletes reaction of the message.
+
+        :param Channel channel: Channel of the message to delete reaction.
+        :param Message message: Message to delete reaction.
+        :param emoji: Emoji of the reaction to delete.
+        :type emoji: Union[str, Emoji]
+        :param User user: User to delete reaction of. Default "@me" which is the bot itself.
+        """
         return self.http.delete_reaction(int(channel), int(message), from_emoji(emoji), int(user) if user != "@me" else user)
 
     def request_reactions(self,
                           channel: Channel.TYPING,
                           message: Message.TYPING,
-                          emoji: typing.Union[str, Emoji],
+                          emoji: Union[str, Emoji],
                           after: User.TYPING = None,
                           limit: int = None) -> User.RESPONSE_AS_LIST:
         users = self.http.request_reactions(int(channel), int(message), from_emoji(emoji), int(after), limit)
@@ -325,7 +404,7 @@ class APIClient:
     def delete_all_reactions_emoji(self,
                                    channel: Channel.TYPING,
                                    message: Message.TYPING,
-                                   emoji: typing.Union[str, Emoji]):
+                                   emoji: Union[str, Emoji]):
         return self.http.delete_all_reactions_emoji(int(channel), int(message), from_emoji(emoji))
 
     def edit_message(self,
@@ -333,14 +412,14 @@ class APIClient:
                      message: Message.TYPING,
                      *,
                      content: str = EmptyObject,
-                     embed: typing.Union[Embed, dict] = EmptyObject,
-                     embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
+                     embed: Union[Embed, dict] = EmptyObject,
+                     embeds: List[Union[Embed, dict]] = EmptyObject,
                      file: FILE_TYPE = EmptyObject,
-                     files: typing.List[FILE_TYPE] = EmptyObject,
-                     allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
-                     attachments: typing.List[typing.Union[Attachment, dict]] = EmptyObject,
-                     component: typing.Union[dict, Component] = EmptyObject,
-                     components: typing.List[typing.Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
+                     files: List[FILE_TYPE] = EmptyObject,
+                     allowed_mentions: Union[AllowedMentions, dict] = EmptyObject,
+                     attachments: List[Union[Attachment, dict]] = EmptyObject,
+                     component: Union[dict, Component] = EmptyObject,
+                     components: List[Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
         if files and file:
             raise TypeError("you can't pass both file and files.")
         if file is None or files is None:
@@ -510,7 +589,7 @@ class APIClient:
     def list_public_archived_threads(self,
                                      channel: Channel.TYPING,
                                      *,
-                                     before: typing.Union[str, datetime.datetime] = None,
+                                     before: Union[str, datetime.datetime] = None,
                                      limit: int = None) -> ListThreadsResponse.RESPONSE:
         resp = self.http.list_public_archived_threads(int(channel), before, limit)
         if isinstance(resp, dict):
@@ -520,7 +599,7 @@ class APIClient:
     def list_private_archived_threads(self,
                                       channel: Channel.TYPING,
                                       *,
-                                      before: typing.Union[str, datetime.datetime] = None,
+                                      before: Union[str, datetime.datetime] = None,
                                       limit: int = None) -> ListThreadsResponse.RESPONSE:
         resp = self.http.list_private_archived_threads(int(channel), before, limit)
         if isinstance(resp, dict):
@@ -530,7 +609,7 @@ class APIClient:
     def list_joined_private_archived_threads(self,
                                              channel: Channel.TYPING,
                                              *,
-                                             before: typing.Union[str, datetime.datetime] = None,
+                                             before: Union[str, datetime.datetime] = None,
                                              limit: int = None) -> ListThreadsResponse.RESPONSE:
         resp = self.http.list_joined_private_archived_threads(int(channel), before, limit)
         if isinstance(resp, dict):
@@ -556,7 +635,7 @@ class APIClient:
                            *,
                            name: str,
                            image: str,
-                           roles: typing.List[Role.TYPING] = None,
+                           roles: List[Role.TYPING] = None,
                            reason: str = None) -> Emoji.RESPONSE:
         resp = self.http.create_guild_emoji(int(guild), name, image, [str(int(x)) for x in roles or []], reason=reason)
         if isinstance(resp, dict):
@@ -568,7 +647,7 @@ class APIClient:
                            emoji: Emoji.TYPING,
                            *,
                            name: str,
-                           roles: typing.List[Role.TYPING],
+                           roles: List[Role.TYPING],
                            reason: str = None) -> Emoji.RESPONSE:
         resp = self.http.modify_guild_emoji(int(guild), int(emoji), name, [str(int(x)) for x in roles], reason=reason)
         if isinstance(resp, dict):
@@ -584,15 +663,15 @@ class APIClient:
                      name: str,
                      *,
                      icon: str = None,
-                     verification_level: typing.Union[int, VerificationLevel] = None,
-                     default_message_notifications: typing.Union[int, DefaultMessageNotificationLevel] = None,
-                     explicit_content_filter: typing.Union[int, ExplicitContentFilterLevel] = None,
-                     roles: typing.List[dict] = None,  # TODO: role and channel generator
-                     channels: typing.List[dict] = None,
+                     verification_level: Union[int, VerificationLevel] = None,
+                     default_message_notifications: Union[int, DefaultMessageNotificationLevel] = None,
+                     explicit_content_filter: Union[int, ExplicitContentFilterLevel] = None,
+                     roles: List[dict] = None,  # TODO: role and channel generator
+                     channels: List[dict] = None,
                      afk_channel_id: Snowflake.TYPING = None,
                      afk_timeout: int = None,
                      system_channel_id: Snowflake.TYPING = None,
-                     system_channel_flags: typing.Union[int, SystemChannelFlags] = None) -> Guild.RESPONSE:
+                     system_channel_flags: Union[int, SystemChannelFlags] = None) -> Guild.RESPONSE:
         kwargs = {"name": name}
         if icon is not None:
             kwargs["icon"] = icon
@@ -635,9 +714,9 @@ class APIClient:
                      guild: Guild.TYPING,
                      *,
                      name: str = None,
-                     verification_level: typing.Union[int, VerificationLevel] = None,
-                     default_message_notifications: typing.Union[int, DefaultMessageNotificationLevel] = None,
-                     explicit_content_filter: typing.Union[int, ExplicitContentFilterLevel] = None,
+                     verification_level: Union[int, VerificationLevel] = None,
+                     default_message_notifications: Union[int, DefaultMessageNotificationLevel] = None,
+                     explicit_content_filter: Union[int, ExplicitContentFilterLevel] = None,
                      afk_channel: Channel.TYPING = None,
                      afk_timeout: int = None,
                      icon: str = None,
@@ -646,11 +725,11 @@ class APIClient:
                      discovery_splash: str = None,
                      banner: str = None,
                      system_channel: Channel.TYPING = None,
-                     system_channel_flags: typing.Union[int, SystemChannelFlags] = None,
+                     system_channel_flags: Union[int, SystemChannelFlags] = None,
                      rules_channel: Channel.TYPING = None,
                      public_updates_channel: Channel.TYPING = None,
                      preferred_locale: str = None,
-                     features: typing.List[str] = None,
+                     features: List[str] = None,
                      description: str = None,
                      reason: str = None) -> Guild.RESPONSE:
         kwargs = {}
@@ -708,13 +787,13 @@ class APIClient:
                              guild: Guild.TYPING,
                              name: str,
                              *,
-                             channel_type: typing.Union[int, ChannelTypes] = None,
+                             channel_type: Union[int, ChannelTypes] = None,
                              topic: str = None,
                              bitrate: int = None,
                              user_limit: int = None,
                              rate_limit_per_user: int = None,
                              position: int = None,
-                             permission_overwrites: typing.Union[dict, Overwrite] = None,
+                             permission_overwrites: Union[dict, Overwrite] = None,
                              parent: Channel.TYPING = None,
                              nsfw: bool = None,
                              reason: str = None) -> Channel.RESPONSE:
@@ -777,7 +856,7 @@ class APIClient:
                          user: User.TYPING,
                          access_token: str,
                          nick: str = None,
-                         roles: typing.List[Role.TYPING] = None,
+                         roles: List[Role.TYPING] = None,
                          mute: bool = None,
                          deaf: bool = None) -> GuildMember.RESPONSE:
         kwargs = {"access_token": access_token}
@@ -800,7 +879,7 @@ class APIClient:
                             guild: Guild.TYPING,
                             user: User.TYPING,
                             nick: str = EmptyObject,
-                            roles: typing.List[Role.TYPING] = EmptyObject,
+                            roles: List[Role.TYPING] = EmptyObject,
                             mute: bool = EmptyObject,
                             deaf: bool = EmptyObject,
                             channel: Channel.TYPING = EmptyObject,
@@ -822,7 +901,7 @@ class APIClient:
             return GuildMember.create(self, resp, guild_id=int(guild))
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
-    def modify_current_user_nick(self, guild: Guild.TYPING, nick: typing.Union[str, None] = EmptyObject, *, reason: str = None):
+    def modify_current_user_nick(self, guild: Guild.TYPING, nick: Union[str, None] = EmptyObject, *, reason: str = None):
         return self.http.modify_current_user_nick(int(guild), nick, reason=reason)
 
     def add_guild_member_role(self,
@@ -889,7 +968,7 @@ class APIClient:
                           guild: Guild.TYPING,
                           *,
                           name: str = None,
-                          permissions: typing.Union[int, str, PermissionFlags] = None,
+                          permissions: Union[int, str, PermissionFlags] = None,
                           color: int = None,
                           hoist: bool = None,
                           mentionable: bool = None,
@@ -922,7 +1001,7 @@ class APIClient:
                           role: Role.TYPING,
                           *,
                           name: str = EmptyObject,
-                          permissions: typing.Union[int, str, PermissionFlags] = EmptyObject,
+                          permissions: Union[int, str, PermissionFlags] = EmptyObject,
                           color: int = EmptyObject,
                           hoist: bool = EmptyObject,
                           mentionable: bool = EmptyObject,
@@ -946,7 +1025,7 @@ class APIClient:
     def delete_guild_role(self, guild: Guild.TYPING, role: Role.TYPING, *, reason: str = None):
         return self.http.delete_guild_role(int(guild), int(role), reason=reason)
 
-    def request_guild_prune_count(self, guild: Guild.TYPING, *, days: int = None, include_roles: typing.List[Role.TYPING] = None) -> "AbstractObject.RESPONSE":
+    def request_guild_prune_count(self, guild: Guild.TYPING, *, days: int = None, include_roles: List[Role.TYPING] = None) -> "AbstractObject.RESPONSE":
         from .base.model import AbstractObject
         if include_roles is not None:
             include_roles = [*map(str, include_roles)]
@@ -960,7 +1039,7 @@ class APIClient:
                           *,
                           days: int = 7,
                           compute_prune_count: bool = True,
-                          include_roles: typing.List[Role.TYPING] = None,
+                          include_roles: List[Role.TYPING] = None,
                           reason: str = None) -> "AbstractObject.RESPONSE":
         from .base.model import AbstractObject
         if include_roles is not None:
@@ -1017,7 +1096,7 @@ class APIClient:
             return AbstractObject(resp)
         return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
-    def request_guild_widget_image(self, guild: Guild.TYPING, style: typing.Optional[str] = None) -> BYTES_RESPONSE:
+    def request_guild_widget_image(self, guild: Guild.TYPING, style: Optional[str] = None) -> BYTES_RESPONSE:
         return self.http.request_guild_widget_image(int(guild), style)
 
     def request_guild_welcome_screen(self, guild: Guild.TYPING) -> WelcomeScreen.RESPONSE:
@@ -1030,7 +1109,7 @@ class APIClient:
                                     guild: Guild.TYPING,
                                     *,
                                     enabled: bool = EmptyObject,
-                                    welcome_channels: typing.List[typing.Union[WelcomeScreenChannel, dict]] = EmptyObject,
+                                    welcome_channels: List[Union[WelcomeScreenChannel, dict]] = EmptyObject,
                                     description: str = EmptyObject,
                                     reason: str = None) -> WelcomeScreen.RESPONSE:
         if welcome_channels is not EmptyObject:
@@ -1046,7 +1125,7 @@ class APIClient:
                                 user: User.TYPING = "@me",
                                 *,
                                 suppress: bool = None,
-                                request_to_speak_timestamp: typing.Union[datetime.datetime, str] = None):
+                                request_to_speak_timestamp: Union[datetime.datetime, str] = None):
         user = int(user) if user != "@me" else user
         if request_to_speak_timestamp is not None:
             request_to_speak_timestamp = request_to_speak_timestamp if isinstance(request_to_speak_timestamp, str) else \
@@ -1099,7 +1178,7 @@ class APIClient:
 
     # Invite
 
-    def request_invite(self, invite_code: typing.Union[str, Invite], *, with_counts: bool = None, with_expiration: bool = None) -> Invite.RESPONSE:
+    def request_invite(self, invite_code: Union[str, Invite], *, with_counts: bool = None, with_expiration: bool = None) -> Invite.RESPONSE:
         resp = self.http.request_invite(str(invite_code), with_counts, with_expiration)
         if isinstance(resp, dict):
             return Invite(self, resp)
@@ -1113,7 +1192,7 @@ class APIClient:
 
     # Stage Instance
 
-    def create_stage_instance(self, channel: Channel.TYPING, topic: str, privacy_level: typing.Union[int, PrivacyLevel] = None, *, reason: str = None) -> StageInstance.RESPONSE:
+    def create_stage_instance(self, channel: Channel.TYPING, topic: str, privacy_level: Union[int, PrivacyLevel] = None, *, reason: str = None) -> StageInstance.RESPONSE:
         resp = self.http.create_stage_instance(str(int(channel)), topic, int(privacy_level) if privacy_level is not None else privacy_level, reason=reason)
         if isinstance(resp, dict):
             return StageInstance.create(self, resp)
@@ -1125,7 +1204,7 @@ class APIClient:
             return StageInstance.create(self, resp)
         return wrap_to_async(StageInstance, self, resp)
 
-    def modify_stage_instance(self, channel: Channel.TYPING, topic: str = None, privacy_level: typing.Union[int, PrivacyLevel] = None, *, reason: str = None) -> StageInstance.RESPONSE:
+    def modify_stage_instance(self, channel: Channel.TYPING, topic: str = None, privacy_level: Union[int, PrivacyLevel] = None, *, reason: str = None) -> StageInstance.RESPONSE:
         resp = self.http.modify_stage_instance(int(channel), topic, int(privacy_level) if privacy_level is not None else privacy_level, reason=reason)
         if isinstance(resp, dict):
             return StageInstance.create(self, resp)
@@ -1161,7 +1240,7 @@ class APIClient:
             return Sticker.create(self, resp)
         return wrap_to_async(Sticker, self, resp)
 
-    def create_guild_sticker(self, guild: Guild.TYPING, *, name: str, description: str, tags: str, file: FILE_TYPE, reason: typing.Optional[str] = None) -> Sticker.RESPONSE:
+    def create_guild_sticker(self, guild: Guild.TYPING, *, name: str, description: str, tags: str, file: FILE_TYPE, reason: Optional[str] = None) -> Sticker.RESPONSE:
         if not isinstance(file, io.FileIO):
             file = open(file, "rb")
         try:
@@ -1176,16 +1255,16 @@ class APIClient:
                              guild: Guild.TYPING,
                              sticker: Sticker.TYPING,
                              *,
-                             name: typing.Optional[str] = None,
-                             description: typing.Optional[str] = EmptyObject,
-                             tags: typing.Optional[str] = None,
-                             reason: typing.Optional[str] = None) -> Sticker.RESPONSE:
+                             name: Optional[str] = None,
+                             description: Optional[str] = EmptyObject,
+                             tags: Optional[str] = None,
+                             reason: Optional[str] = None) -> Sticker.RESPONSE:
         resp = self.http.modify_guild_sticker(int(guild), int(sticker), name, description, tags, reason=reason)
         if isinstance(resp, dict):
             return Sticker.create(self, resp)
         return wrap_to_async(Sticker, self, resp)
 
-    def delete_guild_sticker(self, guild: Guild.TYPING, sticker: Sticker.TYPING, *, reason: typing.Optional[str] = None):
+    def delete_guild_sticker(self, guild: Guild.TYPING, sticker: Sticker.TYPING, *, reason: Optional[str] = None):
         return self.http.delete_guild_sticker(int(guild), int(sticker), reason=reason)
 
     # User
@@ -1196,7 +1275,7 @@ class APIClient:
             return User.create(self, resp)
         return wrap_to_async(User, self, resp)
 
-    def modify_current_user(self, username: str = None, avatar: typing.Union[FILE_TYPE] = EmptyObject) -> User.RESPONSE:
+    def modify_current_user(self, username: str = None, avatar: Union[FILE_TYPE] = EmptyObject) -> User.RESPONSE:
         avatar = to_image_data(avatar) if avatar is not None or avatar is not EmptyObject else avatar
         resp = self.http.modify_current_user(username, avatar)
         if isinstance(resp, dict):
@@ -1218,7 +1297,7 @@ class APIClient:
             return Channel.create(self, resp)
         return wrap_to_async(Channel, self, resp)
 
-    def create_group_dm(self, access_tokens: typing.List[str], nicks: typing.Dict[User.TYPING, str]):
+    def create_group_dm(self, access_tokens: List[str], nicks: Dict[User.TYPING, str]):
         nicks = {str(int(k)): v for k, v in nicks.items()}
         resp = self.http.create_group_dm(access_tokens, nicks)
         if isinstance(resp, dict):
@@ -1288,11 +1367,11 @@ class APIClient:
                         avatar_url: str = None,
                         tts: bool = False,
                         file: FILE_TYPE = None,
-                        files: typing.List[FILE_TYPE] = None,
-                        embed: typing.Union[Embed, dict] = None,
-                        embeds: typing.List[typing.Union[Embed, dict]] = None,
-                        allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                        components: typing.List[typing.Union[dict, Component]] = None) -> Message.RESPONSE:
+                        files: List[FILE_TYPE] = None,
+                        embed: Union[Embed, dict] = None,
+                        embeds: List[Union[Embed, dict]] = None,
+                        allowed_mentions: Union[AllowedMentions, dict] = None,
+                        components: List[Union[dict, Component]] = None) -> Message.RESPONSE:
         if webhook_token is None and not isinstance(webhook, Webhook):
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         if thread and isinstance(thread, Channel) and not thread.is_thread_channel():
@@ -1354,14 +1433,14 @@ class APIClient:
                              *,
                              webhook_token: str = None,
                              content: str = EmptyObject,
-                             embed: typing.Union[Embed, dict] = EmptyObject,
-                             embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
+                             embed: Union[Embed, dict] = EmptyObject,
+                             embeds: List[Union[Embed, dict]] = EmptyObject,
                              file: FILE_TYPE = EmptyObject,
-                             files: typing.List[FILE_TYPE] = EmptyObject,
-                             allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
-                             attachments: typing.List[typing.Union[Attachment, dict]] = EmptyObject,
-                             component: typing.Union[dict, Component] = EmptyObject,
-                             components: typing.List[typing.Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
+                             files: List[FILE_TYPE] = EmptyObject,
+                             allowed_mentions: Union[AllowedMentions, dict] = EmptyObject,
+                             attachments: List[Union[Attachment, dict]] = EmptyObject,
+                             component: Union[dict, Component] = EmptyObject,
+                             components: List[Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
         if not isinstance(webhook, Webhook) and not webhook_token:
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         if file and files:
@@ -1445,9 +1524,9 @@ class APIClient:
                                    *,
                                    name: str,
                                    description: str = None,
-                                   options: typing.List[typing.Union[ApplicationCommandOption, dict]] = None,
+                                   options: List[Union[ApplicationCommandOption, dict]] = None,
                                    default_permission: bool = None,
-                                   command_type: typing.Union[ApplicationCommandTypes, int] = None,
+                                   command_type: Union[ApplicationCommandTypes, int] = None,
                                    application_id: Snowflake.TYPING = None) -> ApplicationCommand.RESPONSE:
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
@@ -1478,7 +1557,7 @@ class APIClient:
                                  *,
                                  name: str = None,
                                  description: str = None,
-                                 options: typing.List[typing.Union[ApplicationCommandOption, dict]] = None,
+                                 options: List[Union[ApplicationCommandOption, dict]] = None,
                                  default_permission: bool = None,
                                  guild: Guild.TYPING = None,
                                  application_id: Snowflake.TYPING = None) -> ApplicationCommand.RESPONSE:
@@ -1502,7 +1581,7 @@ class APIClient:
         return self.http.delete_application_command(int(application_id or self.application_id), command_id, int(guild) if guild else guild)
 
     def bulk_overwrite_application_commands(self,
-                                            *commands: typing.Union[dict, ApplicationCommand],
+                                            *commands: Union[dict, ApplicationCommand],
                                             guild: Guild.TYPING = None,
                                             application_id: Snowflake.TYPING = None) -> ApplicationCommand.RESPONSE_AS_LIST:
         if not application_id and not self.application_id:
@@ -1548,11 +1627,11 @@ class APIClient:
                                 avatar_url: str = None,
                                 tts: bool = False,
                                 file: FILE_TYPE = None,
-                                files: typing.List[FILE_TYPE] = None,
-                                embed: typing.Union[Embed, dict] = None,
-                                embeds: typing.List[typing.Union[Embed, dict]] = None,
-                                allowed_mentions: typing.Union[AllowedMentions, dict] = None,
-                                components: typing.List[typing.Union[dict, Component]] = None,
+                                files: List[FILE_TYPE] = None,
+                                embed: Union[Embed, dict] = None,
+                                embeds: List[Union[Embed, dict]] = None,
+                                allowed_mentions: Union[AllowedMentions, dict] = None,
+                                components: List[Union[dict, Component]] = None,
                                 ephemeral: bool = False) -> Message.RESPONSE:
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
@@ -1605,13 +1684,13 @@ class APIClient:
                                   application_id: Snowflake.TYPING = None,
                                   content: str = EmptyObject,
                                   file: FILE_TYPE = EmptyObject,
-                                  files: typing.List[FILE_TYPE] = EmptyObject,
-                                  embed: typing.Union[Embed, dict] = EmptyObject,
-                                  embeds: typing.List[typing.Union[Embed, dict]] = EmptyObject,
-                                  allowed_mentions: typing.Union[AllowedMentions, dict] = EmptyObject,
-                                  attachments: typing.List[typing.Union[Attachment, dict]] = EmptyObject,
-                                  component: typing.Union[dict, Component] = EmptyObject,
-                                  components: typing.List[typing.Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
+                                  files: List[FILE_TYPE] = EmptyObject,
+                                  embed: Union[Embed, dict] = EmptyObject,
+                                  embeds: List[Union[Embed, dict]] = EmptyObject,
+                                  allowed_mentions: Union[AllowedMentions, dict] = EmptyObject,
+                                  attachments: List[Union[Attachment, dict]] = EmptyObject,
+                                  component: Union[dict, Component] = EmptyObject,
+                                  components: List[Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
@@ -1708,7 +1787,7 @@ class APIClient:
     def edit_application_command_permissions(self,
                                              guild: Guild.TYPING,
                                              command: ApplicationCommand.TYPING,
-                                             *permissions: typing.Union[dict, ApplicationCommandPermissions],
+                                             *permissions: Union[dict, ApplicationCommandPermissions],
                                              application_id: Snowflake.TYPING = None) -> GuildApplicationCommandPermissions.RESPONSE:
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
@@ -1720,7 +1799,7 @@ class APIClient:
 
     def batch_edit_application_command_permissions(self,
                                                    guild: Guild.TYPING,
-                                                   permissions_dict: typing.Dict[ApplicationCommand.TYPING, typing.List[typing.Union[dict, ApplicationCommandPermissions]]],
+                                                   permissions_dict: Dict[ApplicationCommand.TYPING, List[Union[dict, ApplicationCommandPermissions]]],
                                                    *, application_id: Snowflake.TYPING = None) -> GuildApplicationCommandPermissions.RESPONSE:
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
@@ -1740,7 +1819,7 @@ class APIClient:
 
     # Gateway
 
-    def request_gateway(self, *, bot: bool = True) -> typing.Union[GetGateway, typing.Awaitable[GetGateway]]:
+    def request_gateway(self, *, bot: bool = True) -> Union[GetGateway, Awaitable[GetGateway]]:
         resp = self.http.request_gateway(bot)
         if isinstance(resp, dict):
             return GetGateway(resp)

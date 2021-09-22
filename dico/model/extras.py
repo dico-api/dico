@@ -1,6 +1,6 @@
 import io
-import typing
 import pathlib
+from typing import Union, Awaitable
 
-FILE_TYPE = typing.Union[io.FileIO, pathlib.Path, str]
-BYTES_RESPONSE = typing.Union[bytes, typing.Awaitable[bytes]]
+FILE_TYPE = Union[io.FileIO, pathlib.Path, str]
+BYTES_RESPONSE = Union[bytes, Awaitable[bytes]]
