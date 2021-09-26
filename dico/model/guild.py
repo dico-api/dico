@@ -384,6 +384,11 @@ class GuildMember:
         return self.client.create_guild_ban(self.guild_id, self, delete_message_days=delete_message_days, reason=reason)
 
     @property
+    def id(self) -> typing.Optional[Snowflake]:
+        if self.user:
+            return self.user.id
+
+    @property
     def mention(self) -> str:
         if self.user:
             return f"<@!{self.user.id}>"

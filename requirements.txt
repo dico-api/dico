@@ -1,4 +1,4 @@
 aiohttp
 requests
 sphinx
-sphinx-rtd-theme
+sphinx-press-theme

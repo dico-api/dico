@@ -34,7 +34,7 @@ class APIClient:
         ...
 
     .. note::
-        Most of the object parameters accept Snowflake or int or str. Refer each object's ``TYPING`` attribute.
+        Most of the object parameters accept Snowflake or int or str. For example, you may pass ``832488750034190378`` in Message type.
 
     :param str token: Token of the client.
     :param Type[HTTPRequestBase] base: HTTP request handler to use. Must inherit :class:`.base.http.HTTPRequestBase`.
@@ -391,35 +391,85 @@ class APIClient:
                           channel: Channel.TYPING,
                           message: Message.TYPING,
                           emoji: Union[str, Emoji],
-                          after: User.TYPING = None,
-                          limit: int = None) -> User.RESPONSE_AS_LIST:
+                          after: Optional[User.TYPING] = None,
+                          limit: Optional[int] = None) -> User.RESPONSE_AS_LIST:
+        """
+        Requests list of users reacted to the message.
+
+        :param Channel channel: Channel of the message to get reacted users.
+        :param Message message: Message to get reacted users.
+        :param emoji: Emoji of the reaction to get.
+        :type emoji: Union[str, Emoji]
+        :param Optional[User] after: The target user to get after.
+        :param Optional[int] limit: Limit of the number of the reactions.
+        :return: :class:`.model.user.User`
+        """
         users = self.http.request_reactions(int(channel), int(message), from_emoji(emoji), int(after), limit)
         if isinstance(users, list):
             return [User.create(self, x) for x in users]
         return wrap_to_async(User, self, users)
 
     def delete_all_reactions(self, channel: Channel.TYPING, message: Message.TYPING):
+        """
+        Deletes all reactions of the message.
+
+        :param Channel channel: Channel of the message to delete all reactions.
+        :param Message message: Message to delete all reactions.
+        """
         return self.http.delete_all_reactions(int(channel), int(message))
 
     def delete_all_reactions_emoji(self,
                                    channel: Channel.TYPING,
                                    message: Message.TYPING,
                                    emoji: Union[str, Emoji]):
+        """
+        Deletes all reactions of the selected emoji.
+
+        :param Channel channel: Channel of the message to remove all reactions.
+        :param Message message: Message to remove all reactions.
+        :param emoji: Emoji to remove all reactions.
+        :type emoji: Union[str, Emoji]
+        """
         return self.http.delete_all_reactions_emoji(int(channel), int(message), from_emoji(emoji))
 
     def edit_message(self,
                      channel: Channel.TYPING,
                      message: Message.TYPING,
                      *,
-                     content: str = EmptyObject,
-                     embed: Union[Embed, dict] = EmptyObject,
-                     embeds: List[Union[Embed, dict]] = EmptyObject,
-                     file: FILE_TYPE = EmptyObject,
-                     files: List[FILE_TYPE] = EmptyObject,
-                     allowed_mentions: Union[AllowedMentions, dict] = EmptyObject,
-                     attachments: List[Union[Attachment, dict]] = EmptyObject,
-                     component: Union[dict, Component] = EmptyObject,
-                     components: List[Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
+                     content: Optional[str] = EmptyObject,
+                     embed: Optional[Union[Embed, dict]] = EmptyObject,
+                     embeds: Optional[List[Union[Embed, dict]]] = EmptyObject,
+                     file: Optional[FILE_TYPE] = EmptyObject,
+                     files: Optional[List[FILE_TYPE]] = EmptyObject,
+                     allowed_mentions: Optional[Union[AllowedMentions, dict]] = EmptyObject,
+                     attachments: Optional[List[Union[Attachment, dict]]] = EmptyObject,
+                     component: Optional[Union[dict, Component]] = EmptyObject,
+                     components: Optional[List[Union[dict, Component]]] = EmptyObject) -> Message.RESPONSE:
+        """
+        Edits message.
+
+        .. note::
+            All keyword arguments are can be both optional and ``None``. Passing ``None`` will remove the related item, and not passing will keep it as original state.
+
+        :param Channel channel: Channel of the message to edit.
+        :param Message message: Message to edit.
+        :param Optional[str] content: Content to edit.
+        :param embed: Embed to edit.
+        :type embed: Optional[Union[Embed, dict]]
+        :param embeds: Embeds to edit.
+        :type embeds: Optional[List[Union[Embed, dict]]]
+        :param Optional[FILE_TYPE] file: File to add.
+        :param Optional[List[FILE_TYPE]] files: Files to add.
+        :param allowed_mentions: Allowed mentions of the message.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
+        :param attachments: Attachments to keep.
+        :type attachments: Optional[List[Union[Attachment, dict]]]
+        :param component: Component of the message to edit.
+        :type component: Optional[Union[dict, Component]]
+        :param components: Components of the message to edit.
+        :type components: Optional[List[Union[dict, Component]]]
+        :return: :class:`.model.channel.Message`
+        """
         if files and file:
             raise TypeError("you can't pass both file and files.")
         if file is None or files is None:
@@ -479,7 +529,14 @@ class APIClient:
                        channel: Channel.TYPING,
                        message: Message.TYPING,
                        *,
-                       reason: str = None):
+                       reason: Optional[str] = None):
+        """
+        Deletes message.
+
+        :param Channel channel: Channel of the message to delete.
+        :param Message message: Message to delete.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.delete_message(int(channel), int(message), reason=reason)
 
     def bulk_delete_messages(self, channel: Channel.TYPING, *messages: Message.TYPING, reason: str = None):
