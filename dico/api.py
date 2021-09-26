@@ -539,7 +539,15 @@ class APIClient:
         """
         return self.http.delete_message(int(channel), int(message), reason=reason)
 
-    def bulk_delete_messages(self, channel: Channel.TYPING, *messages: Message.TYPING, reason: str = None):
+    def bulk_delete_messages(self, channel: Channel.TYPING, *messages: Message.TYPING, reason: Optional[str] = None):
+        """
+        Bulk deletes messages.
+
+        :param Channel channel: Channel of the messages to delete.
+        :param Message messages: Messages to delete.
+        :param Optional[str] reason: Reason of the action.
+        :return:
+        """
         return self.http.bulk_delete_messages(int(channel), list(map(int, messages)), reason=reason)
 
     def edit_channel_permissions(self, channel: Channel.TYPING, overwrite: Overwrite, *, reason: str = None):
