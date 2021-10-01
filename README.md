@@ -25,6 +25,22 @@ pip install -U dico-api
 ```
 
 ## Quick Example
+
+### API Client
+
+```py
+import dico
+
+api = dico.APIClient("APPLICATION_TOKEN_HERE", base=dico.HTTPRequest)
+# You may use AsyncHTTPClient for async support.
+
+# All endpoints are implemented, and for the example request_user (= Get User) will be used.
+user = api.request_user()  # You may pass any user ID or it will be the application itself.
+# You may use either int, str, dico.Snowflake, or dico.User itself.
+print(user.username)
+```
+
+### Websocket Client
 ```py
 import dico
 
