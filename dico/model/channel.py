@@ -10,6 +10,7 @@ from .snowflake import Snowflake
 from .sticker import Sticker, StickerItem
 from .user import User
 from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
+from ..base.http import EmptyObject
 
 if typing.TYPE_CHECKING:
     from .application import Application
@@ -59,6 +60,39 @@ class Channel(DiscordObjectBase):
 
     def __str__(self) -> str:
         return self.name
+
+    @typing.overload
+    def modify(self,
+               *,
+               name: typing.Optional[str] = None,
+               channel_type: typing.Optional[typing.Union[int, "ChannelTypes"]] = None,
+               position: typing.Optional[int] = EmptyObject,
+               topic: typing.Optional[str] = EmptyObject,
+               nsfw: typing.Optional[bool] = EmptyObject,
+               rate_limit_per_user: typing.Optional[int] = EmptyObject,
+               bitrate: typing.Optional[int] = EmptyObject,
+               user_limit: typing.Optional[int] = EmptyObject,
+               permission_overwrites: typing.Optional[typing.List["Overwrite"]] = EmptyObject,
+               parent: typing.Optional[TYPING] = EmptyObject,
+               rtc_region: typing.Optional[str] = EmptyObject,
+               video_quality_mode: typing.Optional[typing.Union[int, "VideoQualityModes"]] = EmptyObject,
+               reason: typing.Optional[str] = None) -> RESPONSE:
+        ...
+
+    @typing.overload
+    def modify(self, *, name: typing.Optional[str] = None, icon: typing.Optional[bytes] = None, reason: typing.Optional[str] = None) -> RESPONSE:
+        ...
+
+    @typing.overload
+    def modify(self,
+               *,
+               name: typing.Optional[str] = None,
+               archived: typing.Optional[bool] = None,
+               auto_archive_duration: typing.Optional[int] = None,
+               locked: typing.Optional[bool] = None,
+               rate_limit_per_user: typing.Optional[int] = EmptyObject,
+               reason: typing.Optional[str] = None) -> RESPONSE:
+        ...
 
     def modify(self, **kwargs) -> RESPONSE:
         if self.type.group_dm:
@@ -459,6 +493,8 @@ class Reaction:
 
 
 class Overwrite(CopyableObject):
+    TYPING = typing.Union[int, str, Snowflake, "Overwrite"]
+
     def __init__(self,
                  user: typing.Union[str, int, Snowflake, User] = None,
                  role: typing.Union[str, int, Snowflake, Role] = None,
@@ -471,6 +507,9 @@ class Overwrite(CopyableObject):
         self.type: int = 0 if role else 1
         self.allow: PermissionFlags = PermissionFlags.from_value(int(allow))
         self.deny: PermissionFlags = PermissionFlags.from_value(int(deny))
+
+    def __int__(self) -> int:
+        return int(self.id)
 
     def to_dict(self) -> dict:
         return {"id": str(self.id), "type": self.type, "allow": str(int(self.allow)), "deny": str(int(self.deny))}

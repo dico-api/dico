@@ -1,4 +1,6 @@
 import typing
+
+import dico
 from .commands import ApplicationCommandInteractionDataOption, ApplicationCommandTypes
 from .components import Component, ComponentTypes
 from ..channel import Channel, Message, Embed, AllowedMentions
@@ -47,6 +49,12 @@ class Interaction:
 
     def request_response(self, message: Message.TYPING = "@original") -> Message.RESPONSE:
         return self.client.request_interaction_response(self, message)
+
+    def edit_original_response(self, **kwargs):
+        return self.client.edit_interaction_response(self, **kwargs)
+
+    def edit_response(self, message: Message, **kwargs):
+        return self.client.edit_interaction_response(self, message, **kwargs)
 
     @property
     def message(self) -> typing.Optional[Message]:

@@ -8,7 +8,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
-    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway, VideoQualityModes
+    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway, VideoQualityModes, InviteTargetTypes
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if TYPE_CHECKING:
@@ -546,15 +546,27 @@ class APIClient:
         :param Channel channel: Channel of the messages to delete.
         :param Message messages: Messages to delete.
         :param Optional[str] reason: Reason of the action.
-        :return:
         """
         return self.http.bulk_delete_messages(int(channel), list(map(int, messages)), reason=reason)
 
-    def edit_channel_permissions(self, channel: Channel.TYPING, overwrite: Overwrite, *, reason: str = None):
+    def edit_channel_permissions(self, channel: Channel.TYPING, overwrite: Overwrite, *, reason: Optional[str] = None):
+        """
+        Edits channel permissions.
+
+        :param Channel channel: Chanel to edit response.
+        :param Overwrite overwrite: Permission overwrite to edit.
+        :param Optional[str] reason: Reason of the action.
+        """
         ow_dict = overwrite.to_dict()
         return self.http.edit_channel_permissions(int(channel), ow_dict["id"], ow_dict["allow"], ow_dict["deny"], ow_dict["type"], reason=reason)
 
     def request_channel_invites(self, channel: Channel.TYPING) -> Invite.RESPONSE_AS_LIST:
+        """
+        Requests channel invites.
+
+        :param Channel channel: Channel to request invites.
+        :return: :class:`.model.invite.Invite`
+        """
         invites = self.http.request_channel_invites(int(channel))
         if isinstance(invites, list):
             return [Invite(self, x) for x in invites]
@@ -563,31 +575,65 @@ class APIClient:
     def create_channel_invite(self,
                               channel: Channel.TYPING,
                               *,
-                              max_age: int = None,
-                              max_uses: int = None,
-                              temporary: bool = None,
-                              unique: bool = None,
-                              target_type: int = None,
-                              target_user: User.TYPING = None,
-                              target_application: Application.TYPING = None,
-                              reason: str = None) -> Invite.RESPONSE:
-        invite = self.http.create_channel_invite(int(channel), max_age, max_uses, temporary, unique, target_type,
+                              max_age: Optional[int] = None,
+                              max_uses: Optional[int] = None,
+                              temporary: Optional[bool] = None,
+                              unique: Optional[bool] = None,
+                              target_type: Optional[Union[int, InviteTargetTypes]] = None,
+                              target_user: Optional[User.TYPING] = None,
+                              target_application: Optional[Application.TYPING] = None,
+                              reason: Optional[str] = None) -> Invite.RESPONSE:
+        """
+        Creates channel invite.
+
+        :param Channel channel: Channel to request invite.
+        :param Optional[int] max_age: Maximum age of the invite.
+        :param Optional[int] max_uses: Maximum use count of the invite.
+        :param Optional[bool] temporary: Whether this invite is temporary, meaning user will be kicked if role is not added.
+        :param Optional[bool] unique: Whether this invite is unique, meaning new code will be generated even if there is invite with same options.
+        :param target_type: Target type of the voice channel invite.
+        :type target_type: Optional[Union[int, InviteTargetTypes]]
+        :param Optional[User] target_user: Target user of the invite.
+        :param Optional[Application] target_application: Target application of the invite.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`.model.invite.Invite`
+        """
+        invite = self.http.create_channel_invite(int(channel), max_age, max_uses, temporary, unique, int(target_type),
                                                  int(target_user) if target_user is not None else target_user,
                                                  int(target_application) if target_application is not None else target_application, reason=reason)
         if isinstance(invite, dict):
             return Invite(self, invite)
         return wrap_to_async(Invite, self, invite, as_create=False)
 
-    def delete_channel_permission(self, channel: Channel.TYPING, overwrite: Overwrite, *, reason: str = None):
+    def delete_channel_permission(self, channel: Channel.TYPING, overwrite: Overwrite.TYPING, *, reason: Optional[str] = None):
+        """
+        Deletes channel permission.
+
+        :param Channel channel: Channel to delete permission.
+        :param Overwrite overwrite: Target overwrite to delete. Accepts ID of the user or role.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.delete_channel_permission(int(channel), int(overwrite.id), reason=reason)
 
     def follow_news_channel(self, channel: Channel.TYPING, target_channel: Channel.TYPING) -> FollowedChannel.RESPONSE:
+        """
+        Follows news channel to target channel.
+
+        :param channel: Channel to follow.
+        :param target_channel: Channel to receive published messages.
+        :return: :class:`.model.channel.FollowedChannel`
+        """
         fc = self.http.follow_news_channel(int(channel), str(target_channel))
         if isinstance(fc, dict):
             return FollowedChannel(self, fc)
         return wrap_to_async(FollowedChannel, self, fc, as_create=False)
 
     def trigger_typing_indicator(self, channel: Channel.TYPING):
+        """
+        Triggers ``<client> is typing...`` on channel.
+
+        :param Channel channel: Channel to trigger typing.
+        """
         return self.http.trigger_typing_indicator(int(channel))
 
     def request_pinned_messages(self, channel: Channel.TYPING) -> Message.RESPONSE_AS_LIST:
