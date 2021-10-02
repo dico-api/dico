@@ -69,3 +69,6 @@ html_static_path = ['_static']
 intersphinx_mapping = {
     'py': ('https://docs.python.org/3', None)
 }
+
+# autodoc
+autodoc_typehints = 'none'

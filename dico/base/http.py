@@ -6,11 +6,14 @@ from abc import ABC, abstractmethod
 
 class __EmptyObject:
     """An empty object. Can be used as an alternative of ``None``."""
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
-    def __len__(self):
+    def __len__(self) -> int:
         return 0
+
+    def __repr__(self) -> str:
+        return "Empty"
 
 
 EmptyObject: __EmptyObject = __EmptyObject()

@@ -37,7 +37,7 @@ class APIClient:
         Most of the object parameters accept Snowflake or int or str. For example, you may pass ``832488750034190378`` in Message type.
 
     :param str token: Token of the client.
-    :param Type[HTTPRequestBase] base: HTTP request handler to use. Must inherit :class:`.base.http.HTTPRequestBase`.
+    :param Type[HTTPRequestBase] base: HTTP request handler to use. Must inherit :class:`~.HTTPRequestBase`.
     :param Optional[AllowedMentions] default_allowed_mentions: Default allowed mentions object to use. Default None.
     :param Optional[Snowflake] application_id: ID of the application. Required if you use interactions.
     :param http_options: Options of HTTP request handler.
@@ -72,12 +72,12 @@ class APIClient:
         """
         Requests guild audit log.
 
-        :param Guild guild: Guild to request audit log.
-        :param Optional[User] user: Moderator who did the action. Default all.
+        :param guild: Guild to request audit log.
+        :param user: Moderator who did the action. Default all.
         :param Optional[AuditLogEvents] action_type: Type of the audit log to get.
-        :param Optional[DiscordObjectBase] before: Entry object to get before. Can be any object which includes ID.
+        :param before: Entry object to get before. Can be any object which includes ID.
         :param Optional[int] limit: Limit of the number of the audit logs to get.
-        :return: :class:`.model.audit_log.AuditLog`
+        :return: :class:`~.AuditLog`
         """
         if user is not None:
             user = str(int(user))
@@ -96,8 +96,8 @@ class APIClient:
         """
         Requests channel object.
 
-        :param Channel channel: Channel to get.
-        :return: :class:`.model.channel.Channel`
+        :param channel: Channel to get.
+        :return: :class:`~.Channel`
         """
         channel = self.http.request_channel(int(channel))
         if isinstance(channel, dict):
@@ -126,7 +126,7 @@ class APIClient:
         .. note::
             All keyword-only arguments except name, channel_type, and reason accept None.
 
-        :param Channel channel: Channel to edit.
+        :param channel: Channel to edit.
         :param Optional[str] name: Name of the channel to change.
         :param Optional[ChannelTypes] channel_type: Type of the channel to change.
         :param Optional[int] position: Position of the channel to change.
@@ -136,11 +136,11 @@ class APIClient:
         :param Optional[int] bitrate: Bitrate of the channel to change.
         :param Optional[int] user_limit: User limit of the channel to change.
         :param Optional[List[Overwrite]] permission_overwrites: List of permission overwrites to change.
-        :param Optional[Channel] parent: Parent category of the channel to change.
+        :param parent: Parent category of the channel to change.
         :param Optional[str] rtc_region: RTC region of the channel to change. Pass None to set to automatic.
         :param Optional[VideoQualityModes] video_quality_mode: Video quality mode of the camera to change.
         :param Optional[str] reason: Reason of the action.
-        :return: :class:`.model.channel.Channel`
+        :return: :class:`~.Channel`
         """
         if permission_overwrites:
             permission_overwrites = [x.to_dict() for x in permission_overwrites]
@@ -156,11 +156,11 @@ class APIClient:
         """
         Modifies group DM channel.
 
-        :param Channel channel: DM Channel to modify.
+        :param channel: DM Channel to modify.
         :param Optional[str] name: Name to change.
         :param Optional[bin] icon: Icon as bytes to change.
         :param Optional[str] reason: Reason of the action.
-        :return: :class:`.model.channel.Channel`
+        :return: :class:`~.Channel`
         """
         channel = self.http.modify_group_dm_channel(int(channel), name, icon, reason=reason)
         if isinstance(channel, dict):
@@ -179,14 +179,14 @@ class APIClient:
         """
         Modifies thread channel.
 
-        :param Channel channel: Thread channel to modify.
+        :param channel: Thread channel to modify.
         :param Optional[str] name: Name to change.
         :param archived: Whether this thread is archived.
         :param Optional[int] auto_archive_duration: Auto archive duration to set.
         :param Optional[bool] locked: Whether this thread is locked.
         :param Optional[int] rate_limit_per_user: Slowmode time to change. Set to None to remove.
         :param Optional[str] reason: Reason of the action.
-        :return: :class:`.model.channel.Channel`
+        :return: :class:`~.Channel`
         """
         channel = self.http.modify_thread_channel(int(channel), name, archived, auto_archive_duration, locked, rate_limit_per_user, reason=reason)
         if isinstance(channel, dict):
@@ -197,9 +197,9 @@ class APIClient:
         """
         Deletes channel.
 
-        :param Channel channel: Channel to delete.
+        :param channel: Channel to delete.
         :param Optional[str] reason: Reason of the action.
-        :return: :class:`.model.channel.Channel`
+        :return: :class:`~.Channel`
         """
         resp = self.http.delete_channel(int(channel), reason=reason)
         if isinstance(resp, dict):
@@ -216,12 +216,12 @@ class APIClient:
         """
         Requests list of messages in the channel.
 
-        :param Channel channel: Channel to request messages.
-        :param Optional[Message] around: Target message to get around.
-        :param Optional[Message] before: Target message to get before.
-        :param Optional[Message] after: Target message to get after.
+        :param channel: Channel to request messages.
+        :param around: Target message to get around.
+        :param before: Target message to get before.
+        :param after: Target message to get after.
         :param Optional[int] limit: Limit of numbers of messages to request. Default 50.
-        :return: List[:class:`.model.channel.Message`]
+        :return: List[ :class:`~.Message` ]
         """
         messages = self.http.request_channel_messages(int(channel), around and str(int(around)), before and str(int(before)), after and str(int(after)), limit)
         # This looks unnecessary, but this is to ensure they are all numbers.
@@ -233,9 +233,9 @@ class APIClient:
         """
         Requests message from channel.
 
-        :param Channel channel: Channel to request message.
-        :param Message message: Message to request.
-        :return: :class:`.model.channel.Message`
+        :param channel: Channel to request message.
+        :param message: Message to request.
+        :return: :class:`~.Message`
         """
         message = self.http.request_channel_message(int(channel), int(message))
         if isinstance(message, dict):
@@ -268,7 +268,7 @@ class APIClient:
             - You must pass at least one of ``content`` or ``embed`` or ``file`` or ``files`` parameter.
             - You can't use ``file`` and ``files`` at the same time.
 
-        :param Channel channel: Channel to create message.
+        :param channel: Channel to create message.
         :param Optional[str] content: Content of the message.
         :param embed: Embed of the message.
         :type embed: Optional[Union[Embed, dict]]
@@ -279,7 +279,7 @@ class APIClient:
         :param files: Files of the message.
         :type files: Optional[List[Union[io.FileIO, pathlib.Path, str]]]
         :param Optional[bool] tts: Whether to speak message.
-        :param allowed_mentions: :class:`.model.channel.AllowedMentions` to use for this request.
+        :param allowed_mentions: :class:`~.AllowedMentions` to use for this request.
         :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
         :param message_reference: Message to reply.
         :type message_reference: Optional[Union[Message, MessageReference, dict]]
@@ -289,7 +289,7 @@ class APIClient:
         :type components: Optional[List[Union[dict, Component]]]
         :param Optional[Sticker] sticker: Sticker of the message.
         :param Optional[List[Sticker]] stickers: Stickers of the message. Up to 3.
-        :return: :class:`.model.channel.Message`
+        :return: :class:`~.Message`
         """
         if files and file:
             raise TypeError("you can't pass both file and files.")
@@ -348,9 +348,9 @@ class APIClient:
         """
         Crossposts message.
 
-        :param Channel channel: Channel of the message to crosspost.
-        :param Message message: Message to crosspost.
-        :return: :class:`.model.channel.Message`
+        :param channel: Channel of the message to crosspost.
+        :param message: Message to crosspost.
+        :return: :class:`~..Message`
         """
         msg = self.http.crosspost_message(int(channel), int(message))
         if isinstance(msg, dict):
@@ -364,8 +364,8 @@ class APIClient:
         """
         Creates reaction to the message.
 
-        :param Channel channel: Channel of the message to create reaction.
-        :param Message message: Message to create reaction.
+        :param channel: Channel of the message to create reaction.
+        :param message: Message to create reaction.
         :param emoji: Emoji for creating reaction.
         :type emoji: Union[str, Emoji]
         """
@@ -379,11 +379,11 @@ class APIClient:
         """
         Deletes reaction of the message.
 
-        :param Channel channel: Channel of the message to delete reaction.
-        :param Message message: Message to delete reaction.
+        :param channel: Channel of the message to delete reaction.
+        :param message: Message to delete reaction.
         :param emoji: Emoji of the reaction to delete.
         :type emoji: Union[str, Emoji]
-        :param User user: User to delete reaction of. Default "@me" which is the bot itself.
+        :param user: User to delete reaction of. Default "@me" which is the bot itself.
         """
         return self.http.delete_reaction(int(channel), int(message), from_emoji(emoji), int(user) if user != "@me" else user)
 
@@ -396,13 +396,13 @@ class APIClient:
         """
         Requests list of users reacted to the message.
 
-        :param Channel channel: Channel of the message to get reacted users.
-        :param Message message: Message to get reacted users.
+        :param channel: Channel of the message to get reacted users.
+        :param message: Message to get reacted users.
         :param emoji: Emoji of the reaction to get.
         :type emoji: Union[str, Emoji]
-        :param Optional[User] after: The target user to get after.
+        :param after: The target user to get after.
         :param Optional[int] limit: Limit of the number of the reactions.
-        :return: :class:`.model.user.User`
+        :return: :class:`~.User`
         """
         users = self.http.request_reactions(int(channel), int(message), from_emoji(emoji), int(after), limit)
         if isinstance(users, list):
@@ -413,8 +413,8 @@ class APIClient:
         """
         Deletes all reactions of the message.
 
-        :param Channel channel: Channel of the message to delete all reactions.
-        :param Message message: Message to delete all reactions.
+        :param channel: Channel of the message to delete all reactions.
+        :param message: Message to delete all reactions.
         """
         return self.http.delete_all_reactions(int(channel), int(message))
 
@@ -425,8 +425,8 @@ class APIClient:
         """
         Deletes all reactions of the selected emoji.
 
-        :param Channel channel: Channel of the message to remove all reactions.
-        :param Message message: Message to remove all reactions.
+        :param channel: Channel of the message to remove all reactions.
+        :param message: Message to remove all reactions.
         :param emoji: Emoji to remove all reactions.
         :type emoji: Union[str, Emoji]
         """
@@ -451,8 +451,8 @@ class APIClient:
         .. note::
             All keyword arguments are can be both optional and ``None``. Passing ``None`` will remove the related item, and not passing will keep it as original state.
 
-        :param Channel channel: Channel of the message to edit.
-        :param Message message: Message to edit.
+        :param channel: Channel of the message to edit.
+        :param message: Message to edit.
         :param Optional[str] content: Content to edit.
         :param embed: Embed to edit.
         :type embed: Optional[Union[Embed, dict]]
@@ -468,7 +468,7 @@ class APIClient:
         :type component: Optional[Union[dict, Component]]
         :param components: Components of the message to edit.
         :type components: Optional[List[Union[dict, Component]]]
-        :return: :class:`.model.channel.Message`
+        :return: :class:`~.Message`
         """
         if files and file:
             raise TypeError("you can't pass both file and files.")
@@ -533,8 +533,8 @@ class APIClient:
         """
         Deletes message.
 
-        :param Channel channel: Channel of the message to delete.
-        :param Message message: Message to delete.
+        :param channel: Channel of the message to delete.
+        :param message: Message to delete.
         :param Optional[str] reason: Reason of the action.
         """
         return self.http.delete_message(int(channel), int(message), reason=reason)
@@ -543,8 +543,8 @@ class APIClient:
         """
         Bulk deletes messages.
 
-        :param Channel channel: Channel of the messages to delete.
-        :param Message messages: Messages to delete.
+        :param channel: Channel of the messages to delete.
+        :param messages: Messages to delete.
         :param Optional[str] reason: Reason of the action.
         """
         return self.http.bulk_delete_messages(int(channel), list(map(int, messages)), reason=reason)
@@ -553,7 +553,7 @@ class APIClient:
         """
         Edits channel permissions.
 
-        :param Channel channel: Chanel to edit response.
+        :param channel: Chanel to edit response.
         :param Overwrite overwrite: Permission overwrite to edit.
         :param Optional[str] reason: Reason of the action.
         """
@@ -564,8 +564,8 @@ class APIClient:
         """
         Requests channel invites.
 
-        :param Channel channel: Channel to request invites.
-        :return: :class:`.model.invite.Invite`
+        :param channel: Channel to request invites.
+        :return: :class:`~.Invite`
         """
         invites = self.http.request_channel_invites(int(channel))
         if isinstance(invites, list):
@@ -586,17 +586,17 @@ class APIClient:
         """
         Creates channel invite.
 
-        :param Channel channel: Channel to request invite.
+        :param channel: Channel to request invite.
         :param Optional[int] max_age: Maximum age of the invite.
         :param Optional[int] max_uses: Maximum use count of the invite.
         :param Optional[bool] temporary: Whether this invite is temporary, meaning user will be kicked if role is not added.
         :param Optional[bool] unique: Whether this invite is unique, meaning new code will be generated even if there is invite with same options.
         :param target_type: Target type of the voice channel invite.
         :type target_type: Optional[Union[int, InviteTargetTypes]]
-        :param Optional[User] target_user: Target user of the invite.
-        :param Optional[Application] target_application: Target application of the invite.
+        :param target_user: Target user of the invite.
+        :param target_application: Target application of the invite.
         :param Optional[str] reason: Reason of the action.
-        :return: :class:`.model.invite.Invite`
+        :return: :class:`~.Invite`
         """
         invite = self.http.create_channel_invite(int(channel), max_age, max_uses, temporary, unique, int(target_type),
                                                  int(target_user) if target_user is not None else target_user,
@@ -605,15 +605,15 @@ class APIClient:
             return Invite(self, invite)
         return wrap_to_async(Invite, self, invite, as_create=False)
 
-    def delete_channel_permission(self, channel: Channel.TYPING, overwrite: Overwrite.TYPING, *, reason: Optional[str] = None):
+    def delete_channel_permission(self, channel: Channel.TYPING, overwrite: Union[Overwrite.TYPING, User, Role], *, reason: Optional[str] = None):
         """
         Deletes channel permission.
 
-        :param Channel channel: Channel to delete permission.
-        :param Overwrite overwrite: Target overwrite to delete. Accepts ID of the user or role.
+        :param channel: Channel to delete permission.
+        :param overwrite: Target overwrite to delete. Accepts ID of the user or role.
         :param Optional[str] reason: Reason of the action.
         """
-        return self.http.delete_channel_permission(int(channel), int(overwrite.id), reason=reason)
+        return self.http.delete_channel_permission(int(channel), int(overwrite), reason=reason)
 
     def follow_news_channel(self, channel: Channel.TYPING, target_channel: Channel.TYPING) -> FollowedChannel.RESPONSE:
         """
@@ -621,7 +621,7 @@ class APIClient:
 
         :param channel: Channel to follow.
         :param target_channel: Channel to receive published messages.
-        :return: :class:`.model.channel.FollowedChannel`
+        :return: :class:`~.FollowedChannel`
         """
         fc = self.http.follow_news_channel(int(channel), str(target_channel))
         if isinstance(fc, dict):
@@ -632,20 +632,40 @@ class APIClient:
         """
         Triggers ``<client> is typing...`` on channel.
 
-        :param Channel channel: Channel to trigger typing.
+        :param channel: Channel to trigger typing.
         """
         return self.http.trigger_typing_indicator(int(channel))
 
     def request_pinned_messages(self, channel: Channel.TYPING) -> Message.RESPONSE_AS_LIST:
+        """
+        Requests pinned messages of the channel.
+
+        :param channel: Channel to request pinned messages.
+        :return: List[:class:`~.Message`]
+        """
         msgs = self.http.request_pinned_messages(int(channel))
         if isinstance(msgs, list):
             return [Message.create(self, x) for x in msgs]
         return wrap_to_async(Message, self, msgs)
 
-    def pin_message(self, channel: Channel.TYPING, message: Message.TYPING, *, reason: str = None):
+    def pin_message(self, channel: Channel.TYPING, message: Message.TYPING, *, reason: Optional[str] = None):
+        """
+        Pins message to the channel.
+
+        :param channel: Channel to pin message.
+        :param message: Message to pin.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.pin_message(int(channel), int(message), reason=reason)
 
-    def unpin_message(self, channel: Channel.TYPING, message: Message.TYPING, *, reason: str = None):
+    def unpin_message(self, channel: Channel.TYPING, message: Message.TYPING, *, reason: Optional[str] = None):
+        """
+        Unpins message from the channel.
+
+        :param channel: Channel to unpin the message.
+        :param message: Message to unpin.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.unpin_message(int(channel), int(message), reason=reason)
 
     def group_dm_add_recipient(self,
@@ -653,11 +673,25 @@ class APIClient:
                                user: User.TYPING,
                                access_token: str,
                                nick: str):
+        """
+        Adds recipient to the group DM.
+
+        :param channel: Group DM channel to add recipient.
+        :param user: Recipient to add.
+        :param str access_token: OAuth2 access token to use.
+        :param str nick: Nickname to assign.
+        """
         return self.http.group_dm_add_recipient(int(channel), int(user), access_token, nick)
 
     def group_dm_remove_recipient(self,
                                   channel: Channel.TYPING,
                                   user: User.TYPING):
+        """
+        Removes recipient to the group DM.
+
+        :param channel: Group DM channel to remove recipient.
+        :param user: Recipient to remove.
+        """
         return self.http.group_dm_remove_recipient(int(channel), int(user))
 
     def start_thread(self,
