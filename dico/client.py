@@ -24,7 +24,8 @@ class Client(APIClient):
     :param Optional[AllowedMentions] default_allowed_mentions: Default allowed mentions object to use. Default None.
     :param Optional[asyncio.AbstractEventLoop] loop: asyncio Event loop object to use. Default automatic.
     :param bool cache: Whether to enable caching. Default True.
-    :param Optional[Snowflake] application_id: Application ID if needed.
+    :param application_id: Application ID if needed.
+    :type application_id: Optional[Union[int, str, Snowflake]]
     :param bool monoshard: Whether to mono-shard this bot.
     :param Optional[int] shard_count: Count of shards to launch, if monoshard is True.
     :param cache_max_sizes: Max sizes of the cache per types. Message limit is set to 1000 by default.
@@ -172,7 +173,7 @@ class Client(APIClient):
         """
         Gets shard ID from guild.
 
-        :param Guild guild: Guild to get shard ID.
+        :param guild: Guild to get shard ID.
         :return: ID of the shard.
         """
         if self.__shards:
@@ -182,7 +183,7 @@ class Client(APIClient):
         """
         Gets shard from guild.
 
-        :param Guild guild: Guild to get shard.
+        :param guild: Guild to get shard.
         :return: :class:`.ws.websocket.WebSocketClient`
         """
         if self.__shards:
@@ -267,8 +268,8 @@ class Client(APIClient):
         """
         Changes the voice state of the bot in guild. (Connecting/Disconnecting from the guild, etc...)
 
-        :param Guild guild: Guild to change presence.
-        :param Optional[Channel] channel: Voice channel to connect. Pass nothing or None to disconnect from the channel.
+        :param guild: Guild to change presence.
+        :param channel: Voice channel to connect. Pass nothing or None to disconnect from the channel.
         :param bool self_mute: Whether the bot is self-muted.
         :param bool self_deaf: Whether the bot is self-deaf.
         """

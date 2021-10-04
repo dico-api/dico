@@ -298,7 +298,7 @@ class APIClient:
         if files:
             for x in range(len(files)):
                 sel = files[x]
-                if not isinstance(sel, io.FileIO):
+                if isinstance(sel, str):
                     files[x] = open(sel, "rb")
         if isinstance(message_reference, Message):
             message_reference = MessageReference.from_message(message_reference)
@@ -480,7 +480,7 @@ class APIClient:
             if files:
                 for x in range(len(files)):
                     sel = files[x]
-                    if not isinstance(sel, io.FileIO):
+                    if isinstance(sel, str):
                         files[x] = open(sel, "rb")
         if embed and embeds:
             raise TypeError("you can't pass both embed and embeds.")
@@ -1386,7 +1386,7 @@ class APIClient:
         return wrap_to_async(Sticker, self, resp)
 
     def create_guild_sticker(self, guild: Guild.TYPING, *, name: str, description: str, tags: str, file: FILE_TYPE, reason: Optional[str] = None) -> Sticker.RESPONSE:
-        if not isinstance(file, io.FileIO):
+        if isinstance(file, str):
             file = open(file, "rb")
         try:
             resp = self.http.create_guild_sticker(int(guild), name, description, tags, file, reason=reason)
@@ -1530,7 +1530,7 @@ class APIClient:
         if files:
             for x in range(len(files)):
                 sel = files[x]
-                if not isinstance(sel, io.FileIO):
+                if isinstance(sel, str):
                     files[x] = open(sel, "rb")
         if embed:
             embeds = [embed]
@@ -1602,7 +1602,7 @@ class APIClient:
             if files:
                 for x in range(len(files)):
                     sel = files[x]
-                    if not isinstance(sel, io.FileIO):
+                    if isinstance(sel, str):
                         files[x] = open(sel, "rb")
         if embed is None or embeds is None:
             embeds = None
@@ -1791,7 +1791,7 @@ class APIClient:
         if files:
             for x in range(len(files)):
                 sel = files[x]
-                if not isinstance(sel, io.FileIO):
+                if isinstance(sel, str):
                     files[x] = open(sel, "rb")
         if embed:
             embeds = [embed]
@@ -1854,7 +1854,7 @@ class APIClient:
             if files:
                 for x in range(len(files)):
                     sel = files[x]
-                    if not isinstance(sel, io.FileIO):
+                    if isinstance(sel, str):
                         files[x] = open(sel, "rb")
         if embed is None or embeds is None:
             embeds = None
