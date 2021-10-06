@@ -256,7 +256,7 @@ class HTTPRequestBase(ABC):
         :param sticker_ids: List of ID of the stickers.
         """
         if not (content or embeds or sticker_ids):
-            raise ValueError("either content or embed must be passed.")
+            raise ValueError("either content or embed or sticker_ids must be passed.")
         body = {}
         if content is not None:
             body["content"] = content
@@ -606,16 +606,22 @@ class HTTPRequestBase(ABC):
         body = {"name": name, "auto_archive_duration": auto_archive_duration}
         return self.request(f"/channels/{channel_id}/messages/{message_id}/threads", "POST", body, is_json=True, reason_header=reason)
 
-    def start_thread_without_message(self, channel_id, name: str, auto_archive_duration: int, reason: str = None) -> RESPONSE:
+    def start_thread_without_message(self, channel_id, name: str, auto_archive_duration: int, thread_type: int = None, invitable: bool = None, reason: str = None) -> RESPONSE:
         """
         Sends start thread without message request.
 
         :param channel_id: ID of the channel to create thread.
         :param name: Name of the thread channel.
         :param auto_archive_duration: Duration in minute to automatically close after recent activity.
+        :param thread_type: Type of the thread.
+        :param invitable: Whether this thread is invitable.
         :param reason: Reason of the action.
         """
         body = {"name": name, "auto_archive_duration": auto_archive_duration}
+        if thread_type is not None:
+            body["type"] = thread_type
+        if invitable is not None:
+            body["invitable"] = invitable
         return self.request(f"/channels/{channel_id}/threads", "POST", body, is_json=True, reason_header=reason)
 
     def join_thread(self, channel_id) -> RESPONSE:

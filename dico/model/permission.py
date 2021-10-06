@@ -2,6 +2,7 @@ import typing
 
 from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, FlagBase
+from ..utils import cdn_url
 
 if typing.TYPE_CHECKING:
     from .guild import Guild
@@ -60,6 +61,8 @@ class Role(DiscordObjectBase):
         self.name: str = resp["name"]
         self.color: int = resp["color"]
         self.hoist: bool = resp["hoist"]
+        self.icon: typing.Optional[str] = resp.get("icon")
+        self.unicode_emoji: typing.Optional[str] = resp.get("unicode_emoji")
         self.position: int = resp["position"]
         self.permissions: PermissionFlags = PermissionFlags.from_value(int(resp["permissions"]))
         self.managed: bool = resp["managed"]
@@ -76,6 +79,9 @@ class Role(DiscordObjectBase):
         if position is not None:
             body["position"] = position
         return body
+
+    def icon_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
+        return cdn_url("role-icons/{role_id}", image_hash=self.icon, extension=extension, size=size, role_id=self.id)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} name={self.name}>"

@@ -430,7 +430,7 @@ class MessageActivityTypes(TypeBase):
     JOIN = 1
     SPECTATE = 2
     LISTEN = 3
-    JOIN_REQUEST = 4
+    JOIN_REQUEST = 5
 
 
 class MessageFlags(FlagBase):

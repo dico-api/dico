@@ -700,9 +700,11 @@ class APIClient:
                      *,
                      name: str,
                      auto_archive_duration: int,
+                     thread_type: Union[ChannelTypes, int] = None,
+                     invitable: bool = None,
                      reason: str = None) -> Channel.RESPONSE:
         channel = self.http.start_thread_with_message(int(channel), int(message), name, auto_archive_duration, reason=reason) if message else \
-            self.http.start_thread_without_message(int(channel), name, auto_archive_duration, reason=reason)
+            self.http.start_thread_without_message(int(channel), name, auto_archive_duration, int(thread_type), invitable, reason=reason)
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)

@@ -42,11 +42,11 @@ class User(DiscordObjectBase):
     def mention(self) -> str:
         return f"<@{self.id}>"
 
-    def avatar_url(self, *, extension: str = "webp", size: int = 1024) -> str:
+    def avatar_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.avatar:
             return cdn_url("avatars/{user_id}", image_hash=self.avatar, extension=extension, size=size, user_id=self.id)
-        else:
-            return cdn_url("embed/avatars", image_hash=self.discriminator % 5, extension=extension)
+        elif self.discriminator:
+            return cdn_url("embed/avatars", image_hash=str(int(self.discriminator) % 5), extension="png")
 
     def banner_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.banner:
