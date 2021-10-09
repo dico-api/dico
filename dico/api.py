@@ -8,7 +8,7 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
-    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway, VideoQualityModes, InviteTargetTypes
+    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway, VideoQualityModes, InviteTargetTypes, WidgetStyle
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if TYPE_CHECKING:
@@ -696,13 +696,29 @@ class APIClient:
 
     def start_thread(self,
                      channel: Channel.TYPING,
-                     message: Message.TYPING = None,
+                     message: Optional[Message.TYPING] = None,
                      *,
                      name: str,
                      auto_archive_duration: int,
                      thread_type: Union[ChannelTypes, int] = None,
                      invitable: bool = None,
-                     reason: str = None) -> Channel.RESPONSE:
+                     reason: Optional[str] = None) -> Channel.RESPONSE:
+        """
+        Starts new thread.
+
+        .. note::
+            If ``message`` param is passed, type of thread will be always public regardless of what you've set to.
+
+        :param channel: Channel to create thread.
+        :param message: Message to create thread from.
+        :param str name: Name of the thread.
+        :param int auto_archive_duration: When to archive thread in minutes.
+        :param thread_type: Type of thread.
+        :type thread_type: Union[ChannelTypes, int]
+        :param bool invitable: Whether this thread can be invitable.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Channel`
+        """
         channel = self.http.start_thread_with_message(int(channel), int(message), name, auto_archive_duration, reason=reason) if message else \
             self.http.start_thread_without_message(int(channel), name, auto_archive_duration, int(thread_type), invitable, reason=reason)
         if isinstance(channel, dict):
@@ -710,24 +726,58 @@ class APIClient:
         return wrap_to_async(Channel, self, channel)
 
     def join_thread(self, channel: Channel.TYPING):
+        """
+        Joins to thread.
+
+        :param channel: Thread to join.
+        """
         return self.http.join_thread(int(channel))
 
     def add_thread_member(self, channel: Channel.TYPING, user: User.TYPING):
+        """
+        Adds member to thread.
+
+        :param channel: Thread to add member.
+        :param user: User to add.
+        """
         return self.http.add_thread_member(int(channel), int(user))
 
     def leave_thread(self, channel: Channel.TYPING):
+        """
+        Leaves thread.
+
+        :param channel: Thread to leave.
+        """
         return self.http.leave_thread(int(channel))
 
     def remove_thread_member(self, channel: Channel.TYPING, user: User.TYPING):
+        """
+        Removes member from thread.
+
+        :param channel: Thread to remove member.
+        :param user: User to remove.
+        """
         return self.http.remove_thread_member(int(channel), int(user))
 
     def list_thread_members(self, channel: Channel.TYPING) -> ThreadMember.RESPONSE_AS_LIST:
+        """
+        Lists members of thread.
+
+        :param channel: Thread to list members.
+        :return: List[:class:`~.ThreadMember`]
+        """
         members = self.http.list_thread_members(int(channel))
         if isinstance(members, list):
             return [ThreadMember(self, x) for x in members]
         return wrap_to_async(ThreadMember, self, members, as_create=False)
 
     def list_active_threads(self, channel: Channel.TYPING) -> ListThreadsResponse.RESPONSE:
+        """
+        Lists threads in channel that is active.
+
+        :param channel: Channel to list threads.
+        :return: :class:`~.ListThreadsResponse`
+        """
         resp = self.http.list_active_threads(int(channel))
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
@@ -736,8 +786,17 @@ class APIClient:
     def list_public_archived_threads(self,
                                      channel: Channel.TYPING,
                                      *,
-                                     before: Union[str, datetime.datetime] = None,
-                                     limit: int = None) -> ListThreadsResponse.RESPONSE:
+                                     before: Optional[Union[str, datetime.datetime]] = None,
+                                     limit: Optional[int] = None) -> ListThreadsResponse.RESPONSE:
+        """
+        Lists threads in channel that is archived and public.
+
+        :param channel: Channel to list threads.
+        :param before: Timestamp to show threads before.
+        :type before: Optional[Union[str, datetime.datetime]]
+        :param Optional[int] limit: Limit of the number of the threads.
+        :return: :class:`~.ListThreadsResponse`
+        """
         resp = self.http.list_public_archived_threads(int(channel), before, limit)
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
@@ -746,8 +805,17 @@ class APIClient:
     def list_private_archived_threads(self,
                                       channel: Channel.TYPING,
                                       *,
-                                      before: Union[str, datetime.datetime] = None,
-                                      limit: int = None) -> ListThreadsResponse.RESPONSE:
+                                      before: Optional[Union[str, datetime.datetime]] = None,
+                                      limit: Optional[int] = None) -> ListThreadsResponse.RESPONSE:
+        """
+        Lists threads in channel that is archived and private.
+
+        :param channel: Channel to list threads.
+        :param before: Timestamp to show threads before.
+        :type before: Optional[Union[str, datetime.datetime]]
+        :param Optional[int] limit: Limit of the number of the threads.
+        :return: :class:`~.ListThreadsResponse`
+        """
         resp = self.http.list_private_archived_threads(int(channel), before, limit)
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
@@ -758,6 +826,15 @@ class APIClient:
                                              *,
                                              before: Union[str, datetime.datetime] = None,
                                              limit: int = None) -> ListThreadsResponse.RESPONSE:
+        """
+        Lists threads in channel that is archived and private and joined.
+
+        :param channel: Channel to list threads.
+        :param before: Timestamp to show threads before.
+        :type before: Optional[Union[str, datetime.datetime]]
+        :param Optional[int] limit: Limit of the number of the threads.
+        :return: :class:`~.ListThreadsResponse`
+        """
         resp = self.http.list_joined_private_archived_threads(int(channel), before, limit)
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
@@ -766,12 +843,25 @@ class APIClient:
     # Emoji
 
     def list_guild_emojis(self, guild: Guild.TYPING) -> Emoji.RESPONSE_AS_LIST:
+        """
+        Lists emojis of the guild.
+
+        :param guild: Guild to list emojis.
+        :return: List[:class:`~.Emoji`]
+        """
         resp = self.http.list_guild_emojis(int(guild))
         if isinstance(resp, list):
             return [Emoji(self, x) for x in resp]
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
     def request_guild_emoji(self, guild: Guild.TYPING, emoji: Emoji.TYPING) -> Emoji.RESPONSE:
+        """
+        Requests emoji from guild.
+
+        :param guild: Guild to request emoji.
+        :param emoji: Emoji to request.
+        :return: :class:`~.Emoji`
+        """
         resp = self.http.request_guild_emoji(int(guild), int(emoji))
         if isinstance(resp, dict):
             return Emoji(self, resp)
@@ -782,8 +872,18 @@ class APIClient:
                            *,
                            name: str,
                            image: str,
-                           roles: List[Role.TYPING] = None,
-                           reason: str = None) -> Emoji.RESPONSE:
+                           roles: Optional[List[Role.TYPING]] = None,
+                           reason: Optional[str] = None) -> Emoji.RESPONSE:
+        """
+        Creates emoji from guild.
+
+        :param guild: Guild to create emoji.
+        :param str name: Name of the emoji.
+        :param str image: Image of the emoji.
+        :param roles: Roles that are allowed to use this emoji.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Emoji`
+        """
         resp = self.http.create_guild_emoji(int(guild), name, image, [str(int(x)) for x in roles or []], reason=reason)
         if isinstance(resp, dict):
             return Emoji(self, resp)
@@ -793,15 +893,32 @@ class APIClient:
                            guild: Guild.TYPING,
                            emoji: Emoji.TYPING,
                            *,
-                           name: str,
-                           roles: List[Role.TYPING],
-                           reason: str = None) -> Emoji.RESPONSE:
-        resp = self.http.modify_guild_emoji(int(guild), int(emoji), name, [str(int(x)) for x in roles], reason=reason)
+                           name: Optional[str] = EmptyObject,
+                           roles: Optional[List[Role.TYPING]] = EmptyObject,
+                           reason: Optional[str] = None) -> Emoji.RESPONSE:
+        """
+        Modifies emoji of the guild.
+
+        :param guild: Guild to edit emoji.
+        :param emoji: Emoji to edit.
+        :param Optional[str] name: Name to edit.
+        :param roles: Roles to edit.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Emoji`
+        """
+        resp = self.http.modify_guild_emoji(int(guild), int(emoji), name, [str(int(x)) for x in roles] if roles else roles, reason=reason)
         if isinstance(resp, dict):
             return Emoji(self, resp)
         return wrap_to_async(Emoji, self, resp, as_create=False)
 
-    def delete_guild_emoji(self, guild: Guild.TYPING, emoji: Emoji.TYPING, reason: str = None):
+    def delete_guild_emoji(self, guild: Guild.TYPING, emoji: Emoji.TYPING, reason: Optional[str] = None):
+        """
+        Deletes emoji of the guild.
+
+        :param guild: Guild to delete emoji.
+        :param emoji: Emoji to delete.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.delete_guild_emoji(int(guild), int(emoji), reason=reason)
 
     # Guild
@@ -1243,7 +1360,7 @@ class APIClient:
             return AbstractObject(resp)
         return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
-    def request_guild_widget_image(self, guild: Guild.TYPING, style: Optional[str] = None) -> BYTES_RESPONSE:
+    def request_guild_widget_image(self, guild: Guild.TYPING, style: Optional[WidgetStyle] = None) -> BYTES_RESPONSE:
         return self.http.request_guild_widget_image(int(guild), style)
 
     def request_guild_welcome_screen(self, guild: Guild.TYPING) -> WelcomeScreen.RESPONSE:

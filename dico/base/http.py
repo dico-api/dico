@@ -751,7 +751,7 @@ class HTTPRequestBase(ABC):
         body = {"name": name, "image": image, "roles": roles}
         return self.request(f"/guilds/{guild_id}/emojis", "POST", body, is_json=True, reason_header=reason)
 
-    def modify_guild_emoji(self, guild_id, emoji_id, name: str, roles: typing.List[str], reason: str = None) -> RESPONSE:
+    def modify_guild_emoji(self, guild_id, emoji_id, name: str = EmptyObject, roles: typing.List[str] = EmptyObject, reason: str = None) -> RESPONSE:
         """
         Sends modify guild emoji request.
 
@@ -761,7 +761,11 @@ class HTTPRequestBase(ABC):
         :param roles: Roles to change.
         :param reason: Reason of the action.
         """
-        body = {"name": name, "roles": roles}
+        body = {}
+        if name is not EmptyObject:
+            body["name"] = name
+        if roles is not EmptyObject:
+            body["roles"] = roles
         return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "PATCH", body, is_json=True, reason_header=reason)
 
     def delete_guild_emoji(self, guild_id, emoji_id, reason: str = None) -> RESPONSE:
