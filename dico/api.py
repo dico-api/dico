@@ -926,16 +926,39 @@ class APIClient:
     def create_guild(self,
                      name: str,
                      *,
-                     icon: str = None,
-                     verification_level: Union[int, VerificationLevel] = None,
-                     default_message_notifications: Union[int, DefaultMessageNotificationLevel] = None,
-                     explicit_content_filter: Union[int, ExplicitContentFilterLevel] = None,
-                     roles: List[dict] = None,  # TODO: role and channel generator
-                     channels: List[dict] = None,
-                     afk_channel_id: Snowflake.TYPING = None,
-                     afk_timeout: int = None,
-                     system_channel_id: Snowflake.TYPING = None,
-                     system_channel_flags: Union[int, SystemChannelFlags] = None) -> Guild.RESPONSE:
+                     icon: Optional[str] = None,
+                     verification_level: Optional[Union[int, VerificationLevel]] = None,
+                     default_message_notifications: Optional[Union[int, DefaultMessageNotificationLevel]] = None,
+                     explicit_content_filter: Optional[Union[int, ExplicitContentFilterLevel]] = None,
+                     roles: Optional[List[dict]] = None,  # TODO: role and channel generator
+                     channels: Optional[List[dict]] = None,
+                     afk_channel_id: Optional[Snowflake.TYPING] = None,
+                     afk_timeout: Optional[int] = None,
+                     system_channel_id: Optional[Snowflake.TYPING] = None,
+                     system_channel_flags: Optional[Union[int, SystemChannelFlags]] = None) -> Guild.RESPONSE:
+        """
+        Creates guild.
+
+        .. note::
+            You can create image data for ``icon`` using :func:`.utils.to_image_data`.
+
+        :param str name: Name of the guild.
+        :param Optional[str] icon: Icon of the guild.
+        :param verification_level: Verification level of the guild.
+        :type verification_level: Optional[Union[int, VerificationLevel]]
+        :param default_message_notifications: Default notifications level of the guild.
+        :type default_message_notifications: Optional[Union[int, DefaultMessageNotificationLevel]]
+        :param explicit_content_filter: Default explicit content filter level of the guild.
+        :type explicit_content_filter: Optional[Union[int, ExplicitContentFilterLevel]]
+        :param Optional[List[dict]] roles: Roles of the guild.
+        :param Optional[List[dict]] channels: Channels of the guild.
+        :param afk_channel_id: Temporary ID of the afk channel.
+        :param Optional[int] afk_timeout: Timeout of the afk channel.
+        :param system_channel_id: Temporary ID of the system channel.
+        :param system_channel_flags: Flags of the system channel.
+        :type system_channel_flags: Optional[Union[int, SystemChannelFlags]]
+        :return: :class:`~.Guild`
+        """
         kwargs = {"name": name}
         if icon is not None:
             kwargs["icon"] = icon
@@ -963,12 +986,25 @@ class APIClient:
         return wrap_to_async(Guild, self, resp, ensure_cache_type="guild")
 
     def request_guild(self, guild: Guild.TYPING, with_counts: bool = False) -> Guild.RESPONSE:
+        """
+        Requests guild.
+
+        :param guild: Guild to request.
+        :param with_counts: Whether to include member count and presence count.
+        :return: :class:`~.Guild`
+        """
         resp = self.http.request_guild(int(guild), with_counts)
         if isinstance(resp, dict):
             return Guild.create(self, resp, ensure_cache_type="guild")
         return wrap_to_async(Guild, self, resp, ensure_cache_type="guild")
 
     def request_guild_preview(self, guild: Guild.TYPING) -> GuildPreview.RESPONSE:
+        """
+        Requests guild preview.
+
+        :param guild: Guild to request preview.
+        :return: :class:`~.GuildPreview`
+        """
         resp = self.http.request_guild_preview(int(guild))
         if isinstance(resp, dict):
             return GuildPreview(self, resp)
@@ -977,61 +1013,93 @@ class APIClient:
     def modify_guild(self,
                      guild: Guild.TYPING,
                      *,
-                     name: str = None,
-                     verification_level: Union[int, VerificationLevel] = None,
-                     default_message_notifications: Union[int, DefaultMessageNotificationLevel] = None,
-                     explicit_content_filter: Union[int, ExplicitContentFilterLevel] = None,
-                     afk_channel: Channel.TYPING = None,
-                     afk_timeout: int = None,
-                     icon: str = None,
-                     owner: User.TYPING = None,
-                     splash: str = None,
-                     discovery_splash: str = None,
-                     banner: str = None,
-                     system_channel: Channel.TYPING = None,
-                     system_channel_flags: Union[int, SystemChannelFlags] = None,
-                     rules_channel: Channel.TYPING = None,
-                     public_updates_channel: Channel.TYPING = None,
-                     preferred_locale: str = None,
-                     features: List[str] = None,
-                     description: str = None,
-                     reason: str = None) -> Guild.RESPONSE:
+                     name: Optional[str] = None,
+                     verification_level: Optional[Union[int, VerificationLevel]] = EmptyObject,
+                     default_message_notifications: Optional[Union[int, DefaultMessageNotificationLevel]] = EmptyObject,
+                     explicit_content_filter: Optional[Union[int, ExplicitContentFilterLevel]] = EmptyObject,
+                     afk_channel: Optional[Channel.TYPING] = EmptyObject,
+                     afk_timeout: Optional[int] = None,
+                     icon: Optional[str] = EmptyObject,
+                     owner: Optional[User.TYPING] = None,
+                     splash: Optional[str] = EmptyObject,
+                     discovery_splash: Optional[str] = EmptyObject,
+                     banner: Optional[str] = EmptyObject,
+                     system_channel: Optional[Channel.TYPING] = EmptyObject,
+                     system_channel_flags: Optional[Union[int, SystemChannelFlags]] = None,
+                     rules_channel: Optional[Channel.TYPING] = EmptyObject,
+                     public_updates_channel: Optional[Channel.TYPING] = EmptyObject,
+                     preferred_locale: Optional[str] = EmptyObject,
+                     features: Optional[List[str]] = None,
+                     description: Optional[str] = EmptyObject,
+                     reason: Optional[str] = None) -> Guild.RESPONSE:
+        """
+        Modifies guild.
+
+        .. note::
+            You can create image data for ``icon``, ``splash``, ``discovery_splash``, and ``banner`` using :func:`.utils.to_image_data`.
+
+        :param guild: Guild to modify.
+        :param Optional[str] name: Name of the guild.
+        :param verification_level: Verification level of the guild.
+        :type verification_level: Optional[Union[int, VerificationLevel]]
+        :param default_message_notifications: Default notifications level of the guild.
+        :type default_message_notifications: Optional[Union[int, DefaultMessageNotificationLevel]]
+        :param explicit_content_filter: Default explicit content filter level of the guild.
+        :type explicit_content_filter: Optional[Union[int, ExplicitContentFilterLevel]]
+        :param afk_channel: AFK channel of the guild.
+        :param Optional[int] afk_timeout: Timeout of the AFK channel.
+        :param Optional[str] icon: Icon of the guild.
+        :param owner: Owner of the guild.
+        :param Optional[str] splash: Splash image of the guild.
+        :param Optional[str] discovery_splash: Discovery splash image of the guild.
+        :param Optional[str] banner: Banner of the guild.
+        :param system_channel: System channel of the guild.
+        :param system_channel_flags: Flags of the system channel.
+        :type system_channel_flags: Optional[Union[int, SystemChannelFlags]]
+        :param rules_channel: Rules channel of the guild.
+        :param public_updates_channel: Public update channel of the guild.
+        :param Optional[str] preferred_locale: Preferred locale of the guild.
+        :param Optional[List[str]] features: Features of the guild.
+        :param Optional[str] description: Description of the guild.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Guild`
+        """
         kwargs = {}
         if name is not None:
             kwargs["name"] = name
-        if verification_level is not None:
+        if verification_level is not EmptyObject:
             kwargs["verification_level"] = int(verification_level)
-        if default_message_notifications is not None:
-            kwargs["default_message_notifications"] = int(default_message_notifications)
-        if explicit_content_filter is not None:
+        if default_message_notifications is not EmptyObject:
+            kwargs["default_message_notifications"] = int(default_message_notifications) if default_message_notifications is not None else default_message_notifications
+        if explicit_content_filter is not EmptyObject:
             kwargs["explicit_content_filter"] = int(explicit_content_filter)
-        if afk_channel is not None:
-            kwargs["afk_channel_id"] = str(int(afk_channel))
+        if afk_channel is not EmptyObject:
+            kwargs["afk_channel_id"] = str(int(afk_channel)) if afk_channel is not None else afk_channel
         if afk_timeout is not None:
             kwargs["afk_timeout"] = afk_timeout
-        if icon is not None:
+        if icon is not EmptyObject:
             kwargs["icon"] = icon
         if owner is not None:
             kwargs["owner_id"] = str(int(owner))
-        if splash is not None:
+        if splash is not EmptyObject:
             kwargs["splash"] = splash
-        if discovery_splash is not None:
+        if discovery_splash is not EmptyObject:
             kwargs["discovery_splash"] = discovery_splash
-        if banner is not None:
+        if banner is not EmptyObject:
             kwargs["banner"] = banner
-        if system_channel is not None:
-            kwargs["system_channel_id"] = str(int(system_channel))
+        if system_channel is not EmptyObject:
+            kwargs["system_channel_id"] = str(int(system_channel)) if system_channel is not None else system_channel
         if system_channel_flags is not None:
             kwargs["system_channel_flags"] = int(system_channel_flags)
-        if rules_channel is not None:
-            kwargs["rules_channel_id"] = str(int(rules_channel))
-        if public_updates_channel is not None:
-            kwargs["public_updates_channel_id"] = str(int(public_updates_channel))
-        if preferred_locale is not None:
+        if rules_channel is not EmptyObject:
+            kwargs["rules_channel_id"] = str(int(rules_channel)) if rules_channel is not None else rules_channel
+        if public_updates_channel is not EmptyObject:
+            kwargs["public_updates_channel_id"] = str(int(public_updates_channel)) if public_updates_channel is not None else public_updates_channel
+        if preferred_locale is not EmptyObject:
             kwargs["preferred_locale"] = preferred_locale
         if features is not None:
             kwargs["features"] = features
-        if description is not None:
+        if description is not EmptyObject:
             kwargs["description"] = description
         resp = self.http.modify_guild(int(guild), **kwargs, reason=reason)
         if isinstance(resp, dict):
@@ -1039,9 +1107,20 @@ class APIClient:
         return wrap_to_async(Guild, self, resp, ensure_cache_type="guild")
 
     def delete_guild(self, guild: Guild.TYPING):
+        """
+        Deletes guild. Client must be an owner to delete.
+
+        :param guild: Guild to delete.
+        """
         return self.http.delete_guild(int(guild))
 
     def request_guild_channels(self, guild: Guild.TYPING) -> Channel.RESPONSE_AS_LIST:
+        """
+        Requests channels of the guild.
+
+        :param guild: Guild to request channels.
+        :return: List[:class:`~.Channel`]
+        """
         channels = self.http.request_guild_channels(int(guild))
         if isinstance(channels, list):
             return [Channel.create(self, x) for x in channels]
@@ -1051,16 +1130,35 @@ class APIClient:
                              guild: Guild.TYPING,
                              name: str,
                              *,
-                             channel_type: Union[int, ChannelTypes] = None,
-                             topic: str = None,
-                             bitrate: int = None,
-                             user_limit: int = None,
-                             rate_limit_per_user: int = None,
-                             position: int = None,
-                             permission_overwrites: Union[dict, Overwrite] = None,
-                             parent: Channel.TYPING = None,
-                             nsfw: bool = None,
-                             reason: str = None) -> Channel.RESPONSE:
+                             channel_type: Optional[Union[int, ChannelTypes]] = None,
+                             topic: Optional[str] = None,
+                             bitrate: Optional[int] = None,
+                             user_limit: Optional[int] = None,
+                             rate_limit_per_user: Optional[int] = None,
+                             position: Optional[int] = None,
+                             permission_overwrites: Optional[Union[dict, Overwrite]] = None,
+                             parent: Optional[Channel.TYPING] = None,
+                             nsfw: Optional[bool] = None,
+                             reason: Optional[str] = None) -> Channel.RESPONSE:
+        """
+        Creates channel in guild.
+
+        :param guild: Guild to create channel.
+        :param str name: Name of the channel.
+        :param channel_type: Type of the channel.
+        :type channel_type: Optional[Union[int, ChannelTypes]]
+        :param Optional[str] topic: Topic of the channel.
+        :param Optional[int] bitrate: Bitrate of the channel.
+        :param user_limit: User limit of the channel.
+        :param Optional[int] rate_limit_per_user: Slowmode of the channel.
+        :param Optional[int] position: Position of the channel.
+        :param permission_overwrites: Permission overwrites of the channel.
+        :type permission_overwrites: Optional[Union[dict, Overwrite]]
+        :param parent: Parent category of the channel.
+        :param Optional[bool] nsfw: Whether this channel is NSFW.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Channel`
+        """
         if isinstance(parent, Channel) and not parent.type.guild_category:
             raise TypeError("parent must be category channel.")
         kwargs = {"name": name}
@@ -1087,29 +1185,65 @@ class APIClient:
             return Channel.create(self, resp)
         return wrap_to_async(Channel, self, resp)
 
-    def modify_guild_channel_positions(self, guild: Guild.TYPING, *params: dict, reason: str = None):
+    def modify_guild_channel_positions(self, guild: Guild.TYPING, *params: dict, reason: Optional[str] = None):
+        """
+        Modifies position of the guild channels.
+
+        :param guild: Guild to edit channel positions.
+        :param params: Positions of the channel. Use :meth:`~.Channel.to_position_param`.
+        :param Optional[str] reason: Reason of the action.
+        """
         # You can get params by using Channel.to_position_param(...)
         return self.http.modify_guild_channel_positions(int(guild), [*params], reason=reason)
 
     def list_active_threads_as_guild(self, guild: Guild.TYPING) -> ListThreadsResponse.RESPONSE:
+        """
+        Lists active threads in guild.
+
+        :param guild: Guild to get active threads.
+        :return: :class:`~.ListThreadsResponse`
+        """
         resp = self.http.list_active_threads_as_guild(int(guild))
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
         return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
 
-    def request_guild_member(self, guild: Guild.TYPING, user: User.TYPING) -> GuildMember.RESPONSE:
+    def request_guild_member(self, guild: Guild.TYPING, user: Union[GuildMember.TYPING, User.TYPING]) -> GuildMember.RESPONSE:
+        """
+        Requests member of the guild.
+
+        :param guild: Guild to request member
+        :param user: Member to request.
+        :return: :class:`~.GuildMember`
+        """
         resp = self.http.request_guild_member(int(guild), int(user))
         if isinstance(resp, dict):
             return GuildMember.create(self, resp, guild_id=int(guild))
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
-    def list_guild_members(self, guild: Guild.TYPING, limit: int = None, after: str = None) -> GuildMember.RESPONSE_AS_LIST:
+    def list_guild_members(self, guild: Guild.TYPING, limit: Optional[int] = None, after: Optional[Union[GuildMember.TYPING, User.TYPING]] = None) -> GuildMember.RESPONSE_AS_LIST:
+        """
+        Lists members of the guild.
+
+        :param guild: Guild to list members.
+        :param Optional[int] limit: Limit of the count of the members.
+        :param after: Member ID to list after.
+        :return: List[:class:`~.GuildMember`]
+        """
         resp = self.http.list_guild_members(int(guild), limit, after)
         if isinstance(resp, list):
             return [GuildMember.create(self, x, guild_id=int(guild)) for x in resp]
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
-    def search_guild_members(self, guild: Guild.TYPING, query: str, limit: int = None) -> GuildMember.RESPONSE_AS_LIST:
+    def search_guild_members(self, guild: Guild.TYPING, query: str, limit: Optional[int] = None) -> GuildMember.RESPONSE_AS_LIST:
+        """
+        Searches members of the guild using query given. This will search for member nickname or username that starts with query.
+
+        :param guild: Guild to search members
+        :param str query: Query to use for searching.
+        :param Optional[int] limit: Limit of the count of the results.
+        :return: List[:class:`~.GuildMember`]
+        """
         resp = self.http.search_guild_members(int(guild), query, limit)
         if isinstance(resp, list):
             return [GuildMember.create(self, x, guild_id=int(guild)) for x in resp]
@@ -1119,10 +1253,22 @@ class APIClient:
                          guild: Guild.TYPING,
                          user: User.TYPING,
                          access_token: str,
-                         nick: str = None,
-                         roles: List[Role.TYPING] = None,
-                         mute: bool = None,
-                         deaf: bool = None) -> GuildMember.RESPONSE:
+                         nick: Optional[str] = None,
+                         roles: Optional[List[Role.TYPING]] = None,
+                         mute: Optional[bool] = None,
+                         deaf: Optional[bool] = None) -> GuildMember.RESPONSE:
+        """
+        Adds member to guild. Requires OAuth2 access token with ``guilds.join`` scope.
+
+        :param guild: Guild to add member.
+        :param user: User that will be added.
+        :param str access_token: OAuth2 access token with ``guilds.join`` scope.
+        :param Optional[str] nick: Nickname of the member.
+        :param roles: Roles of the member.
+        :param Optional[bool] mute: Whether this member is muted in voice channels.
+        :param Optional[bool] deaf: Whether this member is deafened in voice channels.
+        :return: :class:`~.GuildMember`
+        """
         kwargs = {"access_token": access_token}
         if nick is not None:
             kwargs["nick"] = nick
@@ -1142,12 +1288,12 @@ class APIClient:
     def modify_guild_member(self,
                             guild: Guild.TYPING,
                             user: User.TYPING,
+                            *,
                             nick: str = EmptyObject,
                             roles: List[Role.TYPING] = EmptyObject,
                             mute: bool = EmptyObject,
                             deaf: bool = EmptyObject,
                             channel: Channel.TYPING = EmptyObject,
-                            *,
                             reason: str = None) -> GuildMember.RESPONSE:
         kwargs = {}
         if nick is not EmptyObject:
