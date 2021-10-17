@@ -32,7 +32,7 @@ class DiscordObjectBase(CopyableObject):
     def __init__(self, client: "APIClient", resp: dict, **kwargs: typing.Any):
         resp.update(kwargs)
         # self._cache_type = None
-        self.raw: dict = resp
+        self.raw: dict = resp.copy()
         self.id: Snowflake = Snowflake(resp["id"])
         self.client: "APIClient" = client
 

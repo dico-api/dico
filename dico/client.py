@@ -28,6 +28,7 @@ class Client(APIClient):
     :type application_id: Optional[Union[int, str, Snowflake]]
     :param bool monoshard: Whether to mono-shard this bot.
     :param Optional[int] shard_count: Count of shards to launch, if monoshard is True.
+    :param Optional[int] shard_id: Shard ID of the client. This is not recommended.
     :param cache_max_sizes: Max sizes of the cache per types. Message limit is set to 1000 by default.
 
     :ivar AsyncHTTPRequest ~.http: HTTP request client.
@@ -53,6 +54,7 @@ class Client(APIClient):
                  application_id: typing.Optional[Snowflake.TYPING] = None,
                  monoshard: bool = False,
                  shard_count: typing.Optional[int] = None,
+                 shard_id: typing.Optional[int] = None,
                  **cache_max_sizes: int):
         cache_max_sizes.setdefault("message", 1000)
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
@@ -70,6 +72,7 @@ class Client(APIClient):
         self.monoshard: bool = monoshard
         self.shard_count: typing.Optional[int] = shard_count
         self.__shards = {} if self.monoshard else None
+        self.__shard_id = shard_id
 
         # Internal events dispatch
         self.events.add("READY", self.__ready)
@@ -229,7 +232,8 @@ class Client(APIClient):
                 await ws.receive_once()
                 self.loop.create_task(ws.run())
         else:
-            self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress)
+            maybe_shard = {"shard": [self.__shard_id, self.shard_count]} if self.__shard_id else {}
+            self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress, **maybe_shard)
             await self.ws.run()
 
     async def close(self):
