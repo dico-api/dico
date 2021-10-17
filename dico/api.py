@@ -1289,12 +1289,25 @@ class APIClient:
                             guild: Guild.TYPING,
                             user: User.TYPING,
                             *,
-                            nick: str = EmptyObject,
-                            roles: List[Role.TYPING] = EmptyObject,
-                            mute: bool = EmptyObject,
-                            deaf: bool = EmptyObject,
-                            channel: Channel.TYPING = EmptyObject,
-                            reason: str = None) -> GuildMember.RESPONSE:
+                            nick: Optional[str] = EmptyObject,
+                            roles: Optional[List[Role.TYPING]] = EmptyObject,
+                            mute: Optional[bool] = EmptyObject,
+                            deaf: Optional[bool] = EmptyObject,
+                            channel: Optional[Channel.TYPING] = EmptyObject,
+                            reason: Optional[str] = None) -> GuildMember.RESPONSE:
+        """
+        Modifies guild member.
+
+        :param guild: Guild of the member to modify.
+        :param user: Member to modify
+        :param Optional[str] nick: Nickname to modify.
+        :param roles: Roles to modify.
+        :param Optional[bool] mute: Whether this member is muted.
+        :param Optional[bool] deaf: Whether this member is deafen.
+        :param channel: Channel to move user to.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.GuildMember`
+        """
         kwargs = {}
         if nick is not EmptyObject:
             kwargs["nick"] = nick
@@ -1311,7 +1324,14 @@ class APIClient:
             return GuildMember.create(self, resp, guild_id=int(guild))
         return wrap_to_async(GuildMember, self, resp, guild_id=int(guild))
 
-    def modify_current_user_nick(self, guild: Guild.TYPING, nick: Union[str, None] = EmptyObject, *, reason: str = None):
+    def modify_current_user_nick(self, guild: Guild.TYPING, nick: Optional[str] = EmptyObject, *, reason: Optional[str] = None):
+        """
+        Modifies nickname of the current client user.
+
+        :param guild: Guild to modify nick at.
+        :param Optional[str] nick: Nickname to modify.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.modify_current_user_nick(int(guild), nick, reason=reason)
 
     def add_guild_member_role(self,
@@ -1319,7 +1339,15 @@ class APIClient:
                               user: User.TYPING,
                               role: Role.TYPING,
                               *,
-                              reason: str = None):
+                              reason: Optional[str] = None):
+        """
+        Adds role to guild member.
+
+        :param guild: Guild of the member.
+        :param user: Member to add role.
+        :param role: Role to add.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.add_guild_member_role(int(guild), int(user), int(role), reason=reason)
 
     def remove_guild_member_role(self,
@@ -1327,23 +1355,51 @@ class APIClient:
                                  user: User.TYPING,
                                  role: Role.TYPING,
                                  *,
-                                 reason: str = None):
+                                 reason: Optional[str] = None):
+        """
+        Removes role of the guild member.
+
+        :param guild: Guild to remove member's role.
+        :param user: Member to remove role.
+        :param role: Role to remove.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.remove_guild_member_role(int(guild), int(user), int(role), reason=reason)
 
     def remove_guild_member(self, guild: Guild.TYPING, user: User.TYPING):
+        """
+        Removes guild member.
+
+        :param guild: Guild to remove member.
+        :param user: Member to remove.
+        """
         return self.http.remove_guild_member(int(guild), int(user))
 
     @property
     def kick(self):
+        """Alias of :meth:`.remove_guild_member`."""
         return self.remove_guild_member
 
     def request_guild_bans(self, guild: Guild.TYPING) -> Ban.RESPONSE_AS_LIST:
+        """
+        Requests bans of the guild.
+
+        :param guild: Guild to request bans.
+        :return: List[:class:`~.Ban`]
+        """
         resp = self.http.request_guild_bans(int(guild))
         if isinstance(resp, list):
             return [Ban(self, x) for x in resp]
         return wrap_to_async(Ban, self, resp, as_create=False)
 
     def request_guild_ban(self, guild: Guild.TYPING, user: User.TYPING) -> Ban.RESPONSE:
+        """
+        Requests ban of the user in the guild.
+
+        :param guild: Guild to request ban.
+        :param user: User to request ban of.
+        :return: :class:`~.Ban`
+        """
         resp = self.http.request_guild_ban(int(guild), int(user))
         if isinstance(resp, dict):
             return Ban(self, resp)
@@ -1353,22 +1409,44 @@ class APIClient:
                          guild: Guild.TYPING,
                          user: User.TYPING,
                          *,
-                         delete_message_days: int = None,
-                         reason: str = None):
+                         delete_message_days: Optional[int] = None,
+                         reason: Optional[str] = None):
+        """
+        Creates guild ban.
+
+        :param guild: Guild to create ban.
+        :param user: User to ban.
+        :param Optional[int] delete_message_days: Days of messages sent by the user to delete.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.create_guild_ban(int(guild), int(user), delete_message_days, reason)
 
     @property
     def ban(self):
+        """Alias of :meth:`.create_guild_ban`."""
         return self.create_guild_ban
 
     def remove_guild_ban(self,
                          guild: Guild.TYPING,
                          user: User.TYPING,
                          *,
-                         reason: str = None):
+                         reason: Optional[str] = None):
+        """
+        Removes guild ban.
+
+        :param guild: Guild to remove ban.
+        :param user: User to remove ban.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.remove_guild_ban(int(guild), int(user), reason=reason)
 
     def request_guild_roles(self, guild: Guild.TYPING) -> Role.RESPONSE_AS_LIST:
+        """
+        Requests roles of the guild.
+
+        :param guild: Guild to request roles.
+        :return: List[:class:`~.Role`]
+        """
         resp = self.http.request_guild_roles(int(guild))
         if isinstance(resp, list):
             return [Role.create(self, x, guild_id=int(guild)) for x in resp]
@@ -1377,12 +1455,25 @@ class APIClient:
     def create_guild_role(self,
                           guild: Guild.TYPING,
                           *,
-                          name: str = None,
-                          permissions: Union[int, str, PermissionFlags] = None,
-                          color: int = None,
-                          hoist: bool = None,
-                          mentionable: bool = None,
-                          reason: str = None) -> Role.RESPONSE:
+                          name: Optional[str] = None,
+                          permissions: Optional[Union[int, str, PermissionFlags]] = None,
+                          color: Optional[int] = None,
+                          hoist: Optional[bool] = None,
+                          mentionable: Optional[bool] = None,
+                          reason: Optional[str] = None) -> Role.RESPONSE:
+        """
+        Creates role in the guild.
+
+        :param guild: Guild to create role.
+        :param Optional[str] name: Name of the role.
+        :param permissions: Permissions this role will have.
+        :type permissions: Optional[Union[int, str, PermissionFlags]]
+        :param Optional[int] color: Color of the role.
+        :param Optional[bool] hoist: Whether this role is hoist.
+        :param Optional[bool] mentionable: Whether this role is mentionable.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Role`
+        """
         kwargs = {}
         if name is not None:
             kwargs["name"] = name
@@ -1399,7 +1490,15 @@ class APIClient:
             return Role.create(self, resp, guild_id=int(guild))
         return wrap_to_async(Role, self, resp, guild_id=int(guild))
 
-    def modify_guild_role_positions(self, guild: Guild.TYPING, *params: dict, reason: str = None) -> Role.RESPONSE_AS_LIST:
+    def modify_guild_role_positions(self, guild: Guild.TYPING, *params: dict, reason: Optional[str] = None) -> Role.RESPONSE_AS_LIST:
+        """
+        Modifies positions of the guild role.
+
+        :param guild: Guild to modify positions of the role.
+        :param dict params: Position data to modify. You should use :meth:`~.Role.to_position_param`.
+        :param Optional[str] reason: Reason of the action.
+        :return: List[:class:`~.Role`]
+        """
         # You can get params by using Role.to_position_param(...)
         resp = self.http.modify_guild_role_positions(int(guild), [*params], reason=reason)
         if isinstance(resp, list):
@@ -1410,12 +1509,26 @@ class APIClient:
                           guild: Guild.TYPING,
                           role: Role.TYPING,
                           *,
-                          name: str = EmptyObject,
-                          permissions: Union[int, str, PermissionFlags] = EmptyObject,
-                          color: int = EmptyObject,
-                          hoist: bool = EmptyObject,
-                          mentionable: bool = EmptyObject,
-                          reason: str = None) -> Role.RESPONSE:
+                          name: Optional[str] = EmptyObject,
+                          permissions: Optional[Union[int, str, PermissionFlags]] = EmptyObject,
+                          color: Optional[int] = EmptyObject,
+                          hoist: Optional[bool] = EmptyObject,
+                          mentionable: Optional[bool] = EmptyObject,
+                          reason: Optional[str] = None) -> Role.RESPONSE:
+        """
+        Modifies role of the guild.
+
+        :param guild: Guild to modify role.
+        :param role: Role to modify.
+        :param Optional[str] name: Name of the role to modify.
+        :param permissions: Permissions of the role to modify.
+        :type permissions: Optional[Union[int, str, PermissionFlags]]
+        :param Optional[int] color: Color of the role to modify.
+        :param Optional[bool] hoist: Whether this role is hoist.
+        :param Optional[bool] mentionable: Whether this role is mentionable.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Role`
+        """
         kwargs = {}
         if name is not EmptyObject:
             kwargs["name"] = name
