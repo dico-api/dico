@@ -293,13 +293,20 @@ class Client(APIClient):
         return self.__use_cache
 
     @property
-    def websocket_closed(self) -> typing.Union[bool, typing.List[bool]]:
-        """ Whether the bot is disconnected from the Discord websocket. If the bot is sharded, then it will return list of bools."""
+    def websocket_closed(self) -> bool:
+        """ Whether the bot is disconnected from the Discord websocket. If the bot is sharded, then it will return whether every shards are available."""
         if self.ws:
             return self.ws.closed
         elif self.__shards:
-            return [x.closed for x in self.__shards.values()]
+            return any([x.closed for x in self.__shards.values()])
         return True
+
+    @property
+    def shards_closed(self) -> typing.List[bool]:
+        """Returns list of whether the shard is closed."""
+        if not self.__shards:
+            raise TypeError("unable to get shards closed status")
+        return [x.closed for x in self.__shards.values()]
 
     @property
     def guild_count(self) -> typing.Optional[int]:
