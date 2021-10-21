@@ -1545,52 +1545,103 @@ class APIClient:
             return Role.create(self, resp, guild_id=int(guild))
         return wrap_to_async(Role, self, resp, guild_id=int(guild))
 
-    def delete_guild_role(self, guild: Guild.TYPING, role: Role.TYPING, *, reason: str = None):
+    def delete_guild_role(self, guild: Guild.TYPING, role: Role.TYPING, *, reason: Optional[str] = None):
+        """
+        Deletes guild role.
+
+        :param guild: Guild to delete role.
+        :param role: Role to delete.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.delete_guild_role(int(guild), int(role), reason=reason)
 
-    def request_guild_prune_count(self, guild: Guild.TYPING, *, days: int = None, include_roles: List[Role.TYPING] = None) -> "AbstractObject.RESPONSE":
-        from .base.model import AbstractObject
+    def request_guild_prune_count(self, guild: Guild.TYPING, *, days: Optional[int] = None, include_roles: Optional[List[Role.TYPING]] = None) -> Union[int, Awaitable[int]]:
+        """
+        Requests guild prune count.
+
+        :param guild: Guild to request prune count.
+        :param Optional[int] days: Days to count prune.
+        :param include_roles: Roles to include.
+        :return: Calculated prune count.
+        """
         if include_roles is not None:
             include_roles = [*map(str, include_roles)]
         resp = self.http.request_guild_prune_count(int(guild), days, include_roles)
         if isinstance(resp, dict):
-            return AbstractObject(resp)
-        return wrap_to_async(AbstractObject, None, resp, as_create=False)
+            return resp["pruned"]
+
+        async def wrap() -> int:
+            res = await resp
+            return res["pruned"]
+
+        return wrap()
 
     def begin_guild_prune(self,
                           guild: Guild.TYPING,
                           *,
-                          days: int = 7,
-                          compute_prune_count: bool = True,
-                          include_roles: List[Role.TYPING] = None,
-                          reason: str = None) -> "AbstractObject.RESPONSE":
-        from .base.model import AbstractObject
+                          days: Optional[int] = None,
+                          compute_prune_count: Optional[bool] = None,
+                          include_roles: Optional[List[Role.TYPING]] = None,
+                          reason: Optional[str] = None) -> Optional[Union[int, Awaitable[int]]]:
+        """
+        Begins guild prune.
+
+        :param guild: Guild to prune.
+        :param Optional[int] days: Days to count prune.
+        :param Optional[bool] compute_prune_count:
+        :param include_roles: Roles to include.
+        :param Optional[str] reason: Reason of the action.
+        :return: Prune count, if ``compute_prune_count`` is True.
+        """
         if include_roles is not None:
             include_roles = [*map(str, include_roles)]
         resp = self.http.begin_guild_prune(int(guild), days, compute_prune_count, include_roles, reason=reason)
         if isinstance(resp, dict):
-            return AbstractObject(resp)
-        return wrap_to_async(AbstractObject, None, resp, as_create=False)
+            return resp["pruned"]
+
+        async def wrap() -> int:
+            res = await resp
+            return res["pruned"]
+
+        return wrap()
 
     def request_guild_voice_regions(self, guild: Guild.TYPING) -> VoiceRegion.RESPONSE_AS_LIST:
+        """
+        Requests list of guild voice regions.
+
+        :param guild: Guild to request voice regions.
+        :return: List[:class:`~.VoiceRegion`]
+        """
         resp = self.http.request_guild_voice_regions(int(guild))
         if isinstance(resp, list):
             return [VoiceRegion(x) for x in resp]
         return wrap_to_async(VoiceRegion, None, resp, as_create=False)
 
     def request_guild_invites(self, guild: Guild.TYPING) -> Invite.RESPONSE_AS_LIST:
+        """
+        Requests list of guild invites.
+
+        :param guild: Guild to request invites.
+        :return: List[:class:`~.Invite`]
+        """
         resp = self.http.request_guild_invites(int(guild))
         if isinstance(resp, list):
             return [Invite(self, x) for x in resp]
         return wrap_to_async(Invite, self, resp, as_create=False)
 
     def request_guild_integrations(self, guild: Guild.TYPING) -> Integration.RESPONSE_AS_LIST:
+        """
+        Requests list of guild integrations.
+
+        :param guild: Guild to request integrations.
+        :return: List[:class:`~.Integration`]
+        """
         resp = self.http.request_guild_integrations(int(guild))
         if isinstance(resp, list):
             return [Integration(self, x) for x in resp]
         return wrap_to_async(Integration, self, resp, as_create=False)
 
-    def delete_guild_integration(self, guild: Guild.TYPING, integration: Integration.TYPING, *, reason: str = None):
+    def delete_guild_integration(self, guild: Guild.TYPING, integration: Integration.TYPING, *, reason: Optional[str] = None):
         return self.http.delete_guild_integration(int(guild), int(integration), reason=reason)
 
     def request_guild_widget_settings(self, guild: Guild.TYPING) -> GuildWidget.RESPONSE:

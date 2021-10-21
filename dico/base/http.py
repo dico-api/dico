@@ -1309,7 +1309,7 @@ class HTTPRequestBase(ABC):
             params["include_roles"] = ','.join(include_roles)
         return self.request(f"/guilds/{guild_id}/prune", "GET", params=params)
 
-    def begin_guild_prune(self, guild_id, days: int = 7, compute_prune_count: bool = True, include_roles: typing.List[str] = None, reason: str = None) -> RESPONSE:
+    def begin_guild_prune(self, guild_id, days: int = None, compute_prune_count: bool = None, include_roles: typing.List[str] = None, reason: str = None) -> RESPONSE:
         """
         Sends begin guild prune request.
 
@@ -1319,7 +1319,13 @@ class HTTPRequestBase(ABC):
         :param include_roles: Roles to include.
         :param reason: Reason of the action.
         """
-        body = {"days": days, "compute_prune_count": compute_prune_count, "include_roles": include_roles}  # Not sure if params are optional
+        body = {}
+        if days is not None:
+            body["days"] = days
+        if compute_prune_count is not None:
+            body["compute_prune_count"] = compute_prune_count
+        if include_roles is not None:
+            body["include_roles"] = include_roles
         return self.request(f"/guilds/{guild_id}/prune", "POST", body, reason_header=reason)
 
     def request_guild_voice_regions(self, guild_id) -> RESPONSE:

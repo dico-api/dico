@@ -294,7 +294,7 @@ class Client(APIClient):
 
     @property
     def websocket_closed(self) -> bool:
-        """ Whether the bot is disconnected from the Discord websocket. If the bot is sharded, then it will return whether every shards are available."""
+        """Whether the bot is disconnected from the Discord websocket. If the bot is sharded, then it will return whether every shards are available."""
         if self.ws:
             return self.ws.closed
         elif self.__shards:
