@@ -10,6 +10,7 @@ try:
 except ImportError:
     WidgetStyle = Text
 
+
 class File:
     def __init__(self, raw: bytes, name: str = "unknown", extension: str = "png"):
         self.raw: bytes = raw

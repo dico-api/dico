@@ -1642,21 +1642,55 @@ class APIClient:
         return wrap_to_async(Integration, self, resp, as_create=False)
 
     def delete_guild_integration(self, guild: Guild.TYPING, integration: Integration.TYPING, *, reason: Optional[str] = None):
+        """
+        Deletes guild integration.
+
+        :param guild: Guild to delete integration.
+        :param integration: Integration to delete.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.delete_guild_integration(int(guild), int(integration), reason=reason)
 
     def request_guild_widget_settings(self, guild: Guild.TYPING) -> GuildWidget.RESPONSE:
+        """
+        Requests guild widget settings.
+
+        :param guild: Guild to request widget settings.
+        :return: :class:`~.GuildWidget`
+        """
         resp = self.http.request_guild_widget_settings(int(guild))
         if isinstance(resp, dict):
             return GuildWidget(resp)
         return wrap_to_async(GuildWidget, None, resp, as_create=False)
 
-    def modify_guild_widget(self, guild: Guild.TYPING, *, enabled: bool = None, channel: Channel.TYPING = EmptyObject, reason: str = None) -> GuildWidget.RESPONSE:
+    def modify_guild_widget(self,
+                            guild: Guild.TYPING,
+                            *,
+                            enabled: Optional[bool] = None,
+                            channel: Optional[Channel.TYPING] = EmptyObject,
+                            reason: Optional[str] = None) -> GuildWidget.RESPONSE:
+        """
+        Modifies guild widget.
+
+        :param guild: Guild to modify widget.
+        :param Optional[bool] enabled: Whether the widget is enabled.
+        :param channel: Channel of the widget.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.GuildWidget`
+        """
         resp = self.http.modify_guild_widget(int(guild), enabled, channel, reason=reason)  # noqa
         if isinstance(resp, dict):
             return GuildWidget(resp)
         return wrap_to_async(GuildWidget, None, resp, as_create=False)
 
     def request_guild_widget(self, guild: Guild.TYPING) -> "AbstractObject.RESPONSE":
+        """
+        Request guild's widget.
+
+        :param guild: Guild to request widget.
+        :return: Refer https://discord.com/developers/docs/resources/guild#get-guild-widget.
+        """
+        # TODO: don't use AbstractObject
         from .base.model import AbstractObject
         resp = self.http.request_guild_widget(int(guild))
         if isinstance(resp, dict):
@@ -1664,6 +1698,12 @@ class APIClient:
         return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
     def request_guild_vanity_url(self, guild: Guild.TYPING) -> "AbstractObject.RESPONSE":
+        """
+        Requests guild vanity URL.
+
+        :param guild: Guild to request guild vanity URL.
+        :return: Refer https://discord.com/developers/docs/resources/guild#get-guild-vanity-url.
+        """
         from .base.model import AbstractObject
         resp = self.http.request_guild_vanity_url(int(guild))
         if isinstance(resp, dict):
@@ -1671,6 +1711,13 @@ class APIClient:
         return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
     def request_guild_widget_image(self, guild: Guild.TYPING, style: Optional[WidgetStyle] = None) -> BYTES_RESPONSE:
+        """
+        Requests guild widget image.
+
+        :param guild: Guild to request widget image.
+        :param Optional[str] style: Style of the widget. One of "shield", "banner1", "banner2", "banner3", and "banner4".
+        :return: bytes
+        """
         return self.http.request_guild_widget_image(int(guild), style)
 
     def request_guild_welcome_screen(self, guild: Guild.TYPING) -> WelcomeScreen.RESPONSE:
