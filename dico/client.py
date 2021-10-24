@@ -1,6 +1,7 @@
 import sys
 import typing
 import asyncio
+import logging
 import traceback
 from contextlib import suppress
 
@@ -71,8 +72,12 @@ class Client(APIClient):
         self.__ready_future = asyncio.Future()
         self.monoshard: bool = monoshard
         self.shard_count: typing.Optional[int] = shard_count
+        self.logger = logging.getLogger("dico.client")
         self.__shards = {} if self.monoshard else None
         self.__shard_id = shard_id
+        self.__shard_ids = []
+        self.__shard_ids_ready = []
+        self.__unavailable_guilds = set()
 
         # Internal events dispatch
         self.events.add("READY", self.__ready)
@@ -80,8 +85,19 @@ class Client(APIClient):
 
     def __ready(self, ready):
         self.application_id = Snowflake(ready.application["id"])
-        if not self.__ready_future.done():
-            self.__ready_future.set_result(True)
+        if not self.__shards:
+            if not self.__ready_future.done():
+                self.__ready_future.set_result(True)
+            self.__unavailable_guilds = set(x["id"] for x in ready.guilds)
+        else:
+            if ready.shard_id not in self.__shard_ids_ready:
+                self.__shard_ids_ready.append(ready.shard_id)
+                self.__unavailable_guilds.update([x["id"] for x in ready.guilds])
+            if self.__shard_ids == self.__shard_ids_ready:
+                self.__shard_ids_ready = []
+                if not self.__ready_future.done():
+                    self.__ready_future.set_result(True)
+                self.dispatch("shards_ready")
 
     def __voice_state_update(self, voice_state):
         if self.has_cache:
@@ -224,13 +240,15 @@ class Client(APIClient):
             shard_count = self.shard_count or gateway.shards
             if self.shard_count is None:
                 self.shard_count = gateway.shards
-            for x in range(shard_count):
+            self.__shard_ids = [*range(shard_count)]
+            for x in self.__shard_ids:
                 ws = await self.__ws_class.connect_without_request(
                     gateway, self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress, shard=[x, shard_count]
                 )
                 self.__shards[x] = ws
                 await ws.receive_once()
                 self.loop.create_task(ws.run())
+                await asyncio.sleep(5)
         else:
             maybe_shard = {"shard": [self.__shard_id, self.shard_count]} if self.__shard_id else {}
             self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress, **maybe_shard)
@@ -310,9 +328,12 @@ class Client(APIClient):
 
     @property
     def guild_count(self) -> typing.Optional[int]:
-        """Total count of guilds this bot is in."""
+        """Total count of guilds this bot is in. This may be incorrect since this relies on initial guild count or cached guild count."""
+        initial_guild_count = len(self.__unavailable_guilds)
         if self.has_cache:
-            return self.cache.get_size("guild")
+            return sorted([initial_guild_count, self.cache.get_size("guild")])[-1]
+        self.logger.warning("Caching is disabled, showing initial guild count.")
+        return initial_guild_count
 
     @property
     def ping(self) -> float:

@@ -26,7 +26,7 @@ class Ready(EventBase):
         self.user: User = User.create(client, resp["user"])
         self.guilds: typing.List[dict] = resp["guilds"]
         self.session_id: str = resp["session_id"]
-        self.shard: typing.Optional[list] = resp.get("shard")
+        self.shard: typing.Optional[typing.List[int]] = resp.get("shard")
         self.application: dict = resp["application"]
 
     @property
@@ -36,6 +36,11 @@ class Ready(EventBase):
     @property
     def guild_count(self) -> int:
         return len(self.guilds)
+
+    @property
+    def shard_id(self):
+        if self.shard:
+            return self.shard[0]
 
 
 """
