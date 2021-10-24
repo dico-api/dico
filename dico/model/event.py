@@ -1,3 +1,4 @@
+import sys
 import typing
 import datetime
 from .application import Application
@@ -158,6 +159,9 @@ class GuildCreate(Guild):
     @classmethod
     def create(cls, client: "Client", resp: dict, **kwargs):
         kwargs.setdefault("ensure_cache_type", "guild")
+        if "name" not in resp:
+            print(f"Invalid payload warning! Full payload: {resp}", file=sys.stderr)
+            return None
         return super().create(client, resp, **kwargs)
 
 
