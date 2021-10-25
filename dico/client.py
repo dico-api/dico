@@ -78,6 +78,8 @@ class Client(APIClient):
         self.__shard_ids = []
         self.__shard_ids_ready = []
         self.__unavailable_guilds = set()
+        self.__compress = False
+        self.__reconnect_on_unknown_disconnect = False
 
         # Internal events dispatch
         self.events.add("READY", self.__ready)
@@ -305,6 +307,28 @@ class Client(APIClient):
             raise AttributeError(f"shard for guild {int(guild)} not found.")
         return ws.update_voice_state(str(int(guild)), str(int(channel)) if channel else None, self_mute, self_deaf)
 
+    async def increase_shards(self, number: int = 1, *, auto: bool = False):
+        """
+        Increases numbers of shards.
+
+        .. warning::
+            During this action, client will be offline.
+
+        :param number: Number of shards to increase. Default 1.
+        :param auto: Whether to automatically use recommended number. Default False.
+        """
+        if self.ws:
+            raise TypeError("this client is not monosharded.")
+        elif self.__shards:
+            for x in self.__shards.values():
+                await x.close()
+        if auto:
+            resp = await self.request_gateway()
+            self.shard_count = resp.shards
+        else:
+            self.shard_count += number
+        self.loop.create_task(self.start(reconnect_on_unknown_disconnect=self.__reconnect_on_unknown_disconnect, compress=self.__compress))
+
     @property
     def has_cache(self) -> bool:
         """Whether the caching is enabled."""
@@ -383,6 +407,8 @@ class Client(APIClient):
         :param bool reconnect_on_unknown_disconnect: Whether to reconnect on unknown websocket error.
         :param bool compress: Whether to enable zlib compress.
         """
+        self.__reconnect_on_unknown_disconnect = self.__reconnect_on_unknown_disconnect
+        self.__compress = compress
         try:
             self.loop.create_task(self.start(reconnect_on_unknown_disconnect, compress))
             self.loop.run_forever()
@@ -393,3 +419,7 @@ class Client(APIClient):
             traceback.print_exc()
         finally:
             self.loop.run_until_complete(self.close())
+
+    def kill(self):
+        """Kills event loop and stops bot."""
+        self.loop.stop()
