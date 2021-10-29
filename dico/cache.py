@@ -47,6 +47,15 @@ class CacheContainer:
             for x in self.__cache_dict["guild_cache"].values():
                 x.remove(snowflake_id, obj_type)
 
+    def reset(self, obj_type: str = None):
+        if obj_type:
+            self.__cache_dict[obj_type].reset()
+            if "guild_cache" in self.__cache_dict:
+                for x in self.__cache_dict["guild_cache"].values():
+                    x.reset(obj_type)
+        else:
+            self.__cache_dict = {"guild_cache": {}}
+
     def get_size(self, cache_type: str):
         storage = self.get_storage(cache_type)
         return storage.size
@@ -101,6 +110,9 @@ class CacheStorage:
         snowflake_id = Snowflake.ensure_snowflake(snowflake_id)
         if snowflake_id in self.__cache_dict:
             self.__cache_dict.pop(snowflake_id)
+
+    def reset(self):
+        self.__cache_dict = {}
 
     @property
     def size(self):

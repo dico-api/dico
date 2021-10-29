@@ -83,8 +83,6 @@ class Guild(DiscordObjectBase):
         self.stage_instances: typing.Optional[typing.List[StageInstance]] = [StageInstance.create(client, x) for x in resp.get("stage_instances", [])]
         self.stickers: typing.Optional[typing.List[Sticker]] = [Sticker.create(client, x) for x in resp.get("stickers", [])]
 
-        self.cache: typing.Optional[GuildCacheContainer] = client.cache.get_guild_container(self.id) if client.has_cache else None
-
     def icon_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
         if self.icon:
             return cdn_url("icons/{guild_id}", image_hash=self.icon, extension=extension, size=size, guild_id=self.id)
@@ -259,6 +257,11 @@ class Guild(DiscordObjectBase):
 
     def leave(self):
         return self.client.leave_guild(self)
+
+    @property
+    def cache(self) -> typing.Optional["GuildCacheContainer"]:
+        if self.client.has_cache:
+            return self.client.cache.get_guild_container(self.id)
 
     @property
     def get(self) -> typing.Optional["GuildCacheContainer.get"]:
