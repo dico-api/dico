@@ -314,8 +314,8 @@ class Client(APIClient):
         .. warning::
             During this action, client will be offline.
 
-        :param number: Number of shards to increase. Default 1.
-        :param auto: Whether to automatically use recommended number. Default False.
+        :param int number: Number of shards to increase. Default 1.
+        :param bool auto: Whether to automatically use recommended number. Default False.
         """
         if self.ws:
             raise TypeError("this client is not monosharded.")

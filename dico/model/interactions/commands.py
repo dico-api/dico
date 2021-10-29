@@ -1,4 +1,5 @@
 import typing
+from ..channel import ChannelTypes
 from ..permission import Role
 from ..snowflake import Snowflake
 from ..user import User
@@ -56,30 +57,40 @@ class ApplicationCommandOption:
                  option_type: typing.Union["ApplicationCommandOptionType", int],
                  name: str,
                  description: str,
-                 required: typing.Optional[bool] = False,
+                 required: typing.Optional[bool] = None,
                  choices: typing.Optional[typing.List["ApplicationCommandOptionChoice"]] = None,
+                 autocomplete: typing.Optional[bool] = None,
                  options: typing.Optional[typing.List["ApplicationCommandOption"]] = None,
+                 channel_types: typing.Optional[typing.List[typing.Union[int, ChannelTypes]]] = None,
                  **kw):
         self.type: ApplicationCommandOptionType = ApplicationCommandOptionType(int(option_type))
         self.name: str = name
         self.description: str = description
-        self.required: bool = required
-        self.choices: typing.List[ApplicationCommandOptionChoice] = choices or []
-        self.options: typing.List[ApplicationCommandOption] = options or []
+        self.required: typing.Optional[bool] = required
+        self.choices: typing.Optional[typing.List[ApplicationCommandOptionChoice]] = choices
+        self.autocomplete: typing.Optional[bool] = autocomplete
+        self.options: typing.Optional[typing.List[ApplicationCommandOption]] = options
+        self.channel_types: typing.Optional[typing.List[ChannelTypes]] = \
+            [*map(lambda x: ChannelTypes(int(x)), channel_types)] if channel_types is not None else channel_types
 
     def to_dict(self) -> dict:
-        ret = {"type": int(self.type), "name": self.name, "description": self.description, "required": self.required,
-               "choices": [x.to_dict() for x in self.choices], "options": [x.to_dict() for x in self.options]}
-        if not ret["options"]:
-            del ret["options"]
-        if not ret["choices"]:
-            del ret["choices"]
+        ret = {"type": int(self.type), "name": self.name, "description": self.description}
+        if self.required is not None:
+            ret["required"] = self.required
+        if self.options is not None:
+            ret["options"] = [x.to_dict() for x in self.options]
+        if self.autocomplete is not None:
+            ret["autocomplete"] = self.autocomplete
+        if self.choices is not None:
+            ret["choices"] = [x.to_dict() for x in self.choices]
+        if self.channel_types is not None:
+            ret["channel_types"] = [*map(int, self.channel_types)]
         return ret
 
     @classmethod
     def create(cls, resp):
-        resp["choices"] = [ApplicationCommandOptionChoice.create(x) for x in resp.get("choices", [])]
-        resp["options"] = [cls.create(x) for x in resp.get("options", [])]
+        resp["choices"] = [ApplicationCommandOptionChoice.create(x) for x in resp.get("choices", [])] or None
+        resp["options"] = [cls.create(x) for x in resp.get("options", [])] or None
         resp["option_type"] = resp.pop("type")
         return cls(**resp)
 

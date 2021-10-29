@@ -1,7 +1,6 @@
 import typing
 
-import dico
-from .commands import ApplicationCommandInteractionDataOption, ApplicationCommandTypes
+from .commands import ApplicationCommandInteractionDataOption, ApplicationCommandTypes, ApplicationCommandOptionChoice
 from .components import Component, ComponentTypes
 from ..channel import Channel, Message, Embed, AllowedMentions
 from ..guild import GuildMember
@@ -81,6 +80,7 @@ class InteractionRequestType(TypeBase):
     PING = 1
     APPLICATION_COMMAND = 2
     MESSAGE_COMPONENT = 3
+    APPLICATION_COMMAND_AUTOCOMPLETE = 4
 
 
 class InteractionData:
@@ -138,6 +138,7 @@ class InteractionCallbackType(TypeBase):
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE = 5
     DEFERRED_UPDATE_MESSAGE = 6
     UPDATE_MESSAGE = 7
+    APPLICATION_COMMAND_AUTOCOMPLETE_RESULT = 8
 
 
 class InteractionApplicationCommandCallbackData:
@@ -147,7 +148,8 @@ class InteractionApplicationCommandCallbackData:
                  embeds: typing.Optional[typing.List[Embed]] = None,
                  allowed_mentions: typing.Optional[AllowedMentions] = None,
                  flags: typing.Optional[typing.Union["InteractionApplicationCommandCallbackDataFlags", int]] = None,
-                 components: typing.Optional[typing.List[typing.Union[dict, Component]]] = None):
+                 components: typing.Optional[typing.List[typing.Union[dict, Component]]] = None,
+                 choices: typing.Optional[typing.List[typing.Union[dict, ApplicationCommandOptionChoice]]] = None):
         self.tts: typing.Optional[bool] = tts
         self.content: typing.Optional[str] = content
         self.embeds: typing.Optional[typing.List[Embed]] = embeds
@@ -155,6 +157,7 @@ class InteractionApplicationCommandCallbackData:
         self.flags: typing.Optional[InteractionApplicationCommandCallbackDataFlags] = \
             InteractionApplicationCommandCallbackDataFlags.from_value(flags) if isinstance(flags, int) else flags
         self.components: typing.Optional[typing.List[Component]] = components
+        self.choices: typing.Optional[typing.List[ApplicationCommandOptionChoice]] = choices
 
     def to_dict(self) -> dict:
         ret = {}

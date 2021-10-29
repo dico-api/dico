@@ -822,8 +822,8 @@ class Attachment:
         self.proxy_url: str = resp["proxy_url"]
         self.height: typing.Optional[int] = resp.get("height")
         self.width: typing.Optional[int] = resp.get("width")
-        self.content: typing.Optional[bytes] = None  # Filled after download is called
         self.ephemeral: typing.Optional[bool] = resp.get("ephemeral")
+        self.content: typing.Optional[bytes] = None  # Filled after download is called
 
     def download(self) -> typing.Union[bytes, typing.Awaitable[bytes]]:
         dw = self.client.http.download(self.url)
