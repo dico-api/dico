@@ -150,9 +150,10 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
                                   components: typing.List[dict] = None,
-                                  sticker_ids: typing.List[str] = None) -> ASYNC_RESPONSE:
+                                  sticker_ids: typing.List[str] = None,
+                                  attachments: typing.List[dict] = None) -> ASYNC_RESPONSE:
         if not (content or embeds or files or sticker_ids):
-            raise ValueError("either content or embed or files must be passed.")
+            raise ValueError("either content or embed or files or sticker_ids must be passed.")
         payload_json = {}
         form = aiohttp.FormData()
         if content:
@@ -171,6 +172,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["components"] = components
         if sticker_ids:
             payload_json["sticker_ids"] = sticker_ids
+        if attachments:
+            payload_json["attachments"] = attachments
         form.add_field("payload_json", json.dumps(payload_json), content_type="application/json")
         if files is not None:
             for x in range(len(files)):
@@ -234,6 +237,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                                    embeds: typing.List[dict] = None,
                                    allowed_mentions: dict = None,
                                    components: typing.List[dict] = None,
+                                   attachments: typing.List[dict] = None,
                                    flags: int = None) -> ASYNC_RESPONSE:
         if not (content or embeds or files):
             raise ValueError("either content or embeds or files must be passed.")
@@ -253,6 +257,8 @@ class AsyncHTTPRequest(HTTPRequestBase):
             payload_json["allowed_mentions"] = allowed_mentions
         if components is not None:
             payload_json["components"] = components
+        if attachments is not None:
+            payload_json["attachments"] = attachments
         if flags is not None:
             payload_json["flags"] = flags
         params = {}

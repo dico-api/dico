@@ -287,7 +287,8 @@ class HTTPRequestBase(ABC):
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
                                   components: typing.List[dict] = None,
-                                  sticker_ids: typing.List[str] = None) -> RESPONSE:
+                                  sticker_ids: typing.List[str] = None,
+                                  attachments: typing.List[dict] = None) -> RESPONSE:
         """
         Sends create message request with files.
 
@@ -301,6 +302,7 @@ class HTTPRequestBase(ABC):
         :param message_reference: Message to reference.
         :param components: Components of the message.
         :param sticker_ids: List of ID of the stickers.
+        :param attachments: List of attachment objects.
         """
         pass
 
@@ -1924,6 +1926,7 @@ class HTTPRequestBase(ABC):
                                    embeds: typing.List[dict] = None,
                                    allowed_mentions: dict = None,
                                    components: typing.List[dict] = None,
+                                   attachments: typing.List[dict] = None,
                                    flags: int = None) -> RESPONSE:
         """
         Sends execute webhook request with files.
@@ -1940,6 +1943,7 @@ class HTTPRequestBase(ABC):
         :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param components: Components of the message.
+        :param attachments: List of attachment objects.
         :param flags: Flags of the message.
         """
         pass
@@ -2114,6 +2118,7 @@ class HTTPRequestBase(ABC):
                                 embeds: typing.List[dict] = None,
                                 allowed_mentions: dict = None,
                                 components: typing.List[dict] = None,
+                                attachments: typing.List[dict] = None,
                                 flags: int = None) -> RESPONSE:
         """
         Sends create followup message request.
@@ -2128,9 +2133,11 @@ class HTTPRequestBase(ABC):
         :param embeds: List of embeds of the message.
         :param allowed_mentions: Allowed mentions of the message.
         :param components: Components of the message.
+        :param attachments: List of attachment objects.
         :param flags: Flags of the message.
         """
-        return self.execute_webhook_with_files(application_id, interaction_token, None, None, content, username, avatar_url, tts, files, embeds, allowed_mentions, components, flags) if files \
+        return self.execute_webhook_with_files(application_id, interaction_token, None, None, content, username, avatar_url,
+                                               tts, files, embeds, allowed_mentions, components, attachments, flags) if files \
             else self.execute_webhook(application_id, interaction_token, None, None, content, username, avatar_url, tts, embeds, allowed_mentions, components, flags)
 
     def edit_interaction_response(self,

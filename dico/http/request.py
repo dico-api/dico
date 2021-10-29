@@ -70,9 +70,10 @@ class HTTPRequest(HTTPRequestBase):
                                   allowed_mentions: dict = None,
                                   message_reference: dict = None,
                                   components: typing.List[dict] = None,
-                                  sticker_ids: typing.List[str] = None) -> RESPONSE:
+                                  sticker_ids: typing.List[str] = None,
+                                  attachments: typing.List[dict] = None) -> RESPONSE:
         if not (content or embeds or files or sticker_ids):
-            raise ValueError("either content or embed or files must be passed.")
+            raise ValueError("either content or embed or files or sticker_ids must be passed.")
         payload_json = {}
         if content:
             payload_json["content"] = content
@@ -90,6 +91,8 @@ class HTTPRequest(HTTPRequestBase):
             payload_json["components"] = components
         if sticker_ids:
             payload_json["sticker_ids"] = sticker_ids
+        if attachments:
+            payload_json["attachments"] = attachments
         _files = {"payload_json": (None, json.dumps(payload_json), "application/json")}
         if files is not None:
             for x in range(len(files)):
@@ -142,10 +145,20 @@ class HTTPRequest(HTTPRequestBase):
         file = {"file": (file.name, file, "application/octet-stream")}
         return self.request(f"/guilds/{guild_id}/stickers", "POST", data, files=file, reason_header=reason)
 
-    def execute_webhook_with_files(self, webhook_id, webhook_token, wait: bool = None, thread_id=None,
-                                   content: str = None, username: str = None, avatar_url: str = None, tts: bool = False,
-                                   files: typing.List[io.FileIO] = None, embeds: typing.List[dict] = None,
-                                   allowed_mentions: dict = None, components: typing.List[dict] = None,
+    def execute_webhook_with_files(self,
+                                   webhook_id,
+                                   webhook_token,
+                                   wait: bool = None,
+                                   thread_id=None,
+                                   content: str = None,
+                                   username: str = None,
+                                   avatar_url: str = None,
+                                   tts: bool = False,
+                                   files: typing.List[io.FileIO] = None,
+                                   embeds: typing.List[dict] = None,
+                                   allowed_mentions: dict = None,
+                                   components: typing.List[dict] = None,
+                                   attachments: typing.List[dict] = None,
                                    flags: int = None) -> RESPONSE:
         payload_json = {}
         if content is not None:
@@ -162,6 +175,8 @@ class HTTPRequest(HTTPRequestBase):
             payload_json["allowed_mentions"] = allowed_mentions
         if components is not None:
             payload_json["components"] = components
+        if attachments is not None:
+            payload_json["attachments"] = attachments
         if flags is not None:
             payload_json["flags"] = flags
         params = {}

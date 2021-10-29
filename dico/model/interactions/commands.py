@@ -163,3 +163,4 @@ class ApplicationCommandInteractionDataOption:
         self.type: ApplicationCommandOptionType = ApplicationCommandOptionType(resp["type"])
         self.value: typing.Optional = resp.get("value")
         self.options: typing.List[ApplicationCommandInteractionDataOption] = [ApplicationCommandInteractionDataOption(x) for x in resp.get("options", [])]
+        self.focused: typing.Optional[bool] = resp.get("focused")
