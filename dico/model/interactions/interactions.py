@@ -173,6 +173,8 @@ class InteractionApplicationCommandCallbackData:
             ret["flags"] = int(self.flags)
         if self.components is not None:
             ret["components"] = [x if isinstance(x, dict) else x.to_dict() for x in self.components]
+        if self.choices is not None:
+            ret["choices"] = [x if isinstance(x, dict) else x.to_dict() for x in self.choices]
         return ret
 
 
