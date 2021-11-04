@@ -55,10 +55,10 @@ class Application:
 
     @property
     def owner_ids(self) -> typing.List[Snowflake]:
-        if self.owner:
-            return [self.owner.id]
-        elif self.team:
+        if self.team:
             return self.team.member_ids
+        elif self.owner:
+            return [self.owner.id]
         return []
 
 
