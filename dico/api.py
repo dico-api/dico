@@ -1721,6 +1721,12 @@ class APIClient:
         return self.http.request_guild_widget_image(int(guild), style)
 
     def request_guild_welcome_screen(self, guild: Guild.TYPING) -> WelcomeScreen.RESPONSE:
+        """
+        Requests guild welcome screen.
+
+        :param guild: Guild to request welcome screen.
+        :return: :class:`~.WelcomeScreen`
+        """
         resp = self.http.request_guild_welcome_screen(int(guild))
         if isinstance(resp, dict):
             return WelcomeScreen(resp)
@@ -1729,10 +1735,21 @@ class APIClient:
     def modify_guild_welcome_screen(self,
                                     guild: Guild.TYPING,
                                     *,
-                                    enabled: bool = EmptyObject,
-                                    welcome_channels: List[Union[WelcomeScreenChannel, dict]] = EmptyObject,
-                                    description: str = EmptyObject,
-                                    reason: str = None) -> WelcomeScreen.RESPONSE:
+                                    enabled: Optional[bool] = EmptyObject,
+                                    welcome_channels: Optional[List[Union[WelcomeScreenChannel, dict]]] = EmptyObject,
+                                    description: Optional[str] = EmptyObject,
+                                    reason: Optional[str] = None) -> WelcomeScreen.RESPONSE:
+        """
+        Modifies guild welcome screen.
+
+        :param guild: Guild to modify welcome screen.
+        :param Optional[bool] enabled: Whether welcome screen is enabled.
+        :param welcome_channels: Welcome channels to show. You can use :meth:`~.Channel.to_welcome_screen_channel`.
+        :type welcome_channels: Optional[List[Union[WelcomeScreenChannel, dict]]]
+        :param Optional[str] description: Description of the welcome screen.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.WelcomeScreen`
+        """
         if welcome_channels is not EmptyObject:
             welcome_channels = [x if isinstance(x, dict) else x.to_dict() for x in welcome_channels or []]
         resp = self.http.modify_guild_welcome_screen(int(guild), enabled, welcome_channels, description, reason=reason)
@@ -1745,8 +1762,17 @@ class APIClient:
                                 channel: Channel.TYPING,
                                 user: User.TYPING = "@me",
                                 *,
-                                suppress: bool = None,
-                                request_to_speak_timestamp: Union[datetime.datetime, str] = None):
+                                suppress: Optional[bool] = None,
+                                request_to_speak_timestamp: Optional[Union[datetime.datetime, str]] = None):
+        """
+        Modifies user's voice state.
+
+        :param guild: Guild to modify user voice state.
+        :param channel: Stage channel user is in.
+        :param user: User to modify voice state. Ignore this parameter or pass ``"@me"`` to modify current user.
+        :param suppress: Whether to toggle suppress status.
+        :param request_to_speak_timestamp: Requests to speak. Time can be present or future.
+        """
         user = int(user) if user != "@me" else user
         if request_to_speak_timestamp is not None:
             request_to_speak_timestamp = request_to_speak_timestamp if isinstance(request_to_speak_timestamp, str) else \
@@ -1756,42 +1782,98 @@ class APIClient:
     # Guild Template
 
     def request_guild_template(self, template: GuildTemplate.TYPING) -> GuildTemplate.RESPONSE:
+        """
+        Requests guild template.
+
+        :param template: Template to request. Must be code or guild template object.
+        :type template: Union[str, GuildTemplate]
+        :return: :class:`~.GuildTemplate`
+        """
         resp = self.http.request_guild_template(str(template))
         if isinstance(resp, dict):
             return GuildTemplate(self, resp)
         return wrap_to_async(GuildTemplate, self, resp, as_create=False)
 
-    def create_guild_from_template(self, template: GuildTemplate.TYPING, name: str, *, icon: str = None) -> Guild.RESPONSE:
+    def create_guild_from_template(self, template: GuildTemplate.TYPING, name: str, *, icon: Optional[str] = None) -> Guild.RESPONSE:
+        """
+        Creates guild from template.
+
+        :param template: Template to use. Must be code or guild template object.
+        :type template: Union[str, GuildTemplate]
+        :param str name: Name of the guild.
+        :param Optional[str] icon: Icon of the guild. Use :func:`.utils.to_image_data`.
+        :return: :class:`~.Guild`
+        """
         resp = self.http.create_guild_from_template(str(template), name, icon)
         if isinstance(resp, dict):
             return Guild.create(self, resp)
         return wrap_to_async(Guild, self, resp)
 
     def request_guild_templates(self, guild: Guild.TYPING) -> GuildTemplate.RESPONSE_AS_LIST:
+        """
+        Requests guild's all templates.
+
+        :param guild: Guild to request templates.
+        :return: :class:`~.GuildTemplate`
+        """
         resp = self.http.request_guild_templates(int(guild))
         if isinstance(resp, list):
             return [GuildTemplate(self, x) for x in resp]
         return wrap_to_async(GuildTemplate, self, resp, as_create=False)
 
-    def create_guild_template(self, guild: Guild.TYPING, name: str, *, description: str = EmptyObject) -> GuildTemplate.RESPONSE:
+    def create_guild_template(self, guild: Guild.TYPING, name: str, *, description: Optional[str] = EmptyObject) -> GuildTemplate.RESPONSE:
+        """
+        Creates template from guild.
+
+        :param guild: Guild to create template.
+        :param str name: Name of the template.
+        :param Optional[str] description: Description of the template.
+        :return: :class:`~.GuildTemplate`
+        """
         resp = self.http.create_guild_template(int(guild), name, description)
         if isinstance(resp, dict):
             return GuildTemplate(self, resp)
         return wrap_to_async(GuildTemplate, self, resp, as_create=False)
 
     def sync_guild_template(self, guild: Guild.TYPING, template: GuildTemplate.TYPING) -> GuildTemplate.RESPONSE:
+        """
+        Syncs guild template.
+
+        :param guild: Guild to sync template.
+        :param template: Template to sync. Must be code or guild template object.
+        :type template: Union[str, GuildTemplate]
+        :return: :class:`~.GuildTemplate`
+        """
         resp = self.http.sync_guild_template(int(guild), str(template))
         if isinstance(resp, dict):
             return GuildTemplate(self, resp)
         return wrap_to_async(GuildTemplate, self, resp, as_create=False)
 
-    def modify_guild_template(self, guild: Guild.TYPING, template: GuildTemplate.TYPING, name: str = None, description: str = EmptyObject) -> GuildTemplate.RESPONSE:
+    def modify_guild_template(self, guild: Guild.TYPING, template: GuildTemplate.TYPING, name: Optional[str] = None, description: Optional[str] = EmptyObject) -> GuildTemplate.RESPONSE:
+        """
+        Modifies guild template.
+
+        :param guild: Guild to modify template.
+        :param template: Template to modify. Must be code or guild template object.
+        :type template: Union[str, GuildTemplate]
+        :param Optional[str] name: Name of the template to modify.
+        :param Optional[str] description: Description of the template to modify.
+        :return: :class:`~.GuildTemplate`
+        """
         resp = self.http.modify_guild_template(int(guild), str(template), name, description)
         if isinstance(resp, dict):
             return GuildTemplate(self, resp)
         return wrap_to_async(GuildTemplate, self, resp, as_create=False)
 
     def delete_guild_template(self, guild: Guild.TYPING, template: GuildTemplate.TYPING) -> GuildTemplate.RESPONSE:
+        """
+        Deletes guild template.
+
+        :param guild: Guild to delete template.
+        :param template: Template to delete. Must be code or guild template object.
+        :type template: Union[str, GuildTemplate]
+        :return: :class:`~.GuildTemplate`
+        """
         resp = self.http.delete_guild_template(int(guild), str(template))
         if isinstance(resp, dict):
             return GuildTemplate(self, resp)

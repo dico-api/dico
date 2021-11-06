@@ -4,13 +4,14 @@ import pathlib
 import datetime
 
 from .emoji import Emoji
-from .guild import GuildMember
+from .guild import GuildMember, WelcomeScreenChannel
 from .permission import PermissionFlags, Role
 from .snowflake import Snowflake
 from .sticker import Sticker, StickerItem
 from .user import User
 from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
 from ..base.http import EmptyObject
+from ..utils import from_emoji
 
 if typing.TYPE_CHECKING:
     from .application import Application
@@ -209,6 +210,12 @@ class Channel(DiscordObjectBase):
             "parent_id": str(int(parent))
         }
         return param
+
+    def to_welcome_screen_channel(self, description: str, emoji: Emoji.TYPING = None) -> WelcomeScreenChannel:
+        emoji = from_emoji(emoji)
+        emoji_id = emoji.split(":")[-1] if ":" in emoji else None
+        emoji_name = emoji.split(":")[-2] if ":" in emoji else emoji
+        return WelcomeScreenChannel({"channel_id": str(self.id), "description": description, "emoji_id": emoji_id, "emoji_name": emoji_name})
 
     @property
     def mention(self) -> str:
