@@ -1881,13 +1881,30 @@ class APIClient:
 
     # Invite
 
-    def request_invite(self, invite_code: Union[str, Invite], *, with_counts: bool = None, with_expiration: bool = None) -> Invite.RESPONSE:
+    def request_invite(self, invite_code: Union[str, Invite], *, with_counts: Optional[bool] = None, with_expiration: Optional[bool] = None) -> Invite.RESPONSE:
+        """
+        Requests invite.
+
+        :param invite_code: Code of the invite or invite object.
+        :type invite_code: Union[str, Invite]
+        :param Optional[bool] with_counts: Whether to include approximate member counts.
+        :param Optional[bool] with_expiration: Whether to include the expiration date.
+        :return: :class:`~.Invite`
+        """
         resp = self.http.request_invite(str(invite_code), with_counts, with_expiration)
         if isinstance(resp, dict):
             return Invite(self, resp)
         return wrap_to_async(Invite, self, resp, as_create=False)
 
-    def delete_invite(self, invite_code, *, reason: str = None) -> Invite.RESPONSE:
+    def delete_invite(self, invite_code: Union[str, Invite], *, reason: Optional[str] = None) -> Invite.RESPONSE:
+        """
+        Deletes invite.
+
+        :param invite_code: Code of the invite or invite object.
+        :type invite_code: Union[str, Invite]
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Invite`
+        """
         resp = self.http.delete_invite(str(invite_code), reason=reason)
         if isinstance(resp, dict):
             return Invite(self, resp)
@@ -1895,25 +1912,57 @@ class APIClient:
 
     # Stage Instance
 
-    def create_stage_instance(self, channel: Channel.TYPING, topic: str, privacy_level: Union[int, PrivacyLevel] = None, *, reason: str = None) -> StageInstance.RESPONSE:
+    def create_stage_instance(self, channel: Channel.TYPING, topic: str, privacy_level: Optional[Union[int, PrivacyLevel]] = None, *, reason: Optional[str] = None) -> StageInstance.RESPONSE:
+        """
+        Creates stage instance.
+
+        :param channel: Stage channel to create instance.
+        :param str topic: Topic of the instance.
+        :param privacy_level: Privacy level to set.
+        :type privacy_level: Optional[Union[int, PrivacyLevel]]
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.StageInstance`
+        """
         resp = self.http.create_stage_instance(str(int(channel)), topic, int(privacy_level) if privacy_level is not None else privacy_level, reason=reason)
         if isinstance(resp, dict):
             return StageInstance.create(self, resp)
         return wrap_to_async(StageInstance, self, resp)
 
     def request_stage_instance(self, channel: Channel.TYPING):
+        """
+        Requests stage instance.
+
+        :param channel: Stage channel to request instance.
+        :return: :class:`~.StageInstance`
+        """
         resp = self.http.request_stage_instance(int(channel))
         if isinstance(resp, dict):
             return StageInstance.create(self, resp)
         return wrap_to_async(StageInstance, self, resp)
 
-    def modify_stage_instance(self, channel: Channel.TYPING, topic: str = None, privacy_level: Union[int, PrivacyLevel] = None, *, reason: str = None) -> StageInstance.RESPONSE:
+    def modify_stage_instance(self, channel: Channel.TYPING, topic: Optional[str] = None, privacy_level: Optional[Union[int, PrivacyLevel]] = None, *, reason: Optional[str] = None) -> StageInstance.RESPONSE:
+        """
+        Modifies stage instance.
+
+        :param channel: Stage channel to modify instance.
+        :param Optional[str] topic: Topic of the instance to change.
+        :param privacy_level: Privacy level to change.
+        :type privacy_level: Optional[Union[int, PrivacyLevel]]
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.StageInstance`
+        """
         resp = self.http.modify_stage_instance(int(channel), topic, int(privacy_level) if privacy_level is not None else privacy_level, reason=reason)
         if isinstance(resp, dict):
             return StageInstance.create(self, resp)
         return wrap_to_async(StageInstance, self, resp)
 
-    def delete_stage_instance(self, channel: Channel.TYPING, *, reason: str = None):
+    def delete_stage_instance(self, channel: Channel.TYPING, *, reason: Optional[str] = None):
+        """
+        Deletes stage instance.
+
+        :param channel: Stage channel to delete instance.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.delete_stage_instance(int(channel), reason=reason)
 
     # Sticker
