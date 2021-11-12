@@ -1814,7 +1814,7 @@ class APIClient:
         Requests guild's all templates.
 
         :param guild: Guild to request templates.
-        :return: :class:`~.GuildTemplate`
+        :return: List[:class:`~.GuildTemplate`]
         """
         resp = self.http.request_guild_templates(int(guild))
         if isinstance(resp, list):
@@ -1968,12 +1968,23 @@ class APIClient:
     # Sticker
 
     def request_sticker(self, sticker: Sticker.TYPING) -> Sticker.RESPONSE:
+        """
+        Requests sticker.
+
+        :param sticker: Sticker to request.
+        :return: :class:`~.Sticker`
+        """
         resp = self.http.request_sticker(int(sticker))
         if isinstance(resp, dict):
             return Sticker.create(self, resp)
         return wrap_to_async(Sticker, self, resp)
 
     def list_nitro_sticker_packs(self) -> "AbstractObject.RESPONSE":
+        """
+        Lists nitro sticker packs.
+
+        :return: :class:`~.AbstractObject`
+        """
         from .base.model import AbstractObject
         resp = self.http.list_nitro_sticker_packs()
         if isinstance(resp, dict):
@@ -1981,18 +1992,42 @@ class APIClient:
         return wrap_to_async(AbstractObject, None, resp, as_create=False)
 
     def list_guild_stickers(self, guild: Guild.TYPING) -> Sticker.RESPONSE_AS_LIST:
+        """
+        Lists guild stickers.
+
+        :param guild: Guild to list stickers.
+        :return: List[:class:`~.Sticker`]
+        """
         resp = self.http.list_guild_stickers(int(guild))
         if isinstance(resp, list):
             return [Sticker.create(self, x) for x in resp]
         return wrap_to_async(Sticker, self, resp)
 
     def request_guild_sticker(self, guild: Guild.TYPING, sticker: Sticker.TYPING) -> Sticker.RESPONSE:
+        """
+        Requests guild sticker.
+
+        :param guild: Guild to request sticker.
+        :param sticker: Sticker to request.
+        :return: :class:`~.Sticker`
+        """
         resp = self.http.request_guild_sticker(int(guild), int(sticker))
         if isinstance(resp, dict):
             return Sticker.create(self, resp)
         return wrap_to_async(Sticker, self, resp)
 
     def create_guild_sticker(self, guild: Guild.TYPING, *, name: str, description: str, tags: str, file: FILE_TYPE, reason: Optional[str] = None) -> Sticker.RESPONSE:
+        """
+        Creates guild sticker.
+
+        :param guild: Guild to create sticker.
+        :param str name: Name of the sticker.
+        :param str description: Description of the sticker.
+        :param str tags: Tags of the sticker.
+        :param FILE_TYPE file: Image file of the sticker.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Sticker`
+        """
         if isinstance(file, str):
             file = open(file, "rb")
         try:
@@ -2011,23 +2046,54 @@ class APIClient:
                              description: Optional[str] = EmptyObject,
                              tags: Optional[str] = None,
                              reason: Optional[str] = None) -> Sticker.RESPONSE:
+        """
+        Modifies guild sticker.
+
+        :param guild: Guild to modify sticker.
+        :param sticker: Sticker to modify.
+        :param Optional[str] name: Name of the sticker to modify.
+        :param Optional[str] description: Description of the sticker to modify.
+        :param Optional[str] tags: Tags of the sticker to modify.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Sticker`
+        """
         resp = self.http.modify_guild_sticker(int(guild), int(sticker), name, description, tags, reason=reason)
         if isinstance(resp, dict):
             return Sticker.create(self, resp)
         return wrap_to_async(Sticker, self, resp)
 
     def delete_guild_sticker(self, guild: Guild.TYPING, sticker: Sticker.TYPING, *, reason: Optional[str] = None):
+        """
+        Deletes guild sticker.
+
+        :param guild: Guild to delete sticker.
+        :param sticker: Sticker to delete.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.http.delete_guild_sticker(int(guild), int(sticker), reason=reason)
 
     # User
 
     def request_user(self, user: User.TYPING = "@me") -> User.RESPONSE:
+        """
+        Requests user.
+
+        :param user: User to request. Defaults to current user.
+        :return: :class:`~.User`
+        """
         resp = self.http.request_user(int(user) if user != "@me" else user)
         if isinstance(resp, dict):
             return User.create(self, resp)
         return wrap_to_async(User, self, resp)
 
-    def modify_current_user(self, username: str = None, avatar: Union[FILE_TYPE] = EmptyObject) -> User.RESPONSE:
+    def modify_current_user(self, username: Optional[str] = None, avatar: Optional[FILE_TYPE] = EmptyObject) -> User.RESPONSE:
+        """
+        Modifies current user.
+
+        :param Optional[str] username: Username of the user to modify.
+        :param Optional[FILE_TYPE] avatar: Avatar of the user to modify.
+        :return: :class:`~.User`
+        """
         avatar = to_image_data(avatar) if avatar is not None or avatar is not EmptyObject else avatar
         resp = self.http.modify_current_user(username, avatar)
         if isinstance(resp, dict):
@@ -2035,21 +2101,44 @@ class APIClient:
         return wrap_to_async(User, self, resp)
 
     def request_current_user_guilds(self) -> Guild.RESPONSE_AS_LIST:
+        """
+        Requests current user guilds.
+
+        :return: List[:class:`~.Guild`]
+        """
         resp = self.http.request_current_user_guilds()
         if isinstance(resp, list):
             return [Guild.create(self, x) for x in resp]
         return wrap_to_async(Guild, self, resp)
 
     def leave_guild(self, guild: Guild.TYPING):
+        """
+        Leaves guild.
+
+        :param guild: Guild to leave.
+        """
         return self.leave_guild(int(guild))
 
     def create_dm(self, recipient: User.TYPING) -> Channel.RESPONSE:
+        """
+        Creates direct message channel.
+
+        :param recipient: Recipient of the direct message.
+        :return: :class:`~.Channel`
+        """
         resp = self.http.create_dm(str(int(recipient)))
         if isinstance(resp, dict):
             return Channel.create(self, resp)
         return wrap_to_async(Channel, self, resp)
 
-    def create_group_dm(self, access_tokens: List[str], nicks: Dict[User.TYPING, str]):
+    def create_group_dm(self, access_tokens: List[str], nicks: Dict[User.TYPING, str]) -> Channel.RESPONSE:
+        """
+        Creates group direct message channel.
+
+        :param List[str] access_tokens: Access tokens of the group members.
+        :param nicks: Nicknames of the group members.
+        :return: :class:`~.Channel`
+        """
         nicks = {str(int(k)): v for k, v in nicks.items()}
         resp = self.http.create_group_dm(access_tokens, nicks)
         if isinstance(resp, dict):
@@ -2059,6 +2148,11 @@ class APIClient:
     # Voice
 
     def list_voice_regions(self) -> VoiceRegion.RESPONSE_AS_LIST:
+        """
+        Lists voice regions.
+
+        :return: List[:class:`~.VoiceRegion`]
+        """
         resp = self.http.list_voice_regions()
         if isinstance(resp, list):
             return [VoiceRegion(x) for x in resp]
@@ -2066,25 +2160,52 @@ class APIClient:
 
     # Webhook
 
-    def create_webhook(self, channel: Channel.TYPING, *, name: str = None, avatar: str = None) -> Webhook.RESPONSE:
+    def create_webhook(self, channel: Channel.TYPING, *, name: Optional[str] = None, avatar: Optional[str] = None) -> Webhook.RESPONSE:
+        """
+        Creates webhook.
+
+        :param channel: Channel to create webhook in.
+        :param Optional[str] name: Name of the webhook.
+        :param Optional[str] avatar: Avatar of the webhook.
+        :return: :class:`~.Webhook`
+        """
         hook = self.http.create_webhook(int(channel), name, avatar)
         if isinstance(hook, dict):
             return Webhook(self, hook)
         return wrap_to_async(Webhook, self, hook, as_create=False)
 
     def request_channel_webhooks(self, channel: Channel.TYPING) -> Webhook.RESPONSE_AS_LIST:
+        """
+        Requests channel webhooks.
+
+        :param channel: Channel to request webhooks from.
+        :return: List[:class:`~.Webhook`]
+        """
         hooks = self.http.request_channel_webhooks(int(channel))
         if isinstance(hooks, list):
             return [Webhook(self, x) for x in hooks]
         return wrap_to_async(Webhook, self, hooks, as_create=False)
 
     def request_guild_webhooks(self, guild: Guild.TYPING) -> Webhook.RESPONSE_AS_LIST:
+        """
+        Requests guild webhooks.
+
+        :param guild: Guild to request webhooks from.
+        :return: List[:class:`~.Webhook`]
+        """
         hooks = self.http.request_guild_webhooks(int(guild))
         if isinstance(hooks, list):
             return [Webhook(self, x) for x in hooks]
         return wrap_to_async(Webhook, self, hooks, as_create=False)
 
-    def request_webhook(self, webhook: Webhook.TYPING, webhook_token: str = None) -> Webhook.RESPONSE:  # Requesting webhook using webhook, seems legit.
+    def request_webhook(self, webhook: Webhook.TYPING, webhook_token: Optional[str] = None) -> Webhook.RESPONSE:
+        """
+        Requests webhook.
+
+        :param webhook: Webhook to request.
+        :param Optional[str] webhook_token: Token of the webhook, if ``webhook`` parameter is not a :class:`~.Webhook` instance.
+        :return: :class:`~.Webhook`
+        """
         if isinstance(webhook, Webhook):
             webhook_token = webhook_token or webhook.token
         hook = self.http.request_webhook(int(webhook)) if not webhook_token else self.http.request_webhook_with_token(int(webhook), webhook_token)
@@ -2095,35 +2216,75 @@ class APIClient:
     def modify_webhook(self,
                        webhook: Webhook.TYPING,
                        *,
-                       webhook_token: str = None,
-                       name: str = None,
-                       avatar: str = None,
-                       channel: Channel.TYPING = None) -> Webhook.RESPONSE:
+                       webhook_token: Optional[str] = None,
+                       name: Optional[str] = None,
+                       avatar: Optional[str] = None,
+                       channel: Optional[Channel.TYPING] = None) -> Webhook.RESPONSE:
+        """
+        Modifies webhook.
+
+        :param webhook: Webhook to modify.
+        :param Optional[str] webhook_token: Token of the webhook, if ``webhook`` parameter is not a :class:`~.Webhook` instance.
+        :param Optional[str] name: Name of the webhook to modify.
+        :param Optional[str] avatar: Avatar of the webhook to modify.
+        :param channel: Channel to move the webhook to.
+        :return: :class:`~.Webhook`
+        """
         hook = self.http.modify_webhook(int(webhook), name, avatar, str(int(channel)) if channel is not None else channel) if not webhook_token \
             else self.http.modify_webhook_with_token(int(webhook), webhook_token, name, avatar)
         if isinstance(hook, dict):
             return Webhook(self, hook)
         return wrap_to_async(Webhook, self, hook, as_create=False)
 
-    def delete_webhook(self, webhook: Webhook.TYPING, webhook_token: str = None):
+    def delete_webhook(self, webhook: Webhook.TYPING, webhook_token: Optional[str] = None):
+        """
+        Deletes webhook.
+
+        :param webhook: Webhook to delete.
+        :param webhook_token: Token of the webhook, if ``webhook`` parameter is not a :class:`~.Webhook` instance.
+        :return: :class:`~.Webhook`
+        """
         return self.http.delete_webhook(int(webhook)) if not webhook_token else self.http.delete_webhook_with_token(int(webhook), webhook_token)
 
     def execute_webhook(self,
                         webhook: Webhook.TYPING,
                         *,
-                        webhook_token: str = None,
-                        wait: bool = None,
+                        webhook_token: Optional[str] = None,
+                        wait: Optional[bool] = None,
                         thread: Channel.TYPING = None,
-                        content: str = None,
-                        username: str = None,
-                        avatar_url: str = None,
-                        tts: bool = False,
-                        file: FILE_TYPE = None,
-                        files: List[FILE_TYPE] = None,
-                        embed: Union[Embed, dict] = None,
-                        embeds: List[Union[Embed, dict]] = None,
-                        allowed_mentions: Union[AllowedMentions, dict] = None,
-                        components: List[Union[dict, Component]] = None) -> Message.RESPONSE:
+                        content: Optional[str] = None,
+                        username: Optional[str] = None,
+                        avatar_url: Optional[str] = None,
+                        tts: Optional[bool] = False,
+                        file: Optional[FILE_TYPE] = None,
+                        files: Optional[List[FILE_TYPE]] = None,
+                        embed: Optional[Union[Embed, dict]] = None,
+                        embeds: Optional[List[Union[Embed, dict]]] = None,
+                        allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
+                        components: Optional[List[Union[dict, Component]]] = None) -> Message.RESPONSE:
+        """
+        Executes webhook.
+
+        :param webhook: Webhook to execute.
+        :param Optional[str] webhook_token: Token of the webhook, if ``webhook`` parameter is not a :class:`~.Webhook` instance.
+        :param Optional[bool] wait: Whether to wait for the message to be created.
+        :param thread: Thread channel to send the message in.
+        :param Optional[str] content: Content of the message.
+        :param Optional[str] username: Username of the message.
+        :param Optional[str] avatar_url: Avatar of the message.
+        :param Optional[bool] tts: Whether the message should be TTS.
+        :param Optional[FILE_TYPE] file: File to send with the message.
+        :param Optional[List[FILE_TYPE]] files: List of files to send with the message.
+        :param embed: Embed to send with the message.
+        :type embed: Optional[Union[Embed, dict]]
+        :param embeds: List of embeds to send with the message.
+        :type embeds: Optional[List[Union[Embed, dict]]]
+        :param allowed_mentions: Allowed mentions of the message.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
+        :param components: List of components to send with the message.
+        :type components: Optional[List[Union[dict, Component]]]
+        :return: :class:`~.Message`
+        """
         if webhook_token is None and not isinstance(webhook, Webhook):
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         if thread and isinstance(thread, Channel) and not thread.is_thread_channel():
@@ -2171,7 +2332,15 @@ class APIClient:
                                 webhook: Webhook.TYPING,
                                 message: Message.TYPING,
                                 *,
-                                webhook_token: str = None) -> Message.RESPONSE:
+                                webhook_token: Optional[str] = None) -> Message.RESPONSE:
+        """
+        Requests webhook message.
+
+        :param webhook: Webhook to request message.
+        :param message: Message to request.
+        :param Optional[str] webhook_token: Token of the webhook, if ``webhook`` parameter is not a :class:`~.Webhook` instance.
+        :return: :class:`~.Message`
+        """
         if not isinstance(webhook, Webhook) and not webhook_token:
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         msg = self.http.request_webhook_message(int(webhook), webhook_token or webhook.token, int(message))
@@ -2183,16 +2352,41 @@ class APIClient:
                              webhook: Webhook.TYPING,
                              message: Message.TYPING,
                              *,
-                             webhook_token: str = None,
-                             content: str = EmptyObject,
-                             embed: Union[Embed, dict] = EmptyObject,
-                             embeds: List[Union[Embed, dict]] = EmptyObject,
-                             file: FILE_TYPE = EmptyObject,
-                             files: List[FILE_TYPE] = EmptyObject,
-                             allowed_mentions: Union[AllowedMentions, dict] = EmptyObject,
-                             attachments: List[Union[Attachment, dict]] = EmptyObject,
-                             component: Union[dict, Component] = EmptyObject,
-                             components: List[Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
+                             webhook_token: Optional[str] = None,
+                             content: Optional[str] = EmptyObject,
+                             embed: Optional[Union[Embed, dict]] = EmptyObject,
+                             embeds: Optional[List[Union[Embed, dict]]] = EmptyObject,
+                             file: Optional[FILE_TYPE] = EmptyObject,
+                             files: Optional[List[FILE_TYPE]] = EmptyObject,
+                             allowed_mentions: Optional[Union[AllowedMentions, dict]] = EmptyObject,
+                             attachments: Optional[List[Union[Attachment, dict]]] = EmptyObject,
+                             component: Optional[Union[dict, Component]] = EmptyObject,
+                             components: Optional[List[Union[dict, Component]]] = EmptyObject) -> Message.RESPONSE:
+        """
+        Edits webhook message.
+
+        :param webhook: Webhook to edit message.
+        :param message: Message to edit.
+        :param Optional[str] webhook_token: Token of the webhook, if ``webhook`` parameter is not a :class:`~.Webhook` instance.
+        :param Optional[str] content: Content of the message to edit.
+        :param embed: Embed to edit.
+        :type embed: Optional[Union[Embed, dict]]
+        :param embeds: List of embeds to edit.
+        :type embeds: Optional[List[Union[Embed, dict]]]
+        :param file: File to edit.
+        :type file: Optional[FILE_TYPE]
+        :param files: List of files to edit.
+        :type files: Optional[List[FILE_TYPE]]
+        :param allowed_mentions: Allowed mentions to edit.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
+        :param attachments: List of attachments to edit.
+        :type attachments: Optional[List[Union[Attachment, dict]]]
+        :param component: Component to edit.
+        :type component: Optional[Union[dict, Component]]
+        :param components: List of components to edit.
+        :type components: Optional[List[Union[dict, Component]]]
+        :return: :class:`~.Message`
+        """
         if not isinstance(webhook, Webhook) and not webhook_token:
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         if file and files:
@@ -2253,7 +2447,15 @@ class APIClient:
                                webhook: Webhook.TYPING,
                                message: Message.TYPING,
                                *,
-                               webhook_token: str = None):
+                               webhook_token: Optional[str] = None):
+        """
+        Delete a message from a webhook.
+
+        :param webhook: Webhook to delete message from.
+        :param message: Message to delete.
+        :param Optional[str] webhook_token: Token of the webhook, if ``webhook`` parameter is not a :class:`~.Webhook` instance.
+        :return:
+        """
         if not isinstance(webhook, Webhook) and not webhook_token:
             raise TypeError("you must pass webhook_token if webhook is not dico.Webhook object.")
         return self.http.delete_webhook_message(int(webhook), webhook_token or webhook.token, int(message))
@@ -2261,9 +2463,16 @@ class APIClient:
     # Interaction
 
     def request_application_commands(self,
-                                     guild: Guild.TYPING = None,
+                                     guild: Optional[Guild.TYPING] = None,
                                      *,
-                                     application_id: Snowflake.TYPING = None) -> ApplicationCommand.RESPONSE_AS_LIST:
+                                     application_id: Optional[Snowflake.TYPING] = None) -> ApplicationCommand.RESPONSE_AS_LIST:
+        """
+        Request application commands.
+
+        :param guild: Guild to request commands from. Default global commands.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: List[:class:`~.ApplicationCommand`]
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         app_commands = self.http.request_application_commands(int(application_id or self.application_id), int(guild) if guild else guild)
@@ -2272,14 +2481,28 @@ class APIClient:
         return wrap_to_async(ApplicationCommand, None, app_commands)
 
     def create_application_command(self,
-                                   guild: Guild.TYPING = None,
+                                   guild: Optional[Guild.TYPING] = None,
                                    *,
                                    name: str,
-                                   description: str = None,
-                                   options: List[Union[ApplicationCommandOption, dict]] = None,
-                                   default_permission: bool = None,
-                                   command_type: Union[ApplicationCommandTypes, int] = None,
-                                   application_id: Snowflake.TYPING = None) -> ApplicationCommand.RESPONSE:
+                                   description: Optional[str] = None,
+                                   options: Optional[List[Union[ApplicationCommandOption, dict]]] = None,
+                                   default_permission: Optional[bool] = None,
+                                   command_type: Optional[Union[ApplicationCommandTypes, int]] = None,
+                                   application_id: Optional[Snowflake.TYPING] = None) -> ApplicationCommand.RESPONSE:
+        """
+        Creates application command.
+
+        :param guild: Guild to create command in. Default global command.
+        :param str name: Name of the command.
+        :param Optional[str] description: Description of the command.
+        :param options: List of command options.
+        :type options: Optional[List[Union[:class:`~.ApplicationCommandOption`, dict]]]
+        :param Optional[bool] default_permission: Whether default permission is enabled or not.
+        :param command_type: Type of the command.
+        :type command_type: Optional[Union[:class:`~.ApplicationCommandTypes`, int]]
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: :class:`~.ApplicationCommand`
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if description is None and (command_type is None or int(command_type) == 1):
@@ -2294,8 +2517,16 @@ class APIClient:
     def request_application_command(self,
                                     command: ApplicationCommand.TYPING,
                                     *,
-                                    guild: Guild.TYPING = None,
-                                    application_id: Snowflake.TYPING = None) -> ApplicationCommand.RESPONSE:
+                                    guild: Optional[Guild.TYPING] = None,
+                                    application_id: Optional[Snowflake.TYPING] = None) -> ApplicationCommand.RESPONSE:
+        """
+        Requests application command.
+
+        :param command: Command to request.
+        :param guild: Guild to request command from, if command is guild's.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: :class:`~.ApplicationCommand`
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         command_id = command.id if isinstance(command, ApplicationCommand) else int(command)
@@ -2307,12 +2538,25 @@ class APIClient:
     def edit_application_command(self,
                                  command: ApplicationCommand.TYPING,
                                  *,
-                                 name: str = None,
-                                 description: str = None,
-                                 options: List[Union[ApplicationCommandOption, dict]] = None,
-                                 default_permission: bool = None,
-                                 guild: Guild.TYPING = None,
-                                 application_id: Snowflake.TYPING = None) -> ApplicationCommand.RESPONSE:
+                                 name: Optional[str] = None,
+                                 description: Optional[str] = None,
+                                 options: Optional[List[Union[ApplicationCommandOption, dict]]] = None,
+                                 default_permission: Optional[bool] = None,
+                                 guild: Optional[Guild.TYPING] = None,
+                                 application_id: Optional[Snowflake.TYPING] = None) -> ApplicationCommand.RESPONSE:
+        """
+        Edits application command.
+
+        :param command: Command to edit.
+        :param Optional[str] name: Name of the command to edit.
+        :param Optional[str] description: Description of the command to edit.
+        :param options: List of command options to edit.
+        :type options: Optional[List[Union[:class:`~.ApplicationCommandOption`, dict]]]
+        :param Optional[bool] default_permission: Whether default permission is enabled or not.
+        :param guild: Guild to edit command in, if command is guild's.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: :class:`~.ApplicationCommand`
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         command_id = int(command)
@@ -2325,8 +2569,15 @@ class APIClient:
     def delete_application_command(self,
                                    command: ApplicationCommand.TYPING,
                                    *,
-                                   guild: Guild.TYPING = None,
-                                   application_id: Snowflake.TYPING = None):
+                                   guild: Optional[Guild.TYPING] = None,
+                                   application_id: Optional[Snowflake.TYPING] = None):
+        """
+        Deletes application command.
+
+        :param command: Command to delete.
+        :param guild: Guild to delete command from, if command is guild's.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         command_id = int(command)
