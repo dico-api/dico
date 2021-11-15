@@ -2585,8 +2585,17 @@ class APIClient:
 
     def bulk_overwrite_application_commands(self,
                                             *commands: Union[dict, ApplicationCommand],
-                                            guild: Guild.TYPING = None,
-                                            application_id: Snowflake.TYPING = None) -> ApplicationCommand.RESPONSE_AS_LIST:
+                                            guild: Optional[Guild.TYPING] = None,
+                                            application_id: Optional[Snowflake.TYPING] = None) -> ApplicationCommand.RESPONSE_AS_LIST:
+        """
+        Bulk overwrites application commands.
+
+        :param commands: Commands to overwrite.
+        :type commands: Union[dict, :class:`~.ApplicationCommand`]
+        :param guild: Guild to overwrite commands in, if commands are guild's.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: List[:class:`~.ApplicationCommand`]
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         commands = [x if isinstance(x, dict) else x.to_dict() for x in commands]
@@ -2597,19 +2606,37 @@ class APIClient:
 
     def create_interaction_response(self,
                                     interaction: Interaction.TYPING,
-                                    interaction_response: InteractionResponse,
+                                    interaction_response: Union[dict, InteractionResponse],
                                     *,
-                                    interaction_token: str = None):
+                                    interaction_token: Optional[str] = None):
+        """
+        Creates interaction response.
+
+        :param interaction: Interaction to create response for.
+        :param interaction_response: Response of interaction to create.
+        :type interaction_response: Union[dict, :class:`~.InteractionResponse`]
+        :param Optional[str] interaction_token: Token of the interaction, if parameter ``interaction`` is not an Interaction instance.
+        """
         if not isinstance(interaction, Interaction) and not interaction_token:
             raise TypeError("you must pass interaction_token if interaction is not dico.Interaction object.")
-        return self.http.create_interaction_response(int(interaction), interaction_token or interaction.token, interaction_response.to_dict())
+        interaction_response = interaction_response if isinstance(interaction_response, dict) else interaction_response.to_dict()
+        return self.http.create_interaction_response(int(interaction), interaction_token or interaction.token, interaction_response)
 
     def request_interaction_response(self,
-                                     interaction: Interaction.TYPING = None,
+                                     interaction: Optional[Interaction.TYPING] = None,
                                      message: Message.TYPING = "@original",
                                      *,
-                                     interaction_token: str = None,
-                                     application_id: Snowflake.TYPING = None) -> Message.RESPONSE:
+                                     interaction_token: Optional[str] = None,
+                                     application_id: Optional[Snowflake.TYPING] = None) -> Message.RESPONSE:
+        """
+        Requests interaction response.
+
+        :param interaction: Interaction to request response for.
+        :param message: Message to request. Defaults to initial response.
+        :param Optional[str] interaction_token: Token of the interaction, if parameter ``interaction`` is not an Interaction instance.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: :class:`~.Message`
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
@@ -2621,21 +2648,44 @@ class APIClient:
         return wrap_to_async(Message, self, msg, interaction_token=interaction_token or interaction.token, original_response=original_response)
 
     def create_followup_message(self,
-                                interaction: Interaction.TYPING = None,
+                                interaction: Optional[Interaction.TYPING] = None,
                                 *,
-                                interaction_token: str = None,
-                                application_id: Snowflake.TYPING = None,
-                                content: str = None,
-                                username: str = None,
-                                avatar_url: str = None,
-                                tts: bool = False,
-                                file: FILE_TYPE = None,
-                                files: List[FILE_TYPE] = None,
-                                embed: Union[Embed, dict] = None,
-                                embeds: List[Union[Embed, dict]] = None,
-                                allowed_mentions: Union[AllowedMentions, dict] = None,
-                                components: List[Union[dict, Component]] = None,
-                                ephemeral: bool = False) -> Message.RESPONSE:
+                                interaction_token: Optional[str] = None,
+                                application_id: Optional[Snowflake.TYPING] = None,
+                                content: Optional[str] = None,
+                                username: Optional[str] = None,
+                                avatar_url: Optional[str] = None,
+                                tts: Optional[bool] = False,
+                                file: Optional[FILE_TYPE] = None,
+                                files: Optional[List[FILE_TYPE]] = None,
+                                embed: Optional[Union[Embed, dict]] = None,
+                                embeds: Optional[List[Union[Embed, dict]]] = None,
+                                allowed_mentions: Optional[Union[AllowedMentions, dict]] = None,
+                                components: Optional[List[Union[dict, Component]]] = None,
+                                ephemeral: Optional[bool] = False) -> Message.RESPONSE:
+        """
+        Creates followup message.
+
+        :param interaction: Interaction to create followup message for.
+        :param Optional[str] interaction_token: Token of the interaction, if parameter ``interaction`` is not an Interaction instance.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :param Optional[str] content: Content of the message.
+        :param Optional[str] username: Username of the message.
+        :param Optional[str] avatar_url: Avatar URL of the message.
+        :param Optional[bool] tts: Whether the message should be TTS.
+        :param Optional[FILE_TYPE] file: File to send.
+        :param Optional[List[FILE_TYPE]] files: List of files to send.
+        :param embed: Embed to send.
+        :type embed: Optional[Union[Embed, dict]]
+        :param embeds: List of embeds to send.
+        :type embeds: Optional[List[Union[Embed, dict]]]
+        :param allowed_mentions: Allowed mentions of the message.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
+        :param components: List of components to send.
+        :type components: Optional[List[Union[dict, Component]]]
+        :param Optional[bool] ephemeral: Whether the message should be ephemeral.
+        :return: :class:`~.Message`
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
@@ -2680,20 +2730,44 @@ class APIClient:
                 [x.close() for x in files if not x.closed]
 
     def edit_interaction_response(self,
-                                  interaction: Interaction.TYPING = None,
+                                  interaction: Optional[Interaction.TYPING] = None,
                                   message: Message.TYPING = "@original",
                                   *,
-                                  interaction_token: str = None,
-                                  application_id: Snowflake.TYPING = None,
-                                  content: str = EmptyObject,
-                                  file: FILE_TYPE = EmptyObject,
-                                  files: List[FILE_TYPE] = EmptyObject,
-                                  embed: Union[Embed, dict] = EmptyObject,
-                                  embeds: List[Union[Embed, dict]] = EmptyObject,
-                                  allowed_mentions: Union[AllowedMentions, dict] = EmptyObject,
-                                  attachments: List[Union[Attachment, dict]] = EmptyObject,
-                                  component: Union[dict, Component] = EmptyObject,
-                                  components: List[Union[dict, Component]] = EmptyObject) -> Message.RESPONSE:
+                                  interaction_token: Optional[str] = None,
+                                  application_id: Optional[Snowflake.TYPING] = None,
+                                  content: Optional[str] = EmptyObject,
+                                  file: Optional[FILE_TYPE] = EmptyObject,
+                                  files: Optional[List[FILE_TYPE]] = EmptyObject,
+                                  embed: Optional[Union[Embed, dict]] = EmptyObject,
+                                  embeds: Optional[List[Union[Embed, dict]]] = EmptyObject,
+                                  allowed_mentions: Optional[Union[AllowedMentions, dict]] = EmptyObject,
+                                  attachments: Optional[List[Union[Attachment, dict]]] = EmptyObject,
+                                  component: Optional[Union[dict, Component]] = EmptyObject,
+                                  components: Optional[List[Union[dict, Component]]] = EmptyObject) -> Message.RESPONSE:
+        """
+        Edits interaction response.
+
+        :param interaction: Interaction to edit response.
+        :param message: Message to edit.
+        :param Optional[str] interaction_token: Token of the interaction, if parameter ``interaction`` is not an Interaction instance.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :param Optional[str] content: Content of the message to edit.
+        :param Optional[FILE_TYPE] file: File to edit.
+        :param Optional[List[FILE_TYPE]] files: List of files to edit.
+        :param embed: Embed to edit.
+        :type embed: Optional[Union[Embed, dict]]
+        :param embeds: List of embeds to edit.
+        :type embeds: Optional[List[Union[Embed, dict]]]
+        :param allowed_mentions: Allowed mentions to edit.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
+        :param attachments: Attachments to edit.
+        :type attachments: Optional[List[Union[Attachment, dict]]]
+        :param component: Component to edit.
+        :type component: Optional[Union[dict, Component]]
+        :param components: List of components to edit.
+        :type components: Optional[List[Union[dict, Component]]]
+        :return: :class:`~.Message`
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
@@ -2754,21 +2828,39 @@ class APIClient:
 
     @property
     def edit_followup_message(self):
+        """Alias of :meth:`.edit_interaction_response`."""
         return self.edit_interaction_response
 
     def delete_interaction_response(self,
-                                    interaction: Interaction.TYPING = None,
+                                    interaction: Optional[Interaction.TYPING] = None,
                                     message: Message.TYPING = "@original",
                                     *,
-                                    interaction_token: str = None,
-                                    application_id: Snowflake.TYPING = None):
+                                    interaction_token: Optional[str] = None,
+                                    application_id: Optional[Snowflake.TYPING] = None):
+        """
+        Deletes interaction response.
+
+        :param interaction: Interaction to delete response.
+        :param message: Message to delete.
+        :param Optional[str] interaction_token: Token of the interaction, if parameter ``interaction`` is not an Interaction instance.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         if not isinstance(interaction, Interaction) and not interaction_token:
             raise TypeError("you must pass interaction_token if interaction is not dico.Interaction object.")
         return self.http.delete_interaction_response(int(application_id or self.application_id), interaction_token or interaction.token, int(message) if message != "@original" else message)
 
-    def request_guild_application_command_permissions(self, guild: Guild.TYPING, *, application_id: Snowflake.TYPING = None) -> GuildApplicationCommandPermissions.RESPONSE_AS_LIST:
+    def request_guild_application_command_permissions(self,
+                                                      guild: Guild.TYPING,
+                                                      *, application_id: Optional[Snowflake.TYPING] = None) -> GuildApplicationCommandPermissions.RESPONSE_AS_LIST:
+        """
+        Requests guild application command permissions.
+
+        :param guild: Guild to request application command permissions.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: List[:class:`~.GuildApplicationCommandPermissions`]
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         resp = self.http.request_guild_application_command_permissions(int(application_id or self.application_id), int(guild))
@@ -2779,7 +2871,15 @@ class APIClient:
     def request_application_command_permissions(self,
                                                 guild: Guild.TYPING,
                                                 command: ApplicationCommand.TYPING,
-                                                *, application_id: Snowflake.TYPING = None) -> GuildApplicationCommandPermissions.RESPONSE:
+                                                *, application_id: Optional[Snowflake.TYPING] = None) -> GuildApplicationCommandPermissions.RESPONSE:
+        """
+        Requests application command permissions.
+
+        :param guild: Guild to request application command permissions.
+        :param command: Command to request permissions.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: :class:`~.GuildApplicationCommandPermissions`
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         resp = self.http.request_application_command_permissions(int(application_id or self.application_id), int(guild), int(command))
@@ -2791,7 +2891,17 @@ class APIClient:
                                              guild: Guild.TYPING,
                                              command: ApplicationCommand.TYPING,
                                              *permissions: Union[dict, ApplicationCommandPermissions],
-                                             application_id: Snowflake.TYPING = None) -> GuildApplicationCommandPermissions.RESPONSE:
+                                             application_id: Optional[Snowflake.TYPING] = None) -> GuildApplicationCommandPermissions.RESPONSE:
+        """
+        Edits application command permissions.
+
+        :param guild: Guild to edit application command permissions.
+        :param command: Command to edit permissions.
+        :param permissions: Permissions to edit.
+        :type permissions: Union[dict, :class:`~.GuildApplicationCommandPermissions`]
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: :class:`~.GuildApplicationCommandPermissions`
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         permissions = [x if isinstance(x, dict) else x.to_dict() for x in permissions]
@@ -2803,7 +2913,15 @@ class APIClient:
     def batch_edit_application_command_permissions(self,
                                                    guild: Guild.TYPING,
                                                    permissions_dict: Dict[ApplicationCommand.TYPING, List[Union[dict, ApplicationCommandPermissions]]],
-                                                   *, application_id: Snowflake.TYPING = None) -> GuildApplicationCommandPermissions.RESPONSE:
+                                                   *, application_id: Optional[Snowflake.TYPING] = None) -> GuildApplicationCommandPermissions.RESPONSE_AS_LIST:
+        """
+        Batch edits application command permissions.
+
+        :param guild: Guild to edit application command permissions.
+        :param permissions_dict: Dict of command: permission.
+        :param application_id: ID of the application, if ``application_id`` is not set on the client.
+        :return: List[:class:`~.GuildApplicationCommandPermissions`]
+        """
         if not application_id and not self.application_id:
             raise TypeError("you must pass application_id if it is not set in client instance.")
         permissions_dicts = [{"id": str(int(k)), "permissions": [x if isinstance(x, dict) else x.to_dict() for x in v]} for k, v in permissions_dict.items()]
@@ -2815,6 +2933,11 @@ class APIClient:
     # OAuth2
 
     def request_current_bot_application_information(self) -> Application.RESPONSE:
+        """
+        Requests current bot application information.
+
+        :return: :class:`~.Application`
+        """
         resp = self.http.request_current_bot_application_information()
         if isinstance(resp, dict):
             return Application(self, resp)
@@ -2823,6 +2946,12 @@ class APIClient:
     # Gateway
 
     def request_gateway(self, *, bot: bool = True) -> Union[GetGateway, Awaitable[GetGateway]]:
+        """
+        Requests gateway.
+
+        :param bool bot: Whether this client is bot. This must be ``True``.
+        :return: :class:`~.GetGateway`
+        """
         resp = self.http.request_gateway(bot)
         if isinstance(resp, dict):
             return GetGateway(resp)
@@ -2831,6 +2960,12 @@ class APIClient:
     # Misc
 
     def get_allowed_mentions(self, allowed_mentions):
+        """
+        Automatically converts allowed_mentions to dict.
+
+        :param allowed_mentions: Allowed mentions.
+        :return: dict
+        """
         _all_men = allowed_mentions or self.default_allowed_mentions
         if _all_men and not isinstance(_all_men, dict):
             _all_men = _all_men.to_dict()
@@ -2838,8 +2973,10 @@ class APIClient:
 
     @property
     def get(self):
+        """Empty function that may be implemented if cache is present of the client."""
         raise NotImplementedError
 
     @property
     def has_cache(self) -> bool:
+        """Whether this client supports caching."""
         return hasattr(self, "cache")
