@@ -1,7 +1,8 @@
 import inspect
-import typing
 import pathlib
 import datetime
+
+from typing import TYPE_CHECKING, Optional, Union, List, Awaitable, overload
 
 from .emoji import Emoji
 from .guild import GuildMember, WelcomeScreenChannel
@@ -13,7 +14,7 @@ from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
 from ..base.http import EmptyObject
 from ..utils import from_emoji
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from .application import Application
     from .guild import Guild
     from .invite import Invite
@@ -21,81 +22,134 @@ if typing.TYPE_CHECKING:
 
 
 class Channel(DiscordObjectBase):
-    TYPING = typing.Union[int, str, Snowflake, "Channel"]
-    RESPONSE = typing.Union["Channel", typing.Awaitable["Channel"]]
-    RESPONSE_AS_LIST = typing.Union[typing.List["Channel"], typing.Awaitable[typing.List["Channel"]]]
+    """
+    Represents a Discord channel.
+
+    Refer https://discord.com/developers/docs/resources/channel#channel-object-channel-structure for attributes of the channel object.
+    """
+
+    TYPING = Union[int, str, Snowflake, "Channel"]
+    RESPONSE = Union["Channel", Awaitable["Channel"]]
+    RESPONSE_AS_LIST = Union[List["Channel"], Awaitable[List["Channel"]]]
     _cache_type = "channel"
 
     def __init__(self, client: "APIClient", resp: dict, *, guild_id: Snowflake.TYPING = None):
         super().__init__(client, resp)
         self.type: ChannelTypes = ChannelTypes(resp["type"])
         self.guild_id: Snowflake = Snowflake.optional(resp.get("guild_id")) or Snowflake.ensure_snowflake(guild_id)
-        self.position: typing.Optional[int] = resp.get("position")
-        self.permission_overwrites: typing.Optional[typing.List[Overwrite]] = [Overwrite.create(x) for x in resp.get("permission_overwrites", [])]
-        self.name: typing.Optional[str] = resp.get("name")
-        self.topic: typing.Optional[str] = resp.get("topic")
-        self.nsfw: typing.Optional[bool] = resp.get("nsfw")
-        self.last_message_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("last_message_id"))
-        self.bitrate: typing.Optional[int] = resp.get("bitrate")
-        self.user_limit: typing.Optional[int] = resp.get("user_limit")
-        self.rate_limit_per_user: typing.Optional[int] = resp.get("rate_limit_per_user")
-        self.recipients: typing.Optional[typing.List[User]] = [User.create(client, x) for x in resp.get("recipients", [])]
-        self.icon: typing.Optional[str] = resp.get("icon")
-        self.owner_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("owner_id"))
-        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
-        self.parent_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("parent_id"))
+        self.position: Optional[int] = resp.get("position")
+        self.permission_overwrites: Optional[List[Overwrite]] = [Overwrite.create(x) for x in resp.get("permission_overwrites", [])]
+        self.name: Optional[str] = resp.get("name")
+        self.topic: Optional[str] = resp.get("topic")
+        self.nsfw: Optional[bool] = resp.get("nsfw")
+        self.last_message_id: Optional[Snowflake] = Snowflake.optional(resp.get("last_message_id"))
+        self.bitrate: Optional[int] = resp.get("bitrate")
+        self.user_limit: Optional[int] = resp.get("user_limit")
+        self.rate_limit_per_user: Optional[int] = resp.get("rate_limit_per_user")
+        self.recipients: Optional[List[User]] = [User.create(client, x) for x in resp.get("recipients", [])]
+        self.icon: Optional[str] = resp.get("icon")
+        self.owner_id: Optional[Snowflake] = Snowflake.optional(resp.get("owner_id"))
+        self.application_id: Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
+        self.parent_id: Optional[Snowflake] = Snowflake.optional(resp.get("parent_id"))
         self.__last_pin_timestamp = resp.get("last_pin_timestamp")
-        self.last_pin_timestamp: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
-        self.rtc_region: typing.Optional[str] = resp.get("rtc_region")
+        self.last_pin_timestamp: Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__last_pin_timestamp) if self.__last_pin_timestamp else self.__last_pin_timestamp
+        self.rtc_region: Optional[str] = resp.get("rtc_region")
         self.__video_quality_mode = resp.get("video_quality_mode")
-        self.video_quality_mode: typing.Optional[VideoQualityModes] = VideoQualityModes(self.__video_quality_mode) if self.__video_quality_mode else self.__video_quality_mode
-        self.message_count: typing.Optional[int] = resp.get("message_count")
-        self.member_count: typing.Optional[int] = resp.get("member_count")
-        self.thread_metadata: typing.Optional[ThreadMetadata] = ThreadMetadata.optional(self.client, resp.get("thread_metadata"))
-        self.member: typing.Optional[ThreadMember] = ThreadMember.optional(self.client, resp.get("member"))
-        self.default_auto_archive_duration: typing.Optional[int] = resp.get("default_auto_archive_duration")
+        self.video_quality_mode: Optional[VideoQualityModes] = VideoQualityModes(self.__video_quality_mode) if self.__video_quality_mode else self.__video_quality_mode
+        self.message_count: Optional[int] = resp.get("message_count")
+        self.member_count: Optional[int] = resp.get("member_count")
+        self.thread_metadata: Optional[ThreadMetadata] = ThreadMetadata.optional(self.client, resp.get("thread_metadata"))
+        self.member: Optional[ThreadMember] = ThreadMember.optional(self.client, resp.get("member"))
+        self.default_auto_archive_duration: Optional[int] = resp.get("default_auto_archive_duration")
         self.__permissions = resp.get("permissions")
-        self.permissions: typing.Optional[PermissionFlags] = PermissionFlags.from_value(int(self.__permissions)) if self.__permissions else self.__permissions
+        self.permissions: Optional[PermissionFlags] = PermissionFlags.from_value(int(self.__permissions)) if self.__permissions else self.__permissions
 
         # if self.type.dm and self.
 
     def __str__(self) -> str:
         return self.name
 
-    @typing.overload
+    @overload
     def modify(self,
                *,
-               name: typing.Optional[str] = None,
-               channel_type: typing.Optional[typing.Union[int, "ChannelTypes"]] = None,
-               position: typing.Optional[int] = EmptyObject,
-               topic: typing.Optional[str] = EmptyObject,
-               nsfw: typing.Optional[bool] = EmptyObject,
-               rate_limit_per_user: typing.Optional[int] = EmptyObject,
-               bitrate: typing.Optional[int] = EmptyObject,
-               user_limit: typing.Optional[int] = EmptyObject,
-               permission_overwrites: typing.Optional[typing.List["Overwrite"]] = EmptyObject,
-               parent: typing.Optional[TYPING] = EmptyObject,
-               rtc_region: typing.Optional[str] = EmptyObject,
-               video_quality_mode: typing.Optional[typing.Union[int, "VideoQualityModes"]] = EmptyObject,
-               reason: typing.Optional[str] = None) -> RESPONSE:
+               name: Optional[str] = None,
+               channel_type: Optional[Union[int, "ChannelTypes"]] = None,
+               position: Optional[int] = EmptyObject,
+               topic: Optional[str] = EmptyObject,
+               nsfw: Optional[bool] = EmptyObject,
+               rate_limit_per_user: Optional[int] = EmptyObject,
+               bitrate: Optional[int] = EmptyObject,
+               user_limit: Optional[int] = EmptyObject,
+               permission_overwrites: Optional[List["Overwrite"]] = EmptyObject,
+               parent: Optional[TYPING] = EmptyObject,
+               rtc_region: Optional[str] = EmptyObject,
+               video_quality_mode: Optional[Union[int, "VideoQualityModes"]] = EmptyObject,
+               reason: Optional[str] = None) -> RESPONSE:
+        """
+        Modifies guild channel.
+
+        .. note::
+            All keyword-only arguments except name, channel_type, and reason accept None.
+
+        :param Optional[str] name: Name of the channel to change.
+        :param Optional[ChannelTypes] channel_type: Type of the channel to change.
+        :param Optional[int] position: Position of the channel to change.
+        :param Optional[str] topic: Topic of the channel to change.
+        :param Optional[bool] nsfw: Whether this channel is NSFW.
+        :param Optional[int] rate_limit_per_user: Slowmode of the channel to change.
+        :param Optional[int] bitrate: Bitrate of the channel to change.
+        :param Optional[int] user_limit: User limit of the channel to change.
+        :param Optional[List[Overwrite]] permission_overwrites: List of permission overwrites to change.
+        :param parent: Parent category of the channel to change.
+        :param Optional[str] rtc_region: RTC region of the channel to change. Pass None to set to automatic.
+        :param Optional[VideoQualityModes] video_quality_mode: Video quality mode of the camera to change.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Channel`
+        """
         ...
 
-    @typing.overload
-    def modify(self, *, name: typing.Optional[str] = None, icon: typing.Optional[bytes] = None, reason: typing.Optional[str] = None) -> RESPONSE:
+    @overload
+    def modify(self, *, name: Optional[str] = None, icon: Optional[bytes] = None, reason: Optional[str] = None) -> RESPONSE:
+        """
+        Modifies group DM channel.
+
+        :param Optional[str] name: Name to change.
+        :param Optional[bin] icon: Icon as bytes to change.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Channel`
+        """
         ...
 
-    @typing.overload
+    @overload
     def modify(self,
                *,
-               name: typing.Optional[str] = None,
-               archived: typing.Optional[bool] = None,
-               auto_archive_duration: typing.Optional[int] = None,
-               locked: typing.Optional[bool] = None,
-               rate_limit_per_user: typing.Optional[int] = EmptyObject,
-               reason: typing.Optional[str] = None) -> RESPONSE:
+               name: Optional[str] = None,
+               archived: Optional[bool] = None,
+               auto_archive_duration: Optional[int] = None,
+               locked: Optional[bool] = None,
+               rate_limit_per_user: Optional[int] = EmptyObject,
+               reason: Optional[str] = None) -> RESPONSE:
+        """
+        Modifies thread channel.
+
+        :param Optional[str] name: Name to change.
+        :param archived: Whether this thread is archived.
+        :param Optional[int] auto_archive_duration: Auto archive duration to set.
+        :param Optional[bool] locked: Whether this thread is locked.
+        :param Optional[int] rate_limit_per_user: Slowmode time to change. Set to None to remove.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Channel`
+        """
         ...
 
     def modify(self, **kwargs) -> RESPONSE:
+        """
+        Modifies channel.
+        
+        .. note::
+            ``**kwargs`` varies depending on the channel type.
+        :return: :class:`~.Channel`
+        """
         if self.type.group_dm:
             return self.client.modify_group_dm_channel(self.id, **kwargs)
         elif self.type.dm or self.type.guild_store:
@@ -107,21 +161,68 @@ class Channel(DiscordObjectBase):
 
     @property
     def edit(self):
+        """Alias of :meth:`.modify`."""
         return self.modify
 
-    def delete(self, *, reason: str = None) -> RESPONSE:
+    def delete(self, *, reason: Optional[str] = None) -> RESPONSE:
+        """
+        Deletes channel.
+
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Channel`
+        """
         return self.client.delete_channel(self, reason=reason)
 
     def create_message(self, *args, **kwargs) -> "Message.RESPONSE":
+        """
+        Creates message.
+
+        .. note::
+            - FileIO object passed to ``file`` or ``files`` parameter will be automatically closed when requesting,
+              therefore it is recommended to pass file path.
+
+        .. warning::
+            - You must pass at least one of ``content`` or ``embed`` or ``file`` or ``files`` parameter.
+            - You can't use ``file`` and ``files`` at the same time.
+
+        :param Optional[str] content: Content of the message.
+        :param embed: Embed of the message.
+        :type embed: Optional[Union[Embed, dict]]
+        :param embeds: List of embeds of the message.
+        :type embeds: Optional[List[Union[Embed, dict]]]
+        :param file: File of the message.
+        :type file: Optional[Union[io.FileIO, pathlib.Path, str]]
+        :param files: Files of the message.
+        :type files: Optional[List[Union[io.FileIO, pathlib.Path, str]]]
+        :param Optional[bool] tts: Whether to speak message.
+        :param allowed_mentions: :class:`~.AllowedMentions` to use for this request.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
+        :param message_reference: Message to reply.
+        :type message_reference: Optional[Union[Message, MessageReference, dict]]
+        :param component: Component of the message.
+        :type component: Optional[Union[dict, Component]]
+        :param components: List of  components of the message.
+        :type components: Optional[List[Union[dict, Component]]]
+        :param Optional[Sticker] sticker: Sticker of the message.
+        :param Optional[List[Sticker]] stickers: Stickers of the message. Up to 3.
+        :return: :class:`~.Message`
+        """
         if not self.is_messageable():
             raise TypeError("You can't send message in this type of channel.")
         return self.client.create_message(self, *args, **kwargs)
 
     @property
     def send(self):
+        """Alias of :meth:`.create_message`."""
         return self.create_message
 
-    def bulk_delete_messages(self, *messages: "Message.TYPING", reason: str = None):
+    def bulk_delete_messages(self, *messages: "Message.TYPING", reason: Optional[str] = None):
+        """
+        Bulk deletes messages.
+
+        :param messages: Messages to delete.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.client.bulk_delete_messages(self, *messages, reason=reason)
 
     def edit_permissions(self, overwrite, *, reason: str = None):
@@ -186,13 +287,13 @@ class Channel(DiscordObjectBase):
     def list_active_threads(self) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_active_threads(self)
 
-    def list_public_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+    def list_public_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_public_archived_threads(self, before=before, limit=limit)
 
-    def list_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+    def list_private_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_private_archived_threads(self, before=before, limit=limit)
 
-    def list_joined_private_archived_threads(self, *, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+    def list_joined_private_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
         return self.client.list_joined_private_archived_threads(self, before=before, limit=limit)
 
     def archive(self, locked: bool = False):
@@ -200,7 +301,7 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to archive.")
         return self.modify(archived=True, locked=locked)
 
-    def to_position_param(self, position: int = None, lock_permissions: bool = None, parent: typing.Union[int, str, Snowflake, "Channel"] = None) -> dict:
+    def to_position_param(self, position: int = None, lock_permissions: bool = None, parent: Union[int, str, Snowflake, "Channel"] = None) -> dict:
         if isinstance(parent, Channel) and not parent.type.guild_category:
             raise TypeError("parent must be category channel.")
         param = {
@@ -222,7 +323,7 @@ class Channel(DiscordObjectBase):
         return f"<#{self.id}>"
 
     @property
-    def guild(self) -> typing.Optional["Guild"]:
+    def guild(self) -> Optional["Guild"]:
         if self.guild_id and self.client.has_cache:
             return self.client.cache.get(self.guild_id, "guild")  # noqa
 
@@ -270,9 +371,9 @@ class SendOnlyChannel:
 
 
 class Message(DiscordObjectBase):
-    TYPING = typing.Union[int, str, Snowflake, "Message"]
-    RESPONSE = typing.Union["Message", typing.Awaitable["Message"]]
-    RESPONSE_AS_LIST = typing.Union[typing.List["Message"], typing.Awaitable[typing.List["Message"]]]
+    TYPING = Union[int, str, Snowflake, "Message"]
+    RESPONSE = Union["Message", Awaitable["Message"]]
+    RESPONSE_AS_LIST = Union[List["Message"], Awaitable[List["Message"]]]
     _cache_type = "message"
 
     def __init__(self,
@@ -280,53 +381,53 @@ class Message(DiscordObjectBase):
                  resp: dict,
                  *,
                  guild_id: Snowflake.TYPING = None,
-                 webhook_token: typing.Optional[str] = None,
-                 interaction_token: typing.Optional[str] = None,
-                 original_response: typing.Optional[bool] = False):
+                 webhook_token: Optional[str] = None,
+                 interaction_token: Optional[str] = None,
+                 original_response: Optional[bool] = False):
         from .interactions import MessageInteraction, Component  # Prevent circular import.
         super().__init__(client, resp)
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id") or guild_id)
+        self.guild_id: Optional[Snowflake] = Snowflake.optional(resp.get("guild_id") or guild_id)
         self.author: User = User.create(client, resp["author"])
         self.__member = resp.get("member")
         self.member: GuildMember = GuildMember.create(self.client, self.__member, user=self.author, guild_id=self.guild_id) if self.__member else self.__member
         self.content: str = resp["content"]
         self.timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["timestamp"])
         self.__edited_timestamp = resp["edited_timestamp"]
-        self.edited_timestamp: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
+        self.edited_timestamp: Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__edited_timestamp) if self.__edited_timestamp else self.__edited_timestamp
         self.tts: bool = resp["tts"]
         self.mention_everyone: bool = resp["mention_everyone"]
-        self.mentions: typing.List[typing.Union[User, GuildMember]] = [GuildMember.create(self.client, x["member"], user=User.create(self.client, x), guild_id=self.guild_id)
-                                                                       if "member" in x else User.create(self.client, x) for x in resp["mentions"]]
-        self.mention_roles: typing.List[Snowflake] = [Snowflake(x) for x in resp["mention_roles"]]
-        self.mention_channels: typing.List[ChannelMention] = [ChannelMention(x) for x in resp.get("mention_channels", [])]
-        self.attachments: typing.List[Attachment] = [Attachment(self.client, x) for x in resp["attachments"] or []]
-        self.embeds: typing.List[Embed] = [Embed.create(x) for x in resp["embeds"] or []]
-        self.reactions: typing.Optional[typing.List[Reaction]] = [Reaction(self.client, x) for x in resp.get("reactions", [])]
-        self.nonce: typing.Optional[typing.Union[int, str]] = resp.get("nonce")
+        self.mentions: List[Union[User, GuildMember]] = [GuildMember.create(self.client, x["member"], user=User.create(self.client, x), guild_id=self.guild_id)
+                                                         if "member" in x else User.create(self.client, x) for x in resp["mentions"]]
+        self.mention_roles: List[Snowflake] = [Snowflake(x) for x in resp["mention_roles"]]
+        self.mention_channels: List[ChannelMention] = [ChannelMention(x) for x in resp.get("mention_channels", [])]
+        self.attachments: List[Attachment] = [Attachment(self.client, x) for x in resp["attachments"] or []]
+        self.embeds: List[Embed] = [Embed.create(x) for x in resp["embeds"] or []]
+        self.reactions: Optional[List[Reaction]] = [Reaction(self.client, x) for x in resp.get("reactions", [])]
+        self.nonce: Optional[Union[int, str]] = resp.get("nonce")
         self.pinned: bool = resp["pinned"]
-        self.webhook_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("webhook_id"))
+        self.webhook_id: Optional[Snowflake] = Snowflake.optional(resp.get("webhook_id"))
         self.__webhook_token = webhook_token
         self.__interaction_token = interaction_token
         self.__original_response = original_response
         self.type: MessageTypes = MessageTypes(resp["type"])
-        self.activity: typing.Optional[MessageActivity] = MessageActivity.optional(resp.get("activity"))
-        self.application: typing.Optional[Application] = resp.get("application")
-        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
-        self.message_reference: typing.Optional[MessageReference] = MessageReference(resp.get("message_reference", {}))
+        self.activity: Optional[MessageActivity] = MessageActivity.optional(resp.get("activity"))
+        self.application: Optional[Application] = resp.get("application")
+        self.application_id: Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
+        self.message_reference: Optional[MessageReference] = MessageReference(resp.get("message_reference", {}))
         self.__flags = resp.get("flags")
         self.flags: MessageFlags = MessageFlags.from_value(self.__flags) if self.__flags else self.__flags
         self.__referenced_message = resp.get("referenced_message")
-        self.referenced_message: typing.Optional[Message] = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id) if self.__referenced_message else self.__referenced_message
+        self.referenced_message: Optional[Message] = Message.create(self.client, self.__referenced_message, guild_id=self.guild_id) if self.__referenced_message else self.__referenced_message
         self.__interaction = resp.get("interaction")
-        self.interaction: typing.Optional[MessageInteraction] = MessageInteraction(self.client, self.__interaction) if self.__interaction else self.__interaction
+        self.interaction: Optional[MessageInteraction] = MessageInteraction(self.client, self.__interaction) if self.__interaction else self.__interaction
         self.__thread = resp.get("thread")
-        self.thread: typing.Optional[Channel] = Channel.create(self.client, self.__thread, guild_id=self.guild_id, ensure_cache_type="channel") if self.__thread else self.__thread
-        self.components: typing.Optional[typing.List[Component]] = [Component.auto_detect(x) for x in resp.get("components", [])]
-        self.sticker_items: typing.Optional[typing.List[StickerItem]] = [StickerItem(x) for x in resp.get("sticker_items", [])]
-        self.stickers: typing.Optional[typing.List[Sticker]] = [Sticker.create(client, x) for x in resp.get("stickers", [])]
+        self.thread: Optional[Channel] = Channel.create(self.client, self.__thread, guild_id=self.guild_id, ensure_cache_type="channel") if self.__thread else self.__thread
+        self.components: Optional[List[Component]] = [Component.auto_detect(x) for x in resp.get("components", [])]
+        self.sticker_items: Optional[List[StickerItem]] = [StickerItem(x) for x in resp.get("sticker_items", [])]
+        self.stickers: Optional[List[Sticker]] = [Sticker.create(client, x) for x in resp.get("stickers", [])]
 
-        # self.stickers: typing.Optional[typing.List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
+        # self.stickers: Optional[List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
 
     def __str__(self) -> str:
         return self.content
@@ -360,10 +461,10 @@ class Message(DiscordObjectBase):
     def crosspost(self) -> "Message.RESPONSE":
         return self.client.crosspost_message(self.channel_id, self.id)
 
-    def create_reaction(self, emoji: typing.Union[Emoji, str]):
+    def create_reaction(self, emoji: Union[Emoji, str]):
         return self.client.create_reaction(self.channel_id, self.id, emoji)
 
-    def delete_reaction(self, emoji: typing.Union[Emoji, str], user: User.TYPING = "@me"):
+    def delete_reaction(self, emoji: Union[Emoji, str], user: User.TYPING = "@me"):
         return self.client.delete_reaction(self.channel_id, self.id, emoji, user)
 
     def pin(self, *, reason: str = None):
@@ -376,12 +477,12 @@ class Message(DiscordObjectBase):
         return self.client.start_thread(self.channel_id, self, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     @property
-    def guild(self) -> typing.Optional["Guild"]:
+    def guild(self) -> Optional["Guild"]:
         if self.guild_id and self.client.has_cache:
             return self.client.get(self.guild_id, "guild")
 
     @property
-    def channel(self) -> typing.Union[Channel, SendOnlyChannel]:
+    def channel(self) -> Union[Channel, SendOnlyChannel]:
         send_only = SendOnlyChannel(self.client, self.channel_id)
         if self.channel_id and self.client.has_cache:
             if self.guild_id:
@@ -425,7 +526,7 @@ class MessageTypes(TypeBase):
 class MessageActivity:
     def __init__(self, resp: dict):
         self.type: MessageActivityTypes = MessageActivityTypes(resp["type"])
-        self.party_id: typing.Optional[str] = resp.get("party_id")  # This is actually set as string in discord docs.
+        self.party_id: Optional[str] = resp.get("party_id")  # This is actually set as string in discord docs.
 
     @classmethod
     def optional(cls, resp):
@@ -453,9 +554,9 @@ class MessageFlags(FlagBase):
 
 class MessageReference:
     def __init__(self, resp: dict):
-        self.message_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("message_id"))
-        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.message_id: Optional[Snowflake] = Snowflake.optional(resp.get("message_id"))
+        self.channel_id: Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
+        self.guild_id: Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
         self.fail_if_not_exists: bool = resp.get("fail_if_not_exists", True)
 
     def to_dict(self) -> dict:
@@ -479,15 +580,15 @@ class MessageReference:
 
 
 class FollowedChannel:
-    RESPONSE = typing.Union["FollowedChannel", typing.Awaitable["FollowedChannel"]]
+    RESPONSE = Union["FollowedChannel", Awaitable["FollowedChannel"]]
 
     def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
-        self.channel_id: typing.Optional[Snowflake] = Snowflake(resp["channel_id"])
-        self.webhook_id: typing.Optional[Snowflake] = Snowflake(resp["webhook_id"])
+        self.channel_id: Optional[Snowflake] = Snowflake(resp["channel_id"])
+        self.webhook_id: Optional[Snowflake] = Snowflake(resp["webhook_id"])
 
     @property
-    def channel(self) -> typing.Optional[Channel]:
+    def channel(self) -> Optional[Channel]:
         if self.client.has_cache:
             return self.client.get(self.channel_id)
 
@@ -500,13 +601,13 @@ class Reaction:
 
 
 class Overwrite(CopyableObject):
-    TYPING = typing.Union[int, str, Snowflake, "Overwrite"]
+    TYPING = Union[int, str, Snowflake, "Overwrite"]
 
     def __init__(self,
-                 user: typing.Union[str, int, Snowflake, User] = None,
-                 role: typing.Union[str, int, Snowflake, Role] = None,
-                 allow: typing.Union[int, PermissionFlags] = 0,
-                 deny: typing.Union[int, PermissionFlags] = 0,
+                 user: Union[str, int, Snowflake, User] = None,
+                 role: Union[str, int, Snowflake, Role] = None,
+                 allow: Union[int, PermissionFlags] = 0,
+                 deny: Union[int, PermissionFlags] = 0,
                  **kw):
         if user is None and role is None:
             raise TypeError("you must pass user or role.")
@@ -542,11 +643,11 @@ class ThreadMetadata:
     def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
         self.archived: bool = resp["archived"]
-        # self.archiver_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("archiver_id"))
+        # self.archiver_id: Optional[Snowflake] = Snowflake.optional(resp.get("archiver_id"))
         self.auto_archive_duration: int = resp["auto_archive_duration"]
         self.archive_timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["archive_timestamp"])
         self.locked: bool = resp["locked"]
-        self.invitable: typing.Optional[bool] = resp.get("invitable")
+        self.invitable: Optional[bool] = resp.get("invitable")
 
     @classmethod
     def optional(cls, client, resp):
@@ -555,18 +656,18 @@ class ThreadMetadata:
 
 
 class ThreadMember:
-    RESPONSE = typing.Union["ThreadMember", typing.Awaitable["ThreadMember"]]
-    RESPONSE_AS_LIST = typing.Union[typing.List["ThreadMember"], typing.Awaitable[typing.List["ThreadMember"]]]
+    RESPONSE = Union["ThreadMember", Awaitable["ThreadMember"]]
+    RESPONSE_AS_LIST = Union[List["ThreadMember"], Awaitable[List["ThreadMember"]]]
 
     def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
-        self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
-        self.user_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("user_id"))
+        self.id: Optional[Snowflake] = Snowflake.optional(resp.get("id"))
+        self.user_id: Optional[Snowflake] = Snowflake.optional(resp.get("user_id"))
         self.join_timestamp: datetime.datetime = datetime.datetime.fromisoformat(resp["join_timestamp"])
         self.flags: int = resp["flags"]
 
     @property
-    def user(self) -> typing.Optional[User]:
+    def user(self) -> Optional[User]:
         if self.client.has_cache:
             return self.client.get(self.user_id, "user")
 
@@ -585,20 +686,20 @@ class Embed(CopyableObject):
     def __init__(self, *, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None, **kwargs):
         resp = self.__create(title=title, description=description, url=url, timestamp=timestamp, color=color)
         resp.update(kwargs)
-        self.title: typing.Optional[str] = resp.get("title")
-        self.type: typing.Optional[str] = resp.get("type", "rich")
-        self.description: typing.Optional[str] = resp.get("description")
-        self.url: typing.Optional[str] = resp.get("url")
+        self.title: Optional[str] = resp.get("title")
+        self.type: Optional[str] = resp.get("type", "rich")
+        self.description: Optional[str] = resp.get("description")
+        self.url: Optional[str] = resp.get("url")
         self.__timestamp = resp.get("timestamp")
-        self.timestamp: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__timestamp) if self.__timestamp else self.__timestamp
-        self.color: typing.Optional[int] = resp.get("color")
-        self.footer: typing.Optional[EmbedFooter] = EmbedFooter.optional(resp.get("footer"))
-        self.image: typing.Optional[EmbedImage] = EmbedImage.optional(resp.get("image"))
-        self.thumbnail: typing.Optional[EmbedThumbnail] = EmbedThumbnail.optional(resp.get("thumbnail"))
-        self.video: typing.Optional[EmbedVideo] = EmbedVideo.optional(resp.get("video"))
-        self.provider: typing.Optional[EmbedProvider] = EmbedProvider.optional(resp.get("provider"))
-        self.author: typing.Optional[EmbedAuthor] = EmbedAuthor.optional(resp.get("author"))
-        self.fields: typing.Optional[typing.List[EmbedField]] = [EmbedField(x) for x in resp.get("fields", [])]
+        self.timestamp: Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__timestamp) if self.__timestamp else self.__timestamp
+        self.color: Optional[int] = resp.get("color")
+        self.footer: Optional[EmbedFooter] = EmbedFooter.optional(resp.get("footer"))
+        self.image: Optional[EmbedImage] = EmbedImage.optional(resp.get("image"))
+        self.thumbnail: Optional[EmbedThumbnail] = EmbedThumbnail.optional(resp.get("thumbnail"))
+        self.video: Optional[EmbedVideo] = EmbedVideo.optional(resp.get("video"))
+        self.provider: Optional[EmbedProvider] = EmbedProvider.optional(resp.get("provider"))
+        self.author: Optional[EmbedAuthor] = EmbedAuthor.optional(resp.get("author"))
+        self.fields: Optional[List[EmbedField]] = [EmbedField(x) for x in resp.get("fields", [])]
 
     @staticmethod
     def __create(*, title: str = None, description: str = None, url: str = None, timestamp: datetime.datetime = None, color: int = None):
@@ -666,10 +767,10 @@ class Embed(CopyableObject):
 
 class EmbedThumbnail(CopyableObject):
     def __init__(self, resp: dict):
-        self.url: typing.Optional[str] = resp.get("url")
-        self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
-        self.height: typing.Optional[int] = resp.get("height")
-        self.width: typing.Optional[int] = resp.get("width")
+        self.url: Optional[str] = resp.get("url")
+        self.proxy_url: Optional[str] = resp.get("proxy_url")
+        self.height: Optional[int] = resp.get("height")
+        self.width: Optional[int] = resp.get("width")
 
     def to_dict(self) -> dict:
         ret = {}
@@ -691,10 +792,10 @@ class EmbedThumbnail(CopyableObject):
 
 class EmbedVideo(CopyableObject):
     def __init__(self, resp: dict):
-        self.url: typing.Optional[str] = resp.get("url")
-        self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
-        self.height: typing.Optional[int] = resp.get("height")
-        self.width: typing.Optional[int] = resp.get("width")
+        self.url: Optional[str] = resp.get("url")
+        self.proxy_url: Optional[str] = resp.get("proxy_url")
+        self.height: Optional[int] = resp.get("height")
+        self.width: Optional[int] = resp.get("width")
 
     def to_dict(self) -> dict:
         ret = {}
@@ -716,10 +817,10 @@ class EmbedVideo(CopyableObject):
 
 class EmbedImage(CopyableObject):
     def __init__(self, resp: dict):
-        self.url: typing.Optional[str] = resp.get("url")
-        self.proxy_url: typing.Optional[str] = resp.get("proxy_url")
-        self.height: typing.Optional[int] = resp.get("height")
-        self.width: typing.Optional[int] = resp.get("width")
+        self.url: Optional[str] = resp.get("url")
+        self.proxy_url: Optional[str] = resp.get("proxy_url")
+        self.height: Optional[int] = resp.get("height")
+        self.width: Optional[int] = resp.get("width")
 
     def to_dict(self) -> dict:
         ret = {}
@@ -741,8 +842,8 @@ class EmbedImage(CopyableObject):
 
 class EmbedProvider(CopyableObject):
     def __init__(self, resp: dict):
-        self.name: typing.Optional[str] = resp.get("name")
-        self.url: typing.Optional[str] = resp.get("url")
+        self.name: Optional[str] = resp.get("name")
+        self.url: Optional[str] = resp.get("url")
 
     def to_dict(self) -> dict:
         ret = {}
@@ -760,10 +861,10 @@ class EmbedProvider(CopyableObject):
 
 class EmbedAuthor(CopyableObject):
     def __init__(self, resp: dict):
-        self.name: typing.Optional[str] = resp.get("name")
-        self.url: typing.Optional[str] = resp.get("url")
-        self.icon_url: typing.Optional[str] = resp.get("icon_url")
-        self.proxy_icon_url: typing.Optional[str] = resp.get("proxy_icon_url")
+        self.name: Optional[str] = resp.get("name")
+        self.url: Optional[str] = resp.get("url")
+        self.icon_url: Optional[str] = resp.get("icon_url")
+        self.proxy_icon_url: Optional[str] = resp.get("proxy_icon_url")
 
     def to_dict(self) -> dict:
         ret = {}
@@ -785,9 +886,9 @@ class EmbedAuthor(CopyableObject):
 
 class EmbedFooter(CopyableObject):
     def __init__(self, resp: dict):
-        self.text: typing.Optional[str] = resp["text"]
-        self.icon_url: typing.Optional[str] = resp.get("icon_url")
-        self.proxy_icon_url: typing.Optional[str] = resp.get("proxy_icon_url")
+        self.text: Optional[str] = resp["text"]
+        self.icon_url: Optional[str] = resp.get("icon_url")
+        self.proxy_icon_url: Optional[str] = resp.get("proxy_icon_url")
 
     def to_dict(self) -> dict:
         ret = {"text": self.text}
@@ -805,9 +906,9 @@ class EmbedFooter(CopyableObject):
 
 class EmbedField(CopyableObject):
     def __init__(self, resp: dict):
-        self.name: typing.Optional[str] = resp["name"]
-        self.value: typing.Optional[str] = resp["value"]
-        self.inline: typing.Optional[bool] = resp.get("inline", True)
+        self.name: Optional[str] = resp["name"]
+        self.value: Optional[str] = resp["value"]
+        self.inline: Optional[bool] = resp.get("inline", True)
 
     def to_dict(self) -> dict:
         return {"name": self.name, "value": self.value, "inline": self.inline}
@@ -823,16 +924,16 @@ class Attachment:
         self.client: "APIClient" = client
         self.id: Snowflake = Snowflake(resp["id"])
         self.filename: str = resp["filename"]
-        self.content_type: typing.Optional[str] = resp.get("content_type")
+        self.content_type: Optional[str] = resp.get("content_type")
         self.size: int = resp["size"]
         self.url: str = resp["url"]
         self.proxy_url: str = resp["proxy_url"]
-        self.height: typing.Optional[int] = resp.get("height")
-        self.width: typing.Optional[int] = resp.get("width")
-        self.ephemeral: typing.Optional[bool] = resp.get("ephemeral")
-        self.content: typing.Optional[bytes] = None  # Filled after download is called
+        self.height: Optional[int] = resp.get("height")
+        self.width: Optional[int] = resp.get("width")
+        self.ephemeral: Optional[bool] = resp.get("ephemeral")
+        self.content: Optional[bytes] = None  # Filled after download is called
 
-    def download(self) -> typing.Union[bytes, typing.Awaitable[bytes]]:
+    def download(self) -> Union[bytes, Awaitable[bytes]]:
         dw = self.client.http.download(self.url)
         if inspect.isawaitable(dw):
             return self.__async_download(dw)
@@ -875,33 +976,35 @@ class ChannelMention:
 class AllowedMentions(CopyableObject):
     def __init__(self, *,
                  everyone: bool = False,
-                 users: typing.List[Snowflake.TYPING] = None,
-                 roles: typing.List[Snowflake.TYPING] = None,
+                 users: Optional[List[Snowflake.TYPING]] = None,
+                 roles: Optional[List[Snowflake.TYPING]] = None,
                  replied_user: bool = False):
         self.everyone: bool = everyone
-        self.users: typing.List[Snowflake.TYPING] = users or []
-        self.roles: typing.List[Snowflake.TYPING] = roles or []
+        self.users: List[Snowflake.TYPING] = users
+        self.roles: List[Snowflake.TYPING] = roles
         self.replied_user: bool = replied_user
 
     def to_dict(self, *, reply: bool = False) -> dict:
-        ret = {"parsed": []}
+        ret = {"parse": []}
         if self.everyone:
-            ret["parsed"].append("everyone")
+            ret["parse"].append("everyone")
         if self.users:
-            ret["parsed"].append("users")
             ret["users"] = [str(x) for x in self.users]
+        elif self.users is None:
+            ret["parse"].append("users")
         if self.roles:
-            ret["parsed"].append("roles")
             ret["roles"] = [str(x) for x in self.roles]
+        elif self.roles is None:
+            ret["parse"].append("roles")
         if reply:
             ret["replied_user"] = self.replied_user
         return ret
 
 
 class ListThreadsResponse:
-    RESPONSE = typing.Union["ListThreadsResponse", typing.Awaitable["ListThreadsResponse"]]
+    RESPONSE = Union["ListThreadsResponse", Awaitable["ListThreadsResponse"]]
 
     def __init__(self, client: "APIClient", resp: dict):
-        self.threads: typing.List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
-        self.members: typing.List[ThreadMember] = [ThreadMember(client, x) for x in resp["members"]]
-        self.has_more: typing.Optional[bool] = resp.get("has_more")
+        self.threads: List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
+        self.members: List[ThreadMember] = [ThreadMember(client, x) for x in resp["members"]]
+        self.has_more: Optional[bool] = resp.get("has_more")
