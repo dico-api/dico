@@ -8,7 +8,9 @@ from .model import Channel, Message, MessageReference, AllowedMentions, Snowflak
     ApplicationCommandPermissions, VerificationLevel, DefaultMessageNotificationLevel, ExplicitContentFilterLevel, \
     SystemChannelFlags, GuildPreview, ChannelTypes, GuildMember, Ban, PermissionFlags, GuildWidget, FILE_TYPE, \
     VoiceRegion, Integration, ApplicationCommandTypes, WelcomeScreen, WelcomeScreenChannel, PrivacyLevel, StageInstance, \
-    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway, VideoQualityModes, InviteTargetTypes, WidgetStyle
+    AuditLog, AuditLogEvents, GuildTemplate, BYTES_RESPONSE, Sticker, GetGateway, VideoQualityModes, InviteTargetTypes, WidgetStyle, \
+    GuildScheduledEvent, GuildScheduledEventEntityMetadata, GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityTypes, GuildScheduledEventStatus, \
+    GuildScheduledEventUser
 from .utils import from_emoji, wrap_to_async, to_image_data
 
 if TYPE_CHECKING:
@@ -1778,6 +1780,177 @@ class APIClient:
             request_to_speak_timestamp = request_to_speak_timestamp if isinstance(request_to_speak_timestamp, str) else \
                 request_to_speak_timestamp.isoformat()
         return self.http.modify_user_voice_state(int(guild), str(int(channel)), user, suppress, request_to_speak_timestamp)
+
+    # Guild Scheduled Event
+
+    def list_scheduled_events_for_guild(self, guild: Guild.TYPING, with_user_count: Optional[bool] = None) -> GuildScheduledEvent.RESPONSE_AS_LIST:
+        """
+        Lists scheduled events for guild.
+
+        :param guild: Guild to list scheduled events.
+        :param Optional[bool] with_user_count: Whether to include user count in response.
+        :return: List[:class:`~.GuildScheduledEvent`]
+        """
+        resp = self.http.list_scheduled_events_for_guild(int(guild), with_user_count)
+        if isinstance(resp, list):
+            return [GuildScheduledEvent(self, x) for x in resp]
+        return wrap_to_async(GuildScheduledEvent, self, resp, as_create=False)
+
+    # TODO: fix all isoformat params
+
+    def create_guild_scheduled_event(self,
+                                     guild: Guild.TYPING,
+                                     *,
+                                     channel: Optional[Channel.TYPING] = None,
+                                     entity_metadata: Optional[Union[dict, GuildScheduledEventEntityMetadata]] = None,
+                                     name: str,
+                                     privacy_level: Union[int, GuildScheduledEventPrivacyLevel],
+                                     scheduled_start_time: Union[str, datetime.datetime],
+                                     scheduled_end_time: Optional[Union[str, datetime.datetime]] = None,
+                                     description: Optional[str] = None,
+                                     entity_type: Union[int, GuildScheduledEventEntityTypes]) -> GuildScheduledEvent.RESPONSE:
+        """
+        Creates guild scheduled event.
+
+        :param guild: Guild to create event.
+        :param channel: Channel of the event. Can be optional if entity type is ``EXTERNAL``.
+        :param entity_metadata: Metadata of the entity.
+        :type entity_metadata: Optional[Union[dict, GuildScheduledEventEntityMetadata]]
+        :param str name: Name of the event.
+        :param privacy_level: Privacy level of the event.
+        :type privacy_level: Union[int, GuildScheduledEventPrivacyLevel]
+        :param scheduled_start_time: Scheduled start time of the event.
+        :type scheduled_start_time: Union[str, datetime.datetime]
+        :param scheduled_end_time: Scheduled end time of the event.
+        :type scheduled_end_time: Union[str, datetime.datetime]
+        :param Optional[str] description: Description of the event.
+        :param entity_type: Type of the entity of the event.
+        :type entity_type: Union[int, GuildScheduledEventEntityTypes]
+        :return: :class:`~.GuildScheduledEvent`
+        """
+        kwargs = {
+            "name": name,
+            "privacy_level": int(privacy_level),
+            "scheduled_start_time": scheduled_start_time.isoformat() if isinstance(scheduled_start_time, datetime.datetime) else scheduled_start_time,
+            "entity_type": int(entity_type)
+        }
+        if channel is not None:
+            kwargs["channel_id"] = str(int(channel))
+        if entity_metadata is not None:
+            kwargs["entity_metadata"] = entity_metadata if isinstance(entity_metadata, dict) else entity_metadata.to_dict()
+        if scheduled_end_time is not None:
+            kwargs["scheduled_end_time"] = scheduled_end_time.isoformat() if isinstance(scheduled_end_time, datetime.datetime) else scheduled_end_time
+        if description is not None:
+            kwargs["description"] = description
+        resp = self.http.create_guild_scheduled_event(int(guild), **kwargs)
+        if isinstance(resp, dict):
+            return GuildScheduledEvent(self, resp)
+        return wrap_to_async(GuildScheduledEvent, self, resp, as_create=False)
+
+    def request_guild_scheduled_event(self, guild: Guild.TYPING, guild_scheduled_event: GuildScheduledEvent.TYPING, with_user_count: Optional[bool] = None) -> GuildScheduledEvent.RESPONSE:
+        """
+        Requests guild scheduled event.
+
+        :param guild: Guild to request event.
+        :param guild_scheduled_event: Event to request.
+        :param Optional[bool] with_user_count: Whether to include user count.
+        :return: :class:`~.GuildScheduledEvent`
+        """
+        resp = self.http.request_guild_scheduled_event(int(guild), int(guild_scheduled_event), with_user_count)
+        if isinstance(resp, dict):
+            return GuildScheduledEvent(self, resp)
+        return wrap_to_async(GuildScheduledEvent, self, resp, as_create=False)
+
+    def modify_guild_scheduled_event(self,
+                                     guild: Guild.TYPING,
+                                     guild_scheduled_event: GuildScheduledEvent.TYPING,
+                                     *,
+                                     channel: Optional[Channel.TYPING] = EmptyObject,
+                                     entity_metadata: Optional[Union[dict, GuildScheduledEventEntityMetadata]] = None,
+                                     name: Optional[str] = None,
+                                     privacy_level: Optional[Union[int, GuildScheduledEventPrivacyLevel]] = None,
+                                     scheduled_start_time: Optional[Union[str, datetime.datetime]] = None,
+                                     scheduled_end_time: Optional[Union[str, datetime.datetime]] = None,
+                                     description: Optional[str] = None,
+                                     entity_type: Optional[Union[int, GuildScheduledEventEntityTypes]] = None,
+                                     status: Optional[Union[int, GuildScheduledEventStatus]] = None) -> GuildScheduledEvent.RESPONSE:
+        """
+        Modifies guild scheduled event.
+
+        :param guild: Guild to modify event.
+        :param guild_scheduled_event: Event to modify.
+        :param channel: Channel of the event. Set to ``None`` if you are changing event to ``EXTERNAL``.
+        :param entity_metadata: Metadata of the entity.
+        :type entity_metadata: Optional[Union[dict, GuildScheduledEventEntityMetadata]]
+        :param Optional[str] name: Name of the event.
+        :param privacy_level: Privacy level of the event.
+        :type privacy_level: Optional[Union[int, GuildScheduledEventPrivacyLevel]]
+        :param scheduled_start_time: Scheduled start time of the event.
+        :type scheduled_start_time: Optional[Union[str, datetime.datetime]]
+        :param scheduled_end_time: Scheduled end time of the event.
+        :type scheduled_end_time: Optional[Union[str, datetime.datetime]]
+        :param Optional[str] description: Description of the event.
+        :param entity_type: Type of the entity of the event.
+        :type entity_type: Optional[Union[int, GuildScheduledEventEntityTypes]]
+        :param status: Status of the event.
+        :type status: Optional[Union[int, GuildScheduledEventStatus]]
+        :return: :class:`~.GuildScheduledEvent`
+        """
+        kwargs = {}
+        if channel is not EmptyObject:
+            kwargs["channel_id"] = channel if channel is None else str(int(channel))
+        if entity_metadata is not None:
+            kwargs["entity_metadata"] = entity_metadata if isinstance(entity_metadata, dict) else entity_metadata.to_dict()
+        if name is not None:
+            kwargs["name"] = name
+        if privacy_level is not None:
+            kwargs["privacy_level"] = int(privacy_level)
+        if scheduled_start_time is not None:
+            kwargs["scheduled_start_time"] = scheduled_start_time.isoformat() if isinstance(scheduled_start_time, datetime.datetime) else scheduled_start_time
+        if scheduled_end_time is not None:
+            kwargs["scheduled_end_time"] = scheduled_end_time.isoformat() if isinstance(scheduled_end_time, datetime.datetime) else scheduled_end_time
+        if description is not None:
+            kwargs["description"] = description
+        if entity_type is not None:
+            kwargs["entity_type"] = int(entity_type)
+        if status is not None:
+            kwargs["status"] = int(status)
+        resp = self.http.modify_guild_scheduled_event(int(guild), int(guild_scheduled_event), **kwargs)
+        if isinstance(resp, dict):
+            return GuildScheduledEvent(self, resp)
+        return wrap_to_async(GuildScheduledEvent, self, resp, as_create=False)
+
+    def delete_guild_scheduled_event(self, guild: Guild.TYPING, guild_scheduled_event: GuildScheduledEvent.TYPING):
+        """
+        Deletes guild scheduled event.
+
+        :param guild: Guild to delete event.
+        :param guild_scheduled_event: Event to delete.
+        """
+        return self.http.delete_guild_scheduled_event(int(guild), int(guild_scheduled_event))
+
+    def request_guild_scheduled_event_users(self,
+                                            guild: Guild.TYPING,
+                                            guild_scheduled_event: GuildScheduledEvent.TYPING,
+                                            limit: Optional[int] = None,
+                                            with_member: Optional[bool] = None,
+                                            before: Optional[User.TYPING] = None,
+                                            after: Optional[User.TYPING] = None) -> GuildScheduledEventUser.RESPONSE_AS_LIST:
+        """
+        Requests guild scheduled event users.
+
+        :param guild: Guild to request guild scheduled event users.
+        :param guild_scheduled_event: Event to get users.
+        :param Optional[int] limit: Maximum number of users to return.
+        :param Optional[bool] with_member: Whether to include member data.
+        :param before: User to get users before.
+        :param after: User to get users after.
+        :return: List[:class:`~.GuildScheduledEventUser`]
+        """
+        resp = self.http.request_guild_scheduled_event_users(int(guild), int(guild_scheduled_event), limit, with_member, str(int(before)), str(int(after)))
+        if isinstance(resp, list):
+            return [GuildScheduledEventUser(self, x) for x in resp]
+        return wrap_to_async(GuildScheduledEventUser, self, resp, as_create=False)
 
     # Guild Template
 

@@ -6,6 +6,7 @@ from .channel import Channel, Message, ThreadMember
 from .emoji import Emoji
 from .gateway import Activity
 from .guild import Guild, GuildMember, Integration
+from .guild_scheduled_event import GuildScheduledEvent
 from .invite import InviteTargetTypes
 from .permission import Role
 from .snowflake import Snowflake
@@ -325,6 +326,11 @@ class GuildRoleDelete(EventBase):
     def role(self) -> typing.Optional[Role]:
         if self.client.has_cache:
             return self.guild.get(self.role_id, "role")
+
+
+GuildScheduledEventCreate = GuildScheduledEvent
+GuildScheduledEventUpdate = GuildScheduledEvent
+GuildScheduledEventDelete = GuildScheduledEvent
 
 
 class IntegrationCreate(Integration):

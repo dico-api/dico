@@ -1464,6 +1464,153 @@ class HTTPRequestBase(ABC):
             body["request_to_speak_timestamp"] = request_to_speak_timestamp
         return self.request(f"/guilds/{guild_id}/voice-states/{user_id}", "PATCH", body, is_json=True)
 
+    # Guild Scheduled Event Requests
+
+    def list_scheduled_events_for_guild(self, guild_id, with_user_count: bool = None) -> RESPONSE:
+        """
+        Sends list scheduled events for guild.
+
+        :param guild_id: ID of the guild to list scheduled events.
+        :param with_user_count: Whether to include number of users subscribed to each event.
+        """
+        params = {}
+        if with_user_count is not None:
+            params["with_user_count"] = "true" if with_user_count else "false"
+        return self.request(f"/guilds/{guild_id}/scheduled-events", "GET", params=params)
+
+    def create_guild_scheduled_event(self,
+                                     guild_id,
+                                     *,
+                                     channel_id: str = None,
+                                     entity_metadata: dict = None,
+                                     name: str,
+                                     privacy_level: int,
+                                     scheduled_start_time: str,
+                                     scheduled_end_time: str = None,
+                                     description: str = None,
+                                     entity_type: int) -> RESPONSE:
+        """
+        Sends create guild scheduled event request.
+
+        :param guild_id: ID of the guild to create.
+        :param channel_id: ID of the channel to schedule event. Optional if entity_type is EXTERNAL.
+        :param entity_metadata: Entity metadata of the event.
+        :param name: Name of the event.
+        :param privacy_level: Privacy level of the event.
+        :param scheduled_start_time: Scheduled start time of the event.
+        :param scheduled_end_time: Scheduled end time of the event.
+        :param description: Description of the event.
+        :param entity_type: Type of the entity of the event.
+        """
+        body = {"name": name, "privacy_level": privacy_level, "scheduled_start_time": scheduled_start_time, "entity_type": entity_type}
+        if channel_id is not None:
+            body["channel_id"] = channel_id
+        if entity_metadata is not None:
+            body["entity_metadata"] = entity_metadata
+        if scheduled_end_time is not None:
+            body["scheduled_end_time"] = scheduled_end_time
+        if description is not None:
+            body["description"] = description
+        return self.request(f"/guilds/{guild_id}/scheduled-events", "POST", body, is_json=True)
+
+    def request_guild_scheduled_event(self, guild_id, guild_scheduled_event_id, with_user_count: bool = None):
+        """
+        Sends get guild scheduled event request.
+
+        :param guild_id: ID of the guild to get scheduled event.
+        :param guild_scheduled_event_id: ID of the scheduled event to get.
+        :param with_user_count: Whether to include number of users subscribed to this event.
+        """
+        params = {}
+        if with_user_count is not None:
+            params["with_user_count"] = "true" if with_user_count else "false"
+        return self.request(f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}", "GET", params=params)
+
+    def modify_guild_scheduled_event(self,
+                                     guild_id,
+                                     guild_scheduled_event_id,
+                                     channel_id: str = EmptyObject,
+                                     entity_metadata: dict = None,
+                                     name: str = None,
+                                     privacy_level: int = None,
+                                     scheduled_start_time: str = None,
+                                     scheduled_end_time: str = None,
+                                     description: str = None,
+                                     entity_type: int = None,
+                                     status: int = None):
+        """
+        Sends modify guild scheduled event request.
+
+        :param guild_id: ID of the guild to modify scheduled events.
+        :param guild_scheduled_event_id: ID of the event to modify.
+        :param channel_id: ID of the channel of the event. Set to ``None`` if you are changing event to EXTERNAL.
+        :param entity_metadata: Entity metadata of the event.
+        :param name: Name of the event.
+        :param privacy_level: Privacy level of the event.
+        :param scheduled_start_time: Scheduled start time of the event.
+        :param scheduled_end_time: Scheduled end time of the event.
+        :param description: Description of the event.
+        :param entity_type: Type of the entity of the event.
+        :param status: Status of the event.
+        """
+        body = {}
+        if channel_id is not EmptyObject:
+            body["channel_id"] = channel_id
+        if entity_metadata is not None:
+            body["entity_metadata"] = entity_metadata
+        if name is not None:
+            body["name"] = name
+        if privacy_level is not None:
+            body["privacy_level"] = privacy_level
+        if scheduled_start_time is not None:
+            body["scheduled_start_time"] = scheduled_start_time
+        if scheduled_end_time is not None:
+            body["scheduled_end_time"] = scheduled_end_time
+        if description is not None:
+            body["description"] = description
+        if entity_type is not None:
+            body["entity_type"] = entity_type
+        if status is not None:
+            body["status"] = status
+        return self.request(f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}", "PATCH", body, is_json=True)
+
+    def delete_guild_scheduled_event(self, guild_id, guild_scheduled_event_id):
+        """
+        Sends delete guild scheduled event request.
+
+        :param guild_id: ID of the guild to delete scheduled event.
+        :param guild_scheduled_event_id: ID of the scheduled event to delete.
+        """
+        return self.request(f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}", "DELETE")
+
+    def request_guild_scheduled_event_users(self,
+                                            guild_id,
+                                            guild_scheduled_event_id,
+                                            limit: int = None,
+                                            with_member: bool = None,
+                                            before: str = None,
+                                            after: str = None):
+        """
+        Sends get guild scheduled event users request.
+
+        :param guild_id: ID of the guild to get scheduled event users.
+        :param guild_scheduled_event_id: ID of the scheduled event to get users.
+        :param limit: Maximum number of users to return.
+        :param with_member: Whether to include member data.
+        :param before: ID of the user to get users before.
+        :param after: ID of the user to get users after.
+        """
+        params = {}
+        if limit is not None:
+            params["limit"] = limit
+        if with_member is not None:
+            params["with_member"] = "true" if with_member else "false"
+        if before is not None:
+            params["before"] = before
+        if after is not None:
+            params["after"] = after
+        return self.request(f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}/users", "GET", params=params)
+
     # Guild Template Requests
 
     def request_guild_template(self, template_code) -> RESPONSE:
