@@ -23,6 +23,7 @@ Submodules
    dico.model.extras
    dico.model.gateway
    dico.model.guild
+   dico.model.guild_scheduled_event
    dico.model.guild_template
    dico.model.invite
    dico.model.permission
