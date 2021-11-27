@@ -226,77 +226,201 @@ class Channel(DiscordObjectBase):
         return self.client.bulk_delete_messages(self, *messages, reason=reason)
 
     def edit_permissions(self, overwrite, *, reason: str = None):
+        """
+        Edits permissions.
+
+        :param Overwrite overwrite: Permission overwrite to edit.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.client.edit_channel_permissions(self, overwrite, reason=reason)
 
     def request_invites(self) -> "Invite.RESPONSE_AS_LIST":
+        """
+        Requests channel invites.
+
+        :return: :class:`~.Invite`
+        """
         return self.client.request_channel_invites(self)
 
     def create_invite(self, **kwargs) -> "Invite.RESPONSE":
+        """
+        Creates channel invite.
+
+        :param Optional[int] max_age: Maximum age of the invite.
+        :param Optional[int] max_uses: Maximum use count of the invite.
+        :param Optional[bool] temporary: Whether this invite is temporary, meaning user will be kicked if role is not added.
+        :param Optional[bool] unique: Whether this invite is unique, meaning new code will be generated even if there is invite with same options.
+        :param target_type: Target type of the voice channel invite.
+        :type target_type: Optional[Union[int, InviteTargetTypes]]
+        :param target_user: Target user of the invite.
+        :param target_application: Target application of the invite.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Invite`
+        """
         return self.client.create_channel_invite(self, **kwargs)
 
     def delete_permissions(self, overwrite, *, reason: str = None):
+        """
+        Deletes permissions.
+
+        :param overwrite: Target overwrite to delete. Accepts ID of the user or role.
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.client.delete_channel_permission(self, overwrite, reason=reason)
 
     def follow(self, target_channel: "Channel.TYPING") -> "FollowedChannel.RESPONSE":
+        """
+        Follows this channel to target channel.
+        :param target_channel: Channel to receive published messages.
+        :return: :class:`~.FollowedChannel`
+        """
         return self.client.follow_news_channel(self, target_channel)
 
     def trigger_typing_indicator(self):
+        """
+        Triggers ``<client> is typing...`` on channel.
+        """
         return self.client.trigger_typing_indicator(self)
 
     def request_pinned_messages(self) -> "Message.RESPONSE_AS_LIST":
+        """
+        Requests pinned messages.
+
+        :return: List[:class:`~.Message`]
+        """
         return self.client.request_pinned_messages(self)
 
     def add_recipient(self, user: User.TYPING, access_token: str, nick: str):
+        """
+        Adds recipient to the group DM.
+
+        :param user: Recipient to add.
+
+        :param str access_token: OAuth2 access token to use.
+        :param str nick: Nickname to assign.
+        """
         if not self.type.group_dm:
             raise AttributeError("This type of channel is not allowed to add recipient.")
         return self.client.group_dm_add_recipient(self, user, access_token, nick)
 
     def remove_recipient(self, user: User.TYPING):
+        """
+        Removes recipient from the group DM.
+
+        :param user: Recipient to remove.
+        """
         if not self.type.group_dm:
             raise AttributeError("This type of channel is not allowed to remove recipient.")
         return self.client.group_dm_remove_recipient(self, user)
 
     def start_thread(self, message: "Message.TYPING" = None, *, name: str, auto_archive_duration: int, reason: str = None) -> "Channel.RESPONSE":
+        """
+        Starts new thread.
+
+        .. note::
+            If ``message`` param is passed, type of thread will be always public regardless of what you've set to.
+
+        :param message: Message to create thread from.
+        :param str name: Name of the thread.
+        :param int auto_archive_duration: When to archive thread in minutes.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Channel`
+        """
         return self.client.start_thread(self, message, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     def join_thread(self):
+        """
+        Joins to thread.
+        """
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to join thread.")
         return self.client.join_thread(self)
 
     def add_thread_member(self, user: User.TYPING):
+        """
+        Adds member to thread.
+
+        :param user: User to add.
+        """
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to add thread member.")
         return self.client.add_thread_member(self, user)
 
     def leave_thread(self):
+        """
+        Leaves thread.
+        """
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to leave thread.")
         return self.client.leave_thread(self)
 
     def remove_thread_member(self, user: User.TYPING):
+        """
+        Removes member from thread.
+
+        :param user: User to remove.
+        """
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to remove thread member.")
         return self.client.remove_thread_member(self, user)
 
     def list_thread_members(self) -> "ThreadMember.RESPONSE_AS_LIST":
+        """
+        Returns list of members in thread.
+
+        :return: List[:class:`~.ThreadMember`]
+        """
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to list thread members.")
         return self.client.list_thread_members(self)
 
     def list_active_threads(self) -> "ListThreadsResponse.RESPONSE":
+        """
+        Returns list of active threads in channel.
+
+        :return: :class:`~.ListThreadsResponse`
+        """
         return self.client.list_active_threads(self)
 
     def list_public_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+        """
+        Returns list of public archived threads in channel.
+
+        :param before: Timestamp to show threads before.
+        :type before: Optional[Union[str, datetime.datetime]]
+        :param Optional[int] limit: Limit of the number of the threads.
+        :return: :class:`~.ListThreadsResponse`
+        """
         return self.client.list_public_archived_threads(self, before=before, limit=limit)
 
     def list_private_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+        """
+        Returns list of private archived threads in channel.
+
+        :param before: Timestamp to show threads before.
+        :type before: Optional[Union[str, datetime.datetime]]
+        :param Optional[int] limit: Limit of the number of the threads.
+        :return: :class:`~.ListThreadsResponse`
+        """
         return self.client.list_private_archived_threads(self, before=before, limit=limit)
 
     def list_joined_private_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+        """
+        Returns list of private archived threads that bot joined in channel.
+
+        :param before: Timestamp to show threads before.
+        :type before: Optional[Union[str, datetime.datetime]]
+        :param Optional[int] limit: Limit of the number of the threads.
+        :return: :class:`~.ListThreadsResponse`
+        """
         return self.client.list_joined_private_archived_threads(self, before=before, limit=limit)
 
     def archive(self, locked: bool = False):
+        """
+        Archives thread.
+
+        :param locked: whether to lock thread or not.
+        """
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to archive.")
         return self.modify(archived=True, locked=locked)
@@ -320,19 +444,39 @@ class Channel(DiscordObjectBase):
 
     @property
     def mention(self) -> str:
+        """
+        The string that mentions channel.
+
+        :return: :class:`str`
+        """
         return f"<#{self.id}>"
 
     @property
     def guild(self) -> Optional["Guild"]:
+        """
+        Guild that channel belongs to if applicable.
+
+        :return: Optional[:class:`~.Guild`]
+        """
         if self.guild_id and self.client.has_cache:
             return self.client.cache.get(self.guild_id, "guild")  # noqa
 
     def is_messageable(self) -> bool:
+        """
+        Checks if channel is able to send messages.
+
+        :return: :class:`bool`
+        """
         if self.is_thread_channel():
             return self.thread_metadata.archived
         return self.type.guild_text or self.type.guild_news or self.type.dm or self.type.group_dm
 
     def is_thread_channel(self) -> bool:
+        """
+        Checks if channel is a thread.
+
+        :return: :class:`bool`
+        """
         return self.type.guild_news_thread or self.type.guild_public_thread or self.type.guild_private_thread
 
     def __repr__(self) -> str:
