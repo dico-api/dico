@@ -225,7 +225,7 @@ class Channel(DiscordObjectBase):
         """
         return self.client.bulk_delete_messages(self, *messages, reason=reason)
 
-    def edit_permissions(self, overwrite, *, reason: str = None):
+    def edit_permissions(self, overwrite, *, reason: Optional[str] = None):
         """
         Edits permissions.
 
@@ -238,7 +238,7 @@ class Channel(DiscordObjectBase):
         """
         Requests channel invites.
 
-        :return: :class:`~.Invite`
+        :return: List[:class:`~.Invite`]
         """
         return self.client.request_channel_invites(self)
 
@@ -259,7 +259,7 @@ class Channel(DiscordObjectBase):
         """
         return self.client.create_channel_invite(self, **kwargs)
 
-    def delete_permissions(self, overwrite, *, reason: str = None):
+    def delete_permissions(self, overwrite, *, reason: Optional[str] = None):
         """
         Deletes permissions.
 
@@ -313,7 +313,7 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to remove recipient.")
         return self.client.group_dm_remove_recipient(self, user)
 
-    def start_thread(self, message: "Message.TYPING" = None, *, name: str, auto_archive_duration: int, reason: str = None) -> "Channel.RESPONSE":
+    def start_thread(self, message: "Message.TYPING" = None, *, name: str, auto_archive_duration: int, reason: Optional[str] = None) -> "Channel.RESPONSE":
         """
         Starts new thread.
 
@@ -382,7 +382,7 @@ class Channel(DiscordObjectBase):
         """
         return self.client.list_active_threads(self)
 
-    def list_public_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+    def list_public_archived_threads(self, *, before: Optional[Union[str, datetime.datetime]] = None, limit: Optional[int] = None) -> "ListThreadsResponse.RESPONSE":
         """
         Returns list of public archived threads in channel.
 
@@ -393,7 +393,7 @@ class Channel(DiscordObjectBase):
         """
         return self.client.list_public_archived_threads(self, before=before, limit=limit)
 
-    def list_private_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+    def list_private_archived_threads(self, *, before: Optional[Union[str, datetime.datetime]] = None, limit: Optional[int] = None) -> "ListThreadsResponse.RESPONSE":
         """
         Returns list of private archived threads in channel.
 
@@ -404,7 +404,7 @@ class Channel(DiscordObjectBase):
         """
         return self.client.list_private_archived_threads(self, before=before, limit=limit)
 
-    def list_joined_private_archived_threads(self, *, before: Union[str, datetime.datetime] = None, limit: int = None) -> "ListThreadsResponse.RESPONSE":
+    def list_joined_private_archived_threads(self, *, before: Optional[Union[str, datetime.datetime]] = None, limit: Optional[int] = None) -> "ListThreadsResponse.RESPONSE":
         """
         Returns list of private archived threads that bot joined in channel.
 
@@ -419,7 +419,7 @@ class Channel(DiscordObjectBase):
         """
         Archives thread.
 
-        :param locked: whether to lock thread or not.
+        :param bool locked: whether to lock thread or not.
         """
         if not self.is_thread_channel():
             raise AttributeError("This type of channel is not allowed to archive.")
@@ -447,7 +447,6 @@ class Channel(DiscordObjectBase):
         """
         The string that mentions channel.
 
-        :return: :class:`str`
         """
         return f"<#{self.id}>"
 
@@ -456,7 +455,6 @@ class Channel(DiscordObjectBase):
         """
         Guild that channel belongs to if applicable.
 
-        :return: Optional[:class:`~.Guild`]
         """
         if self.guild_id and self.client.has_cache:
             return self.client.cache.get(self.guild_id, "guild")  # noqa
@@ -465,7 +463,7 @@ class Channel(DiscordObjectBase):
         """
         Checks if channel is able to send messages.
 
-        :return: :class:`bool`
+        :return: bool
         """
         if self.is_thread_channel():
             return self.thread_metadata.archived
@@ -475,7 +473,7 @@ class Channel(DiscordObjectBase):
         """
         Checks if channel is a thread.
 
-        :return: :class:`bool`
+        :return: bool
         """
         return self.type.guild_news_thread or self.type.guild_public_thread or self.type.guild_private_thread
 
