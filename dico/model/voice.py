@@ -52,6 +52,7 @@ class VoiceState:
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}>"
 
+
 class VoiceRegion:
     RESPONSE = typing.Union["VoiceRegion", typing.Awaitable["VoiceRegion"]]
     RESPONSE_AS_LIST = typing.Union[typing.List["VoiceRegion"], typing.Awaitable[typing.List["VoiceRegion"]]]
@@ -95,3 +96,9 @@ class VoiceOpcodes:
                    9: "Resumed",
                    13: "Client Disconnect"}
         return opcodes.get(code)
+
+
+class SpeakingFlags:
+    MICROPHONE = 1 << 0
+    SOUNDSHARE = 1 << 1
+    PRIORITY = 1 << 2

@@ -12,7 +12,7 @@ from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .exception import WebsocketClosed
 from .handler import EventHandler
-from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel
+from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel, User
 from .utils import get_shard_id
 
 
@@ -72,7 +72,8 @@ class Client(APIClient):
         self.__ready_future = asyncio.Future()
         self.monoshard: bool = monoshard
         self.shard_count: typing.Optional[int] = shard_count
-        self.logger = logging.getLogger("dico.client")
+        self.logger: logging.Logger = logging.getLogger("dico.client")
+        self.user: typing.Optional[User] = None
         self.__shards = {} if self.monoshard else None
         self.__shard_id = shard_id
         self.__shard_ids = []
@@ -84,8 +85,13 @@ class Client(APIClient):
         # Internal events dispatch
         self.events.add("READY", self.__ready)
         self.events.add("VOICE_STATE_UPDATE", self.__voice_state_update)
+        self.loop.create_task(self.__request_user())
 
-    def __ready(self, ready):
+    async def __request_user(self):
+        await self.wait_ready()
+        self.user = await self.request_user()
+
+    async def __ready(self, ready):
         self.application_id = Snowflake(ready.application["id"])
         if not self.__shards:
             if not self.__ready_future.done():
