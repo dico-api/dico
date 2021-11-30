@@ -425,7 +425,15 @@ class Channel(DiscordObjectBase):
             raise AttributeError("This type of channel is not allowed to archive.")
         return self.modify(archived=True, locked=locked)
 
-    def to_position_param(self, position: int = None, lock_permissions: bool = None, parent: Union[int, str, Snowflake, "Channel"] = None) -> dict:
+    def to_position_param(self, position: Optional[int] = None, lock_permissions: Optional[bool] = None, parent: Optional["Channel.TYPING"] = None) -> dict:
+        """
+        Exports channel object to dict as position parameter format.
+
+        :param Optional[int] position: Position of the channel.
+        :param Optional[bool] lock_permissions: Whether to lock permissions.
+        :param parent: Parent category of the channel.
+        :return: dict
+        """
         if isinstance(parent, Channel) and not parent.type.guild_category:
             raise TypeError("parent must be category channel.")
         param = {
@@ -436,7 +444,14 @@ class Channel(DiscordObjectBase):
         }
         return param
 
-    def to_welcome_screen_channel(self, description: str, emoji: Emoji.TYPING = None) -> WelcomeScreenChannel:
+    def to_welcome_screen_channel(self, description: str, emoji: Optional[Emoji.TYPING] = None) -> WelcomeScreenChannel:
+        """
+        Exports channel object to welcome screen object.
+
+        :param str description: Description of the channel.
+        :param emoji: Emoji to use.
+        :return: :class:`~.WelcomeScreenChannel`
+        """
         emoji = from_emoji(emoji)
         emoji_id = emoji.split(":")[-1] if ":" in emoji else None
         emoji_name = emoji.split(":")[-2] if ":" in emoji else emoji
@@ -482,6 +497,9 @@ class Channel(DiscordObjectBase):
 
 
 class ChannelTypes(TypeBase):
+    """
+    Types of the channel.
+    """
     GUILD_TEXT = 0
     DM = 1
     GUILD_VOICE = 2
@@ -496,11 +514,17 @@ class ChannelTypes(TypeBase):
 
 
 class VideoQualityModes(TypeBase):
+    """
+    Types of the video quality modes.
+    """
     AUTO = 1
     FULL = 2
 
 
 class SendOnlyChannel:
+    """
+    Internal class representing temporary messageable channel.
+    """
     def __init__(self, client: "APIClient", channel_id: Snowflake.TYPING):
         self.client: "APIClient" = client
         self.id: Snowflake = Snowflake.ensure_snowflake(channel_id)
@@ -513,6 +537,12 @@ class SendOnlyChannel:
 
 
 class Message(DiscordObjectBase):
+    """
+    Represents a Discord message.
+
+    Refer https://discord.com/developers/docs/resources/channel#message-object for attributes of the channel object.
+    """
+
     TYPING = Union[int, str, Snowflake, "Message"]
     RESPONSE = Union["Message", Awaitable["Message"]]
     RESPONSE_AS_LIST = Union[List["Message"], Awaitable[List["Message"]]]
