@@ -604,7 +604,30 @@ class Message(DiscordObjectBase):
     def __str__(self) -> str:
         return self.content
 
-    def reply(self, content=None, **kwargs) -> "Message.RESPONSE":
+    def reply(self, content: Optional[str] = None, **kwargs) -> "Message.RESPONSE":
+        """
+        Replies to the message.
+
+        :param Optional[str] content: Content of the message.
+        :param embed: Embed of the message.
+        :type embed: Optional[Union[Embed, dict]]
+        :param embeds: List of embeds of the message.
+        :type embeds: Optional[List[Union[Embed, dict]]]
+        :param file: File of the message.
+        :type file: Optional[Union[io.FileIO, pathlib.Path, str]]
+        :param files: Files of the message.
+        :type files: Optional[List[Union[io.FileIO, pathlib.Path, str]]]
+        :param Optional[bool] tts: Whether to speak message.
+        :param allowed_mentions: :class:`~.AllowedMentions` to use for this request.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
+        :param component: Component of the message.
+        :type component: Optional[Union[dict, Component]]
+        :param components: List of  components of the message.
+        :type components: Optional[List[Union[dict, Component]]]
+        :param Optional[Sticker] sticker: Sticker of the message.
+        :param Optional[List[Sticker]] stickers: Stickers of the message. Up to 3.
+        :return: :class:`~.Message`
+        """
         kwargs["message_reference"] = self
         mention = kwargs.pop("mention") if "mention" in kwargs.keys() else True
         allowed_mentions = kwargs.get("allowed_mentions", self.client.default_allowed_mentions or AllowedMentions(replied_user=mention)).copy()
@@ -613,6 +636,26 @@ class Message(DiscordObjectBase):
         return self.client.create_message(self.channel_id, content, **kwargs)
 
     def edit(self, **kwargs) -> "Message.RESPONSE":
+        """
+        Edits message.
+        
+        :param Optional[str] content: Content to edit.
+        :param embed: Embed to edit.
+        :type embed: Optional[Union[Embed, dict]]
+        :param embeds: Embeds to edit.
+        :type embeds: Optional[List[Union[Embed, dict]]]
+        :param Optional[FILE_TYPE] file: File to add.
+        :param Optional[List[FILE_TYPE]] files: Files to add.
+        :param allowed_mentions: Allowed mentions of the message.
+        :type allowed_mentions: Optional[Union[AllowedMentions, dict]]
+        :param attachments: Attachments to keep.
+        :type attachments: Optional[List[Union[Attachment, dict]]]
+        :param component: Component of the message to edit.
+        :type component: Optional[Union[dict, Component]]
+        :param components: Components of the message to edit.
+        :type components: Optional[List[Union[dict, Component]]]
+        :return: :class:`~.Message`
+        """
         if self.__webhook_token:
             kwargs["webhook_token"] = self.__webhook_token
             return self.client.edit_webhook_message(self.webhook_id, self, **kwargs)
@@ -623,7 +666,12 @@ class Message(DiscordObjectBase):
             return self.client.edit_interaction_response(**kwargs)
         return self.client.edit_message(self.channel_id, self.id, **kwargs)
 
-    def delete(self, *, reason: str = None):
+    def delete(self, *, reason: Optional[str] = None):
+        """
+        Deletes message.
+
+        :param Optional[str] reason: Reason of the action.
+        """
         if self.__webhook_token:
             return self.client.delete_webhook_message(self.webhook_id, self, webhook_token=self.__webhook_token)
         elif self.__interaction_token:
@@ -631,30 +679,68 @@ class Message(DiscordObjectBase):
         return self.client.delete_message(self.channel_id, self.id, reason=reason)
 
     def crosspost(self) -> "Message.RESPONSE":
+        """
+        Crossposts message.
+
+        :return: :class:`~.Message`
+        """
         return self.client.crosspost_message(self.channel_id, self.id)
 
     def create_reaction(self, emoji: Union[Emoji, str]):
+        """
+        Creates reaction.
+
+        :param emoji: Emoji for creating reaction.
+        :type emoji: Union[str, Emoji]
+        """
         return self.client.create_reaction(self.channel_id, self.id, emoji)
 
     def delete_reaction(self, emoji: Union[Emoji, str], user: User.TYPING = "@me"):
+        """
+        Deletes reaction.
+
+        :param emoji: Emoji of the reaction to delete.
+        :type emoji: Union[str, Emoji]
+        :param user: User to delete reaction of. Default "@me" which is the bot itself.
+        """
         return self.client.delete_reaction(self.channel_id, self.id, emoji, user)
 
-    def pin(self, *, reason: str = None):
+    def pin(self, *, reason: Optional[str] = None):
+        """
+        Pins message.
+
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.client.pin_message(self.channel_id, self.id, reason=reason)
 
-    def unpin(self, *, reason: str = None):
+    def unpin(self, *, reason: Optional[str] = None):
+        """
+        Unpins message.
+
+        :param Optional[str] reason: Reason of the action.
+        """
         return self.client.unpin_message(self.channel_id, self.id, reason=reason)
 
-    def start_thread(self, *, name: str, auto_archive_duration: int, reason: str = None) -> Channel.RESPONSE:
+    def start_thread(self, *, name: str, auto_archive_duration: int, reason: Optional[str] = None) -> Channel.RESPONSE:
+        """
+        Starts new thread.
+        
+        :param str name: Name of the thread.
+        :param int auto_archive_duration: When to archive thread in minutes.
+        :param Optional[str] reason: Reason of the action.
+        :return: :class:`~.Channel`
+        """
         return self.client.start_thread(self.channel_id, self, name=name, auto_archive_duration=auto_archive_duration, reason=reason)
 
     @property
     def guild(self) -> Optional["Guild"]:
+        """Guild this message belongs to."""
         if self.guild_id and self.client.has_cache:
             return self.client.get(self.guild_id, "guild")
 
     @property
     def channel(self) -> Union[Channel, SendOnlyChannel]:
+        """Channel this message belongs to."""
         send_only = SendOnlyChannel(self.client, self.channel_id)
         if self.channel_id and self.client.has_cache:
             if self.guild_id:
@@ -670,6 +756,9 @@ class Message(DiscordObjectBase):
 
 
 class MessageTypes(TypeBase):
+    """
+    Types of the message.
+    """
     DEFAULT = 0
     RECIPIENT_ADD = 1
     RECIPIENT_REMOVE = 2
@@ -696,6 +785,12 @@ class MessageTypes(TypeBase):
 
 
 class MessageActivity:
+    """
+    Represents Message Activity.
+
+    :ivar MessageActivityTypes ~.type: Type of the message activity.
+    :ivar Optional[str] ~.party_id: ID of the party.
+    """
     def __init__(self, resp: dict):
         self.type: MessageActivityTypes = MessageActivityTypes(resp["type"])
         self.party_id: Optional[str] = resp.get("party_id")  # This is actually set as string in discord docs.
@@ -707,6 +802,9 @@ class MessageActivity:
 
 
 class MessageActivityTypes(TypeBase):
+    """
+    Types of the message activity.
+    """
     JOIN = 1
     SPECTATE = 2
     LISTEN = 3
@@ -714,6 +812,9 @@ class MessageActivityTypes(TypeBase):
 
 
 class MessageFlags(FlagBase):
+    """
+    Flags of the message.
+    """
     CROSSPOSTED = 1 << 0
     IS_CROSSPOST = 1 << 1
     SUPPRESS_EMBEDS = 1 << 2
