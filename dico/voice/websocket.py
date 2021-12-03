@@ -43,6 +43,8 @@ class VoiceWebsocket:
         self.sock = None
         self.secret_key: Optional[list] = None
         self.encoder: Optional[Encoder] = None
+        self.self_ip: Optional[str] = None
+        self.self_port: Optional[int] = None
 
     def get_mode(self) -> str:
         return [x for x in self.modes if x in self.AVAILABLE_MODES][0]
@@ -142,8 +144,8 @@ class VoiceWebsocket:
             "d": {
                 "protocol": "udp",
                 "data": {
-                    "address": self.ip,
-                    "port": self.port,
+                    "address": self.self_ip,
+                    "port": self.self_port,
                     "mode": self.mode,
                 },
             }
@@ -191,8 +193,16 @@ class VoiceWebsocket:
         except asyncio.CancelledError:
             pass
 
+    def set_self_ip(self, self_ip, self_port):
+        self.self_ip = self_ip
+        self.self_port = self_port
+
     async def create_socket(self):
-        self.sock = VoiceSocket
+        self.sock = await VoiceSocket.connect(self, ip_discovery=bool(self.self_ip and self.self_port))
+
+    @property
+    def loop(self):
+        return self.client.loop
 
     @classmethod
     async def connect(cls, client: "Client", payload: "VoiceServerUpdate"):
