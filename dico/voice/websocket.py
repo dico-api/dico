@@ -4,7 +4,7 @@ import logging
 
 import aiohttp
 
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Union
 
 from .encoder import Encoder
 from .voice_socket import VoiceSocket
@@ -92,6 +92,7 @@ class VoiceWebsocket:
             self.port = resp.d["port"]
             self.modes = resp.d["modes"]
             self.mode = self.get_mode()
+            self.sock = await VoiceSocket.connect(self, ip_discovery=bool(self.self_ip and self.self_port))
             await self.select_protocol()
         elif resp.op == VoiceOpcodes.HELLO:
             self.heartbeat_interval = resp.d["heartbeat_interval"]
@@ -152,11 +153,11 @@ class VoiceWebsocket:
         }
         await self.ws.send_json(payload)
 
-    async def speaking(self, speaking_flag=SpeakingFlags.MICROPHONE):
+    async def speaking(self, speaking_flag: Union[SpeakingFlags, int] = SpeakingFlags.MICROPHONE, is_speaking: bool = True):
         payload = {
             "op": VoiceOpcodes.SPEAKING,
             "d": {
-                "speaking": speaking_flag,
+                "speaking": speaking_flag if is_speaking else 0,
                 "delay": 0,
                 "ssrc": self.ssrc
             }
@@ -196,9 +197,6 @@ class VoiceWebsocket:
     def set_self_ip(self, self_ip, self_port):
         self.self_ip = self_ip
         self.self_port = self_port
-
-    async def create_socket(self):
-        self.sock = await VoiceSocket.connect(self, ip_discovery=bool(self.self_ip and self.self_port))
 
     @property
     def loop(self):
