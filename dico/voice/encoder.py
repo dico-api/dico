@@ -6,7 +6,7 @@ class Encoder:
     AVAILABLE = ["xsalsa20_poly1305_suffix"]
 
     def __init__(self, secret_key):
-        self.secret_key = secret_key
+        self.secret_key = bytes(secret_key)
         self.box = secret.SecretBox(self.secret_key)
 
     def get_encoder(self, mode: str):

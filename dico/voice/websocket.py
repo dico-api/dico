@@ -8,23 +8,25 @@ from typing import TYPE_CHECKING, Optional, List, Union
 
 from .encoder import Encoder
 from .voice_socket import VoiceSocket
-from ..model import VoiceOpcodes, GatewayResponse
+from ..model import VoiceOpcodes, GatewayResponse, SpeakingFlags
 from ..ws.websocket import Ignore, WSClosing
 
 if TYPE_CHECKING:
     from ..client import Client
-    from ..model import VoiceServerUpdate, Snowflake, SpeakingFlags
+    from ..model import VoiceServerUpdate, VoiceState, Snowflake
 
 
 class VoiceWebsocket:
     AVAILABLE_MODES = Encoder.AVAILABLE
+    WS_KWARGS = {"autoclose": False, "autoping": False, "timeout": 60}
 
-    def __init__(self, ws: aiohttp.ClientWebSocketResponse, client: "Client", payload: "VoiceServerUpdate"):
+    def __init__(self, ws: aiohttp.ClientWebSocketResponse, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState"):
         self.client: "Client" = client
         self.ws: aiohttp.ClientWebSocketResponse = ws
         self.guild_id: "Snowflake" = payload.guild_id
-        self.endpoint: str = payload.endpoint
+        self.endpoint: str = f"wss://{payload.endpoint}?v=4"
         self.token: str = payload.token
+        self.session_id = voice_state.session_id
         self.logger: logging.Logger = logging.getLogger(f"dico.voice.{self.guild_id}")
         self.__keep_running: bool = True
         self.ssrc: Optional[int] = None
@@ -53,6 +55,8 @@ class VoiceWebsocket:
         await self.cancel_heartbeat()
         if not self.__keep_running:
             return
+        if self.sock:
+            self.sock.close()
         if not self.ws.closed:
             await self.ws.close(code=code)
         self.__keep_running = reconnect
@@ -71,10 +75,20 @@ class VoiceWebsocket:
                     continue
                 except WSClosing as ex:
                     self.logger.warning(f"Voice websocket is closing with code: {ex.code}")
+                    if self.sock:
+                        pass
+                    if ex.code in (4006, 4009):
+                        await self.reconnect(fresh=True)
+                    elif ex.code in (4015,):
+                        await self.reconnect()
+                    else:
+                        await self.close(code=ex.code)
                     break
                 value = await self.process(resp)
-            if self.__keep_running:
-                self.ws = await self.http.session.ws_connect(self.endpoint)
+            if self._reconnecting or self._fresh_reconnecting:
+                self.ws = await self.client.http.session.ws_connect(self.endpoint, **self.WS_KWARGS)
+            else:
+                self.__keep_running = False
 
     async def receive(self, resp: aiohttp.WSMessage) -> GatewayResponse:
         self.logger.debug(f"Voice raw receive {resp.type}: {resp.data}")
@@ -92,7 +106,7 @@ class VoiceWebsocket:
             self.port = resp.d["port"]
             self.modes = resp.d["modes"]
             self.mode = self.get_mode()
-            self.sock = await VoiceSocket.connect(self, ip_discovery=bool(self.self_ip and self.self_port))
+            self.sock = await VoiceSocket.connect(self, ip_discovery=not bool(self.self_ip and self.self_port))
             await self.select_protocol()
         elif resp.op == VoiceOpcodes.HELLO:
             self.heartbeat_interval = resp.d["heartbeat_interval"]
@@ -121,7 +135,7 @@ class VoiceWebsocket:
             "d": {
                 "server_id": str(self.guild_id),
                 "user_id": str(self.client.user.id),
-                "session_id": self.client.ws.session_id,
+                "session_id": self.session_id,
                 "token": self.token,
             }
         }
@@ -132,7 +146,7 @@ class VoiceWebsocket:
             "op": VoiceOpcodes.RESUME,
             "d": {
                 "server_id": str(self.guild_id),
-                "session_id": self.client.ws.session_id,
+                "session_id": self.session_id,
                 "token": self.token,
             }
         }
@@ -151,6 +165,7 @@ class VoiceWebsocket:
                 },
             }
         }
+        print(payload)
         await self.ws.send_json(payload)
 
     async def speaking(self, speaking_flag: Union[SpeakingFlags, int] = SpeakingFlags.MICROPHONE, is_speaking: bool = True):
@@ -173,7 +188,7 @@ class VoiceWebsocket:
                     if self._reconnecting or self._fresh_reconnecting:
                         break
                     self.logger.warning("Heartbeat timeout, reconnecting...")
-                    self.http.loop.create_task(self.reconnect())
+                    self.loop.create_task(self.reconnect())
                     break
                 data = {"op": VoiceOpcodes.HEARTBEAT, "d": 1501184119561}
                 self._ping_start = time.time()
@@ -202,8 +217,13 @@ class VoiceWebsocket:
     def loop(self):
         return self.client.loop
 
+    @property
+    def parent_ws(self):
+        return self.client.ws if not self.client.monoshard else self.client.get_shard(self.guild_id)
+
     @classmethod
-    async def connect(cls, client: "Client", payload: "VoiceServerUpdate"):
-        ws = await client.http.session.ws_connect(f"wss://{payload.endpoint}?v=4")
-        resp = cls(ws, client, payload)
+    async def connect(cls, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState"):
+        url = f"wss://{payload.endpoint}?v=4"
+        ws = await client.http.session.ws_connect(url, **cls.WS_KWARGS)
+        resp = cls(ws, client, payload, voice_state)
         return resp

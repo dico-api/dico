@@ -14,6 +14,7 @@ from .exception import WebsocketClosed
 from .handler import EventHandler
 from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel, User
 from .utils import get_shard_id
+from .voice import VoiceWebsocket
 
 
 class Client(APIClient):
@@ -81,6 +82,7 @@ class Client(APIClient):
         self.__unavailable_guilds = set()
         self.__compress = False
         self.__reconnect_on_unknown_disconnect = False
+        self.__voice_ws = {}
 
         # Internal events dispatch
         self.events.add("READY", self.__ready)
@@ -221,6 +223,16 @@ class Client(APIClient):
         """Waits until bot is ready."""
         if not self.__ready_future.done():
             await self.__ready_future
+
+    async def connect_voice(self, guild: Guild.TYPING, channel: Channel.TYPING):
+        await self.update_voice_state(guild, channel)
+        resp = await self.wait("VOICE_SERVER_UPDATE", check=lambda res: res.guild_id == int(guild))
+        ws = await VoiceWebsocket.connect(self, resp, self.user.voice_state)
+        self.loop.create_task(ws.run())
+        self.__voice_ws[int(guild)] = ws
+
+    def get_voice_ws(self, guild: Guild.TYPING) -> typing.Optional[VoiceWebsocket]:
+        return self.__voice_ws.get(int(guild))
 
     @property
     def get(self):
