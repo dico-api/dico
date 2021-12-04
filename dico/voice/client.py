@@ -22,6 +22,18 @@ class VoiceClient:
         self.__playing = False
         self.__not_paused = asyncio.Event()
         self.__not_paused.set()
+        self.__audio_done = asyncio.Future()
+
+    async def close(self):
+        if self.playing:
+            await self.stop()
+        await self.ws.close()
+
+    async def __voice_state_update(self, payload: "VoiceState"):
+        self.ws.session_id = payload.session_id
+
+    async def __voice_server_update(self, payload: "VoiceServerUpdate"):
+        pass
 
     async def play(self, audio: "AudioBase"):
         await self.ws.speaking()
@@ -36,6 +48,7 @@ class VoiceClient:
         if self.__audio_loaded:
             raise RuntimeError("Audio already loaded")
         self.__audio_loaded = True
+        self.__audio_done = asyncio.Future()
         while self.__playing:
             if not self.__not_paused.is_set():
                 await self.__not_paused.wait()
@@ -46,6 +59,7 @@ class VoiceClient:
             count += 1
             next_at = start + (DELAY_SECONDS * count)
             await asyncio.sleep(max(0, next_at - time.perf_counter()))
+        await self.stop()
         self.__audio_loaded = False
 
     def pause(self):
@@ -56,7 +70,13 @@ class VoiceClient:
 
     async def stop(self):
         self.__playing = False
+        if not self.__audio_done.done():
+            self.__audio_done.set_result(True)
         await self.ws.speaking(is_speaking=False)
+
+    async def wait_audio_done(self):
+        if not self.__audio_done.done():
+            await self.__audio_done
 
     @property
     def playing(self):

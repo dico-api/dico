@@ -83,10 +83,12 @@ class VoiceWebsocket:
                         await self.reconnect(fresh=True)
                     elif ex.code in (4015,):
                         await self.reconnect()
+                    elif ex.code in (4014,):
+                        await self.maybe_reconnect()
                     else:
                         await self.close(code=ex.code)
                     break
-                value = await self.process(resp)
+                await self.process(resp)
             if self._reconnecting or self._fresh_reconnecting:
                 self.ws = await self.client.http.session.ws_connect(self.endpoint, **self.WS_KWARGS)
             else:
@@ -108,7 +110,7 @@ class VoiceWebsocket:
             self.port = resp.d["port"]
             self.modes = resp.d["modes"]
             self.mode = self.get_mode()
-            self.sock = await VoiceSocket.connect(self, ip_discovery=not bool(self.self_ip and self.self_port))
+            self.sock = await VoiceSocket.connect(self)
             await self.select_protocol()
         elif resp.op == VoiceOpcodes.HELLO:
             self.heartbeat_interval = resp.d["heartbeat_interval"]
@@ -134,6 +136,12 @@ class VoiceWebsocket:
         self.logger.info("Reconnecting to Websocket...")
         if not self.ws.closed:
             await self.close(4000, reconnect=True)
+
+    def set_reconnect_voice_server(self):
+        pass
+
+    async def maybe_reconnect(self):
+        pass
 
     async def identify(self):
         payload = {
@@ -171,7 +179,6 @@ class VoiceWebsocket:
                 },
             }
         }
-        print(payload)
         await self.ws.send_json(payload)
 
     async def speaking(self, speaking_flag: Union[SpeakingFlags, int] = SpeakingFlags.MICROPHONE, is_speaking: bool = True):
@@ -198,7 +205,6 @@ class VoiceWebsocket:
                     break
                 self.last_heartbeat_send = time.time()
                 data = {"op": VoiceOpcodes.HEARTBEAT, "d": int(self.last_heartbeat_send * 1000)}
-                #self._ping_start = time.time()
                 await self.ws.send_json(data)
                 await asyncio.sleep(self.heartbeat_interval / 1000)
         except asyncio.CancelledError:
@@ -218,7 +224,7 @@ class VoiceWebsocket:
     def set_self_ip(self, self_ip, self_port):
         self.self_ip = self_ip
         self.self_port = self_port
-        self.logger.debug("IP Discovery done, IP: {} Port: {}")
+        self.logger.debug(f"IP Discovery done, IP: {self_ip} Port: {self_port}")
 
     async def wait_ready(self):
         if not self.__ready.done():
