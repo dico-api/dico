@@ -1,6 +1,5 @@
 import struct
 import socket
-import asyncio
 
 from typing import TYPE_CHECKING
 
@@ -16,8 +15,6 @@ class VoiceSocket:
         self.parent = parent
         self.seq = 0
         self.timestamp = 0
-        import time
-        self.__debug_file = open(f"{time.time()}.opus", "w")
     
     @classmethod
     async def connect(cls, parent: "VoiceWebsocket", ip_discovery: bool = True):
