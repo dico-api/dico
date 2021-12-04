@@ -114,7 +114,7 @@ class VoiceWebsocket:
             self.heartbeat_interval = resp.d["heartbeat_interval"]
             self._heartbeat_task = self.client.loop.create_task(self.run_heartbeat())
         elif resp.op == VoiceOpcodes.HEARTBEAT_ACK:
-            if(int(self.last_heartbeat_send * 1000) != resp.d):
+            if int(self.last_heartbeat_send * 1000) != resp.d:
                 self.last_heartbeat_ack = -1  # heartbeat sync failed
             else:
                 self.last_heartbeat_ack = time.time()
