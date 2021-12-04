@@ -11,7 +11,7 @@ class Encryptor:
 
     def get_encryptor(self, mode: str):
         if mode not in self.AVAILABLE:
-            raise ValueError("Encoder mode not available")
+            raise ValueError("Encryptor mode not available")
         return getattr(self, mode)
 
     def xsalsa20_poly1305_suffix(self, header: bytearray, data: bytes):

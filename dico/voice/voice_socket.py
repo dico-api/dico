@@ -4,6 +4,8 @@ import asyncio
 
 from typing import TYPE_CHECKING
 
+from .opus import SAMPLES_PER_FRAME
+
 if TYPE_CHECKING:
     from .websocket import VoiceWebsocket
 
@@ -45,10 +47,14 @@ class VoiceSocket:
         struct.pack_into(">I", header, 8, self.parent.ssrc)  # 8 9 10 11
         return self.parent.encryptor.get_encryptor(self.parent.mode)(header, data)
 
-    def send(self, data: bytes):
+    def send(self, data: bytes, encode_opus: bool = True):
         self.seq += 1
-        self.timestamp += 0  # TODO: set to correct value
-        packet = self.generate_packet(data)
+        if self.seq > 0xFFFF:
+            self.seq = 0
+        self.timestamp += SAMPLES_PER_FRAME
+        if self.timestamp > 0xFFFFFFFF:
+            self.timestamp = 0
+        packet = self.generate_packet(self.parent.encoder.encode(data) if encode_opus else data)
         self.sock.sendto(packet, (self.parent.ip, self.parent.port))
 
     def close(self):

@@ -7,6 +7,7 @@ import aiohttp
 from typing import TYPE_CHECKING, Optional, List, Union
 
 from .encryptor import Encryptor
+from .opus import OpusEncoder
 from .voice_socket import VoiceSocket
 from ..model import VoiceOpcodes, GatewayResponse, SpeakingFlags
 from ..ws.websocket import Ignore, WSClosing
@@ -42,11 +43,13 @@ class VoiceWebsocket:
         self.ping: float = 0.0
         self._ping_start: float = 0.0
         self.mode: Optional[str] = None
-        self.sock = None
+        self.sock: Optional[VoiceSocket] = None
         self.secret_key: Optional[list] = None
         self.encryptor: Optional[Encryptor] = None
+        self.encoder: OpusEncoder = OpusEncoder()
         self.self_ip: Optional[str] = None
         self.self_port: Optional[int] = None
+        self.__ready: asyncio.Future = asyncio.Future()
 
     def get_mode(self) -> str:
         return [x for x in self.modes if x in self.AVAILABLE_MODES][0]
@@ -117,6 +120,7 @@ class VoiceWebsocket:
         elif resp.op == VoiceOpcodes.SESSION_DESCRIPTION:
             self.secret_key = resp.d["secret_key"]
             self.encryptor = Encryptor(self.secret_key)
+            self.__ready.set_result(True)
 
     async def reconnect(self, fresh: bool = False):
         if self._reconnecting or self._fresh_reconnecting:
@@ -212,6 +216,10 @@ class VoiceWebsocket:
     def set_self_ip(self, self_ip, self_port):
         self.self_ip = self_ip
         self.self_port = self_port
+
+    async def wait_ready(self):
+        if not self.__ready.done():
+            await self.__ready
 
     @property
     def loop(self):
