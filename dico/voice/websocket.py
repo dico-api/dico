@@ -41,7 +41,7 @@ class VoiceWebsocket:
         self.last_heartbeat_send: float = 0
         self._heartbeat_task: Optional[asyncio.Task] = None
         self.ping: float = 0.0
-        self._ping_start: float = 0.0
+        #self._ping_start: float = 0.0
         self.mode: Optional[str] = None
         self.sock: Optional[VoiceSocket] = None
         self.secret_key: Optional[list] = None
@@ -115,8 +115,11 @@ class VoiceWebsocket:
             self.heartbeat_interval = resp.d["heartbeat_interval"]
             self._heartbeat_task = self.client.loop.create_task(self.run_heartbeat())
         elif resp.op == VoiceOpcodes.HEARTBEAT_ACK:
-            self.last_heartbeat_ack = time.time()
-            self.ping = self.last_heartbeat_ack - self._ping_start
+            if(int(self.last_heartbeat_send * 1000) != resp.d):
+                self.last_heartbeat_ack = -1  # heartbeat sync failed
+            else:
+                self.last_heartbeat_ack = time.time()
+            self.ping = self.last_heartbeat_ack - (resp.d / 1000)
         elif resp.op == VoiceOpcodes.SESSION_DESCRIPTION:
             self.secret_key = resp.d["secret_key"]
             self.encryptor = Encryptor(self.secret_key)
@@ -194,10 +197,10 @@ class VoiceWebsocket:
                     self.logger.warning("Heartbeat timeout, reconnecting...")
                     self.loop.create_task(self.reconnect())
                     break
-                data = {"op": VoiceOpcodes.HEARTBEAT, "d": 1501184119561}
-                self._ping_start = time.time()
-                await self.ws.send_json(data)
                 self.last_heartbeat_send = time.time()
+                data = {"op": VoiceOpcodes.HEARTBEAT, "d": int(self.last_heartbeat_send * 1000)}
+                #self._ping_start = time.time()
+                await self.ws.send_json(data)
                 await asyncio.sleep(self.heartbeat_interval / 1000)
         except asyncio.CancelledError:
             return
