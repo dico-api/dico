@@ -41,7 +41,6 @@ class VoiceWebsocket:
         self.last_heartbeat_send: float = 0
         self._heartbeat_task: Optional[asyncio.Task] = None
         self.ping: float = 0.0
-        #self._ping_start: float = 0.0
         self.mode: Optional[str] = None
         self.sock: Optional[VoiceSocket] = None
         self.secret_key: Optional[list] = None
