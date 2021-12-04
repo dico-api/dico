@@ -43,7 +43,7 @@ class VoiceSocket:
         struct.pack_into(">H", header, 2, self.seq)  # 2 3
         struct.pack_into(">I", header, 4, self.timestamp)  # 4 5 6 7
         struct.pack_into(">I", header, 8, self.parent.ssrc)  # 8 9 10 11
-        return self.parent.encoder.get_encoder(self.parent.mode)(header, data)
+        return self.parent.encryptor.get_encryptor(self.parent.mode)(header, data)
 
     def send(self, data: bytes):
         self.seq += 1

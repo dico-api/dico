@@ -6,7 +6,7 @@ import aiohttp
 
 from typing import TYPE_CHECKING, Optional, List, Union
 
-from .encoder import Encoder
+from .encryptor import Encryptor
 from .voice_socket import VoiceSocket
 from ..model import VoiceOpcodes, GatewayResponse, SpeakingFlags
 from ..ws.websocket import Ignore, WSClosing
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class VoiceWebsocket:
-    AVAILABLE_MODES = Encoder.AVAILABLE
+    AVAILABLE_MODES = Encryptor.AVAILABLE
     WS_KWARGS = {"autoclose": False, "autoping": False, "timeout": 60}
 
     def __init__(self, ws: aiohttp.ClientWebSocketResponse, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState"):
@@ -44,7 +44,7 @@ class VoiceWebsocket:
         self.mode: Optional[str] = None
         self.sock = None
         self.secret_key: Optional[list] = None
-        self.encoder: Optional[Encoder] = None
+        self.encryptor: Optional[Encryptor] = None
         self.self_ip: Optional[str] = None
         self.self_port: Optional[int] = None
 
@@ -116,7 +116,7 @@ class VoiceWebsocket:
             self.ping = self.last_heartbeat_ack - self._ping_start
         elif resp.op == VoiceOpcodes.SESSION_DESCRIPTION:
             self.secret_key = resp.d["secret_key"]
-            self.encoder = Encoder(self.secret_key)
+            self.encryptor = Encryptor(self.secret_key)
 
     async def reconnect(self, fresh: bool = False):
         if self._reconnecting or self._fresh_reconnecting:
