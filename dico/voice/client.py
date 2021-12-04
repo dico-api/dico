@@ -1,5 +1,6 @@
 import time
 import asyncio
+import logging
 
 from typing import TYPE_CHECKING
 
@@ -16,6 +17,7 @@ class VoiceClient:
     def __init__(self, client: "Client", ws: VoiceWebsocket):
         self.client = client
         self.ws = ws
+        self.logger = logging.getLogger(f"dico.voice.{ws.guild_id}")
         self.__audio_loaded = False
         self.__playing = False
         self.__not_paused = asyncio.Event()
@@ -24,7 +26,9 @@ class VoiceClient:
     async def play(self, audio: "AudioBase"):
         await self.ws.speaking()
         self.__playing = True
-        self.client.loop.create_task(self.__play(audio))
+        if not self.__audio_loaded:
+            self.logger.debug("Loaded new audio.")
+            self.client.loop.create_task(self.__play(audio))
 
     async def __play(self, audio: "AudioBase"):
         start = time.perf_counter()
@@ -35,7 +39,10 @@ class VoiceClient:
         while self.__playing:
             if not self.__not_paused.is_set():
                 await self.__not_paused.wait()
-            self.ws.sock.send(audio.read(), encode_opus=not audio.is_opus())
+            data = audio.read()
+            if not data:
+                break
+            self.ws.sock.send(data, encode_opus=not audio.is_opus())
             count += 1
             next_at = start + (DELAY_SECONDS * count)
             await asyncio.sleep(max(0, next_at - time.perf_counter()))
@@ -46,6 +53,18 @@ class VoiceClient:
 
     def resume(self):
         self.__not_paused.set()
+
+    async def stop(self):
+        self.__playing = False
+        await self.ws.speaking(is_speaking=False)
+
+    @property
+    def playing(self):
+        return self.__playing
+
+    @property
+    def paused(self):
+        return not self.__not_paused.is_set()
 
     @classmethod
     async def connect(cls, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState", wait_ready: bool = True):

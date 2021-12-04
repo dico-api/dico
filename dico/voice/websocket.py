@@ -28,7 +28,7 @@ class VoiceWebsocket:
         self.endpoint: str = f"wss://{payload.endpoint}?v=4"
         self.token: str = payload.token
         self.session_id = voice_state.session_id
-        self.logger: logging.Logger = logging.getLogger(f"dico.voice.{self.guild_id}")
+        self.logger: logging.Logger = logging.getLogger(f"dico.voice.{self.guild_id}.ws")
         self.__keep_running: bool = True
         self.ssrc: Optional[int] = None
         self.ip: Optional[str] = None
@@ -216,6 +216,7 @@ class VoiceWebsocket:
     def set_self_ip(self, self_ip, self_port):
         self.self_ip = self_ip
         self.self_port = self_port
+        self.logger.debug("IP Discovery done, IP: {} Port: {}")
 
     async def wait_ready(self):
         if not self.__ready.done():

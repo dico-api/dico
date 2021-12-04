@@ -16,30 +16,27 @@ class VoiceSocket:
         self.parent = parent
         self.seq = 0
         self.timestamp = 0
+        import time
+        self.__debug_file = open(f"{time.time()}.opus", "w")
     
     @classmethod
     async def connect(cls, parent: "VoiceWebsocket", ip_discovery: bool = True):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setblocking(False)
-        print("ip discovery?", ip_discovery)
         if ip_discovery:
             packet = bytearray(70)
             packet[0] = 0x1
             packet[2] = 70
             struct.pack_into(">I", packet, 4, parent.ssrc)
-            print("sending...")
             sock.sendto(packet, (parent.ip, parent.port))
-            print("sent, waiting...")
             resp = await parent.loop.sock_recv(sock, 70)
-            print("resp is:", resp)
             self_ip = resp[4:resp.index(0, 4)].decode("ascii")
             self_port = struct.unpack_from(">H", resp, len(resp) - 2)[0]
-            print(self_ip, self_port)
             parent.set_self_ip(self_ip, self_port)
         return cls(parent, sock)
 
     def generate_packet(self, data: bytes):
-        header = bytearray(24)
+        header = bytearray(12)
         header[0] = 0x80
         header[1] = 0x78
         struct.pack_into(">H", header, 2, self.seq)  # 2 3
@@ -54,7 +51,8 @@ class VoiceSocket:
         self.timestamp += SAMPLES_PER_FRAME
         if self.timestamp > 0xFFFFFFFF:
             self.timestamp = 0
-        packet = self.generate_packet(self.parent.encoder.encode(data) if encode_opus else data)
+        data = self.parent.encoder.encode(data) if encode_opus else data
+        packet = self.generate_packet(data)
         self.sock.sendto(packet, (self.parent.ip, self.parent.port))
 
     def close(self):
