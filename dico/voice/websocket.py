@@ -79,7 +79,7 @@ class VoiceWebsocket:
                 except WSClosing as ex:
                     self.logger.warning(f"Voice websocket is closing with code: {ex.code}")
                     self.__ready = asyncio.Future()
-                    if ex.code in (4006, 4009):
+                    if ex.code in (4009,):
                         await self.reconnect(fresh=True)
                     elif ex.code in (4015,):
                         await self.reconnect()
@@ -258,6 +258,10 @@ class VoiceWebsocket:
     @property
     def closed(self):
         return self.ws.closed
+
+    @property
+    def destroyed(self):
+        return self.ws.closed and not self._reconnecting and not self._fresh_reconnecting
 
     @classmethod
     async def connect(cls, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState"):

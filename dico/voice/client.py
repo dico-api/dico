@@ -2,7 +2,7 @@ import time
 import asyncio
 import logging
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .opus import DELAY_SECONDS
 from .websocket import VoiceWebsocket
@@ -15,19 +15,21 @@ if TYPE_CHECKING:
 
 class VoiceClient:
     def __init__(self, client: "Client", ws: VoiceWebsocket):
-        self.client = client
-        self.ws = ws
-        self.logger = logging.getLogger(f"dico.voice.{ws.guild_id}")
+        self.client: "Client" = client
+        self.ws: VoiceWebsocket = ws
+        self.logger: logging.Logger = logging.getLogger(f"dico.voice.{ws.guild_id}")
         self.__audio_loaded = False
         self.__playing = False
         self.__not_paused = asyncio.Event()
         self.__not_paused.set()
         self.__audio_done = asyncio.Future()
+        self.__audio = None
 
     async def close(self):
         if self.playing:
             await self.stop()
         await self.ws.close()
+        await self.client.update_voice_state(self.ws.guild_id)
 
     def voice_state_update(self, payload: "VoiceState"):
         self.ws.session_id = payload.session_id
@@ -49,9 +51,19 @@ class VoiceClient:
             raise RuntimeError("Audio already loaded")
         self.__audio_loaded = True
         self.__audio_done = asyncio.Future()
+        self.__audio = audio
         while self.__playing:
+            if self.ws.destroyed:
+                self.logger.warning("Voice websocket destroyed, closing voice client.")
+                self.__playing = False
+                if not self.__audio_done.done():
+                    self.__audio_done.set_result(True)
+                await self.close()
+                break
             if not self.__not_paused.is_set():
+                await self.ws.speaking(is_speaking=False)
                 await self.__not_paused.wait()
+                await self.ws.speaking()
                 start = time.perf_counter()
                 count = 0
             if not self.ws.ready:
@@ -72,6 +84,7 @@ class VoiceClient:
         if not self.ws.closed:
             await self.stop()
         self.__audio_loaded = False
+        self.__audio = None
 
     def pause(self):
         self.__not_paused.clear()
@@ -90,12 +103,16 @@ class VoiceClient:
             await self.__audio_done
 
     @property
-    def playing(self):
+    def playing(self) -> bool:
         return self.__playing
 
     @property
-    def paused(self):
+    def paused(self) -> bool:
         return not self.__not_paused.is_set()
+
+    @property
+    def audio(self) -> Optional["AudioBase"]:
+        return self.__audio
 
     @classmethod
     async def connect(cls, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState", wait_ready: bool = True):
