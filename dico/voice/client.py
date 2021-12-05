@@ -29,20 +29,20 @@ class VoiceClient:
             await self.stop()
         await self.ws.close()
 
-    async def __voice_state_update(self, payload: "VoiceState"):
+    def voice_state_update(self, payload: "VoiceState"):
         self.ws.session_id = payload.session_id
 
-    async def __voice_server_update(self, payload: "VoiceServerUpdate"):
-        pass
+    def voice_server_update(self, payload: "VoiceServerUpdate"):
+        self.ws.set_reconnect_voice_server(payload)
 
-    async def play(self, audio: "AudioBase"):
+    async def play(self, audio: "AudioBase", *, lock_audio: bool = False):
         await self.ws.speaking()
         self.__playing = True
         if not self.__audio_loaded:
             self.logger.debug("Loaded new audio.")
-            self.client.loop.create_task(self.__play(audio))
+            self.client.loop.create_task(self.__play(audio, lock_audio=lock_audio))
 
-    async def __play(self, audio: "AudioBase"):
+    async def __play(self, audio: "AudioBase", *, lock_audio: bool = False):
         start = time.perf_counter()
         count = 0
         if self.__audio_loaded:
@@ -52,14 +52,25 @@ class VoiceClient:
         while self.__playing:
             if not self.__not_paused.is_set():
                 await self.__not_paused.wait()
+                start = time.perf_counter()
+                count = 0
+            if not self.ws.ready:
+                await self.ws.wait_ready()
+                await self.ws.speaking()
+                start = time.perf_counter()
+                count = 0
             data = audio.read()
-            if not data:
+            if not data and not lock_audio:
                 break
-            self.ws.sock.send(data, encode_opus=not audio.is_opus())
+            elif not data and lock_audio:
+                self.ws.sock.send(b"\xF8\xFF\xFE", encode_opus=False)
+            else:
+                self.ws.sock.send(data, encode_opus=not audio.is_opus())
             count += 1
             next_at = start + (DELAY_SECONDS * count)
             await asyncio.sleep(max(0, next_at - time.perf_counter()))
-        await self.stop()
+        if not self.ws.closed:
+            await self.stop()
         self.__audio_loaded = False
 
     def pause(self):

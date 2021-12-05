@@ -49,6 +49,7 @@ class VoiceWebsocket:
         self.self_ip: Optional[str] = None
         self.self_port: Optional[int] = None
         self.__ready: asyncio.Future = asyncio.Future()
+        self.__new_server_set = asyncio.Future()
 
     def get_mode(self) -> str:
         return [x for x in self.modes if x in self.AVAILABLE_MODES][0]
@@ -77,14 +78,13 @@ class VoiceWebsocket:
                     continue
                 except WSClosing as ex:
                     self.logger.warning(f"Voice websocket is closing with code: {ex.code}")
-                    if self.sock:
-                        pass
+                    self.__ready = asyncio.Future()
                     if ex.code in (4006, 4009):
                         await self.reconnect(fresh=True)
                     elif ex.code in (4015,):
                         await self.reconnect()
                     elif ex.code in (4014,):
-                        await self.maybe_reconnect()
+                        await self.maybe_reconnect(code=ex.code)
                     else:
                         await self.close(code=ex.code)
                     break
@@ -125,6 +125,8 @@ class VoiceWebsocket:
             self.secret_key = resp.d["secret_key"]
             self.encryptor = Encryptor(self.secret_key)
             self.__ready.set_result(True)
+        elif resp.op == VoiceOpcodes.RESUMED:
+            self.__ready.set_result(True)
 
     async def reconnect(self, fresh: bool = False):
         if self._reconnecting or self._fresh_reconnecting:
@@ -137,11 +139,22 @@ class VoiceWebsocket:
         if not self.ws.closed:
             await self.close(4000, reconnect=True)
 
-    def set_reconnect_voice_server(self):
-        pass
+    def set_reconnect_voice_server(self, payload: "VoiceServerUpdate"):
+        self.endpoint = f"wss://{payload.endpoint}?v=4"
+        self.token = payload.token
+        self.guild_id = payload.guild_id
+        if not self.__new_server_set.done():
+            self.__new_server_set.set_result(True)
 
-    async def maybe_reconnect(self):
-        pass
+    async def maybe_reconnect(self, code):
+        self.logger.warning("Voice server disconnected, trying to reconnect...")
+        try:
+            await asyncio.wait_for(self.__new_server_set, timeout=15)
+            self.__new_server_set = asyncio.Future()
+            await self.reconnect(fresh=True)
+        except asyncio.TimeoutError:
+            self.logger.warning("Reconnection to voice server failed.")
+            await self.close(code=code)
 
     async def identify(self):
         payload = {
@@ -231,12 +244,20 @@ class VoiceWebsocket:
             await self.__ready
 
     @property
+    def ready(self):
+        return self.__ready.done()
+
+    @property
     def loop(self):
         return self.client.loop
 
     @property
     def parent_ws(self):
         return self.client.ws if not self.client.monoshard else self.client.get_shard(self.guild_id)
+
+    @property
+    def closed(self):
+        return self.ws.closed
 
     @classmethod
     async def connect(cls, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState"):

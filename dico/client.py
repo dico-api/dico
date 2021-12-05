@@ -83,10 +83,12 @@ class Client(APIClient):
         self.__compress = False
         self.__reconnect_on_unknown_disconnect = False
         self.__voice_client = {}
+        self.__self_voice_states = {}
 
         # Internal events dispatch
         self.events.add("READY", self.__ready)
         self.events.add("VOICE_STATE_UPDATE", self.__voice_state_update)
+        self.events.add("VOICE_SERVER_UPDATE", self.__voice_server_update)
         self.loop.create_task(self.__request_user())
 
     async def __request_user(self):
@@ -111,9 +113,20 @@ class Client(APIClient):
 
     def __voice_state_update(self, voice_state):
         if self.has_cache:
-            user = self.get(voice_state.user_id)
-            if user:
-                user.set_voice_state(voice_state)
+            if voice_state.user_id == self.user.id:
+                self.__self_voice_states[voice_state.guild_id] = voice_state
+                vc = self.__voice_client.get(voice_state.guild_id)
+                if vc:
+                    vc.voice_state_update(voice_state)
+            else:
+                user = self.get(voice_state.user_id)
+                if user:
+                    user.set_voice_state(voice_state)
+
+    def __voice_server_update(self, payload):
+        vc = self.__voice_client.get(payload.guild_id)
+        if vc:
+            vc.voice_server_update(payload)
 
     def on_(self, name: typing.Optional[str] = None, meth: typing.Optional[typing.Union[typing.Callable, typing.Coroutine]] = None) -> typing.Any:
         """
@@ -227,7 +240,7 @@ class Client(APIClient):
     async def connect_voice(self, guild: Guild.TYPING, channel: Channel.TYPING) -> VoiceClient:
         await self.update_voice_state(guild, channel)
         resp = await self.wait("VOICE_SERVER_UPDATE", check=lambda res: res.guild_id == int(guild))
-        voice = await VoiceClient.connect(self, resp, self.user.voice_state)
+        voice = await VoiceClient.connect(self, resp, self.__self_voice_states.get(int(guild)))
         self.__voice_client[int(guild)] = voice
         return voice
 
