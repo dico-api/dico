@@ -24,6 +24,7 @@ class VoiceClient:
         self.__not_paused.set()
         self.__audio_done = asyncio.Future()
         self.__audio = None
+        self.__audio_task = None
 
     async def close(self):
         if self.playing:
@@ -40,10 +41,13 @@ class VoiceClient:
 
     async def play(self, audio: "AudioBase", *, lock_audio: bool = False):
         await self.ws.speaking()
+        if self.__audio_loaded:
+            task = self.__audio_task
+            if not task.done():
+                await task
         self.__playing = True
-        if not self.__audio_loaded:
-            self.logger.debug("Loaded new audio.")
-            self.client.loop.create_task(self.__play(audio, lock_audio=lock_audio))
+        self.logger.debug("Loaded new audio.")
+        self.__audio_task = self.client.loop.create_task(self.__play(audio, lock_audio=lock_audio))
 
     async def __play(self, audio: "AudioBase", *, lock_audio: bool = False):
         start = time.perf_counter()
