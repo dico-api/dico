@@ -30,6 +30,7 @@ class VoiceClient:
             await self.stop()
         await self.ws.close()
         await self.client.update_voice_state(self.ws.guild_id)
+        self.client.dispatch("voice_client_closed", self.ws.guild_id)
 
     def voice_state_update(self, payload: "VoiceState"):
         self.ws.session_id = payload.session_id
