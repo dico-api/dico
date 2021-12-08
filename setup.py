@@ -16,6 +16,9 @@ setuptools.setup(
     include_package_data=True,
     python_requires='>=3.7',
     install_requires=["aiohttp", "requests"],
+    extras_require={
+        "voice": ["PyNaCl"]
+    },
     classifiers=[
         "Programming Language :: Python :: 3"
     ]
