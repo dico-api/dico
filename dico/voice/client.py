@@ -26,12 +26,15 @@ class VoiceClient:
         self.__audio = None
         self.__audio_task = None
 
+    def __del__(self):
+        if self.__audio_task and not self.__audio_task.cancelled() and not self.__audio_task.done():
+            self.__audio_task.cancel()
+
     async def close(self):
         if self.playing:
             await self.stop()
         await self.ws.close()
         await self.client.update_voice_state(self.ws.guild_id)
-        self.client.dispatch("voice_client_closed", self.ws.guild_id)
 
     def voice_state_update(self, payload: "VoiceState"):
         self.ws.session_id = payload.session_id

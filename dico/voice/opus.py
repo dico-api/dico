@@ -3,8 +3,11 @@ This code is referred from kijk2869/discodo: https://github.com/kijk2869/discodo
 LICENSE(MIT): https://github.com/kijk2869/discodo/blob/master/LICENSE
 """
 
+import os
+import sys
 import array
 import ctypes
+import ctypes.util
 
 
 c_int_ptr = ctypes.POINTER(ctypes.c_int)
@@ -30,7 +33,14 @@ BITRATE = 128
 EXPECTED_PACKETLOSS = 0  # ...maybe?
 
 
-def load_libopus(name: str = "libopus-0.x64.dll"):
+def load_libopus(name: str = None):
+    if not name:
+        if sys.platform == "win32":
+            architecture = "x64" if sys.maxsize > 32 ** 2 else "x86"
+            directory = os.path.dirname(os.path.abspath(__file__))
+            name = os.path.join(directory, "bin", f"opus-{architecture}.dll")
+        else:
+            name = ctypes.util.find_library("opus")
     global libopus
     libopus = ctypes.cdll.LoadLibrary(name)
     libopus.opus_encoder_create.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, c_int_ptr]

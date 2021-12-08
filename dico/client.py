@@ -89,7 +89,7 @@ class Client(APIClient):
         self.events.add("READY", self.__ready)
         self.events.add("VOICE_STATE_UPDATE", self.__voice_state_update)
         self.events.add("VOICE_SERVER_UPDATE", self.__voice_server_update)
-        self.events.add("VOICE_CLIENT_CLOSED", lambda guild_id: self.__voice_client.pop(guild_id))
+        self.events.add("VOICE_CLIENT_CLOSED", lambda guild_id: self.__voice_client.pop(guild_id, None))
         self.loop.create_task(self.__request_user())
 
     async def __request_user(self):

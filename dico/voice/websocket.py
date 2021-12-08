@@ -63,6 +63,8 @@ class VoiceWebsocket:
         if not self.ws.closed:
             await self.ws.close(code=code)
         self.__keep_running = reconnect
+        if not reconnect:
+            self.client.dispatch("voice_client_closed", self.guild_id)
 
     async def run(self):
         while self.__keep_running:
@@ -149,7 +151,7 @@ class VoiceWebsocket:
     async def maybe_reconnect(self, code):
         self.logger.warning("Voice server disconnected, trying to reconnect...")
         try:
-            await asyncio.wait_for(self.__new_server_set, timeout=15)
+            await asyncio.wait_for(self.__new_server_set, timeout=5)
             self.__new_server_set = asyncio.Future()
             await self.reconnect(fresh=True)
         except asyncio.TimeoutError:
