@@ -12,6 +12,7 @@ from .api import APIClient
 from .client import Client
 from .http import AsyncHTTPRequest, HTTPRequest
 from .model import *
+from .voice import *
 """
 from .model.extras import File
 from .model.channel import *

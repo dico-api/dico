@@ -4,12 +4,14 @@ https://github.com/Rapptz/discord.py/blob/master/discord/player.py#L71
 LICENSE(MIT): https://github.com/Rapptz/discord.py/blob/master/LICENSE
 """
 
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+import audioop
+import subprocess
 
-if TYPE_CHECKING:
-    from .client import VoiceClient
-    from ..model import FILE_TYPE
+from abc import ABC, abstractmethod
+from typing import Union
+from pathlib import Path
+
+from .opus import FRAME_SIZE
 
 
 class AudioBase(ABC):
@@ -42,15 +44,35 @@ class AudioBase(ABC):
         pass
 
 
-"""
-class FileAudio(AudioBase):
-    def __init__(self, file: FILE_TYPE):
-        self.file = file if not isinstance(file, str) else open(file, "rb")
+class Audio(AudioBase):
+    """
+    Audio for playing from file or URL.
+
+    :param src: Source of the audio.
+    :type src: Union[str, Path]
+
+    :ivar subprocess.Popen ~.process: FFmpeg process for processing source.
+    :ivar float ~.volume: Volume of the audio.
+    """
+    def __init__(self, src: Union[str, Path]):
+        cmd = f"ffmpeg -i {src} -f s16le -ar 48000 -ac 2 -loglevel warning pipe:1"
+        self.process: subprocess.Popen = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.volume: float = 1.0
     
-    def read(self):
-        pass
+    def read(self) -> bytes:
+        """
+        Reads 20ms of audio from source.
+
+        :return: bytes
+        """
+        data = self.process.stdout.read(FRAME_SIZE)
+        if len(data) != FRAME_SIZE:
+            data = b''
+        return audioop.mul(data, 2, min(max(self.volume, 0), 2.0))
 
     def cleanup(self):
-        if not self.file.closed:
-            self.file.close()
-"""
+        """
+        Cleans up subprocess.
+        """
+        if self.process:
+            self.process.kill()
