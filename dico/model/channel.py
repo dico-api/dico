@@ -529,6 +529,9 @@ class SendOnlyChannel:
         self.client: "APIClient" = client
         self.id: Snowflake = Snowflake.ensure_snowflake(channel_id)
 
+    def __int__(self) -> int:
+        return int(self.id)
+
     def send(self, *args, **kwargs) -> "Message.RESPONSE":
         return self.client.create_message(self.id, *args, **kwargs)
 
