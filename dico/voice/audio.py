@@ -1,5 +1,5 @@
 """
-AudioBase is from discord.py's AudioSource.
+AudioBase structure is from discord.py's AudioSource.
 https://github.com/Rapptz/discord.py/blob/master/discord/player.py#L71
 LICENSE(MIT): https://github.com/Rapptz/discord.py/blob/master/LICENSE
 """
@@ -13,18 +13,32 @@ if TYPE_CHECKING:
 
 
 class AudioBase(ABC):
+    """
+    Base structure of the audio.
+    """
     def __del__(self):
         self.cleanup()
 
     @abstractmethod
-    def read(self):
+    def read(self) -> bytes:
+        """
+        This should read 20ms of the audio.
+
+        :return: bytes
+        """
         pass
 
     @staticmethod
     def is_opus() -> bool:
+        """
+        Whether this is already opus.
+        """
         return False
 
     def cleanup(self):
+        """
+        Optionally clean up before destroying this audio instance.
+        """
         pass
 
 
@@ -32,17 +46,11 @@ class AudioBase(ABC):
 class FileAudio(AudioBase):
     def __init__(self, file: FILE_TYPE):
         self.file = file if not isinstance(file, str) else open(file, "rb")
+    
+    def read(self):
+        pass
 
-    def __del__(self):
+    def cleanup(self):
         if not self.file.closed:
             self.file.close()
 """
-
-
-class Player:
-    def __init__(self, parent: "VoiceClient", audio: AudioBase):
-        self.parent = parent
-        self.audio = audio
-
-    def start(self):
-        self.parent.ws.sock.send()

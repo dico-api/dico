@@ -10,6 +10,7 @@ Subpackages
    dico.base
    dico.http
    dico.model
+   dico.voice
    dico.ws
 
 Submodules
