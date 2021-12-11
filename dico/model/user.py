@@ -1,4 +1,6 @@
 import typing
+import warnings
+
 from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, FlagBase, TypeBase
 from ..utils import cdn_url
@@ -32,7 +34,7 @@ class User(DiscordObjectBase):
         self.premium_type: PremiumTypes = PremiumTypes(resp.get("premium_type", 0))
         self.public_flags: UserFlags = UserFlags.from_value(resp.get("public_flags", 0))
 
-        self.voice_state: typing.Optional["VoiceState"] = self.raw.get("voice_state")  # Filled later.
+        # self.voice_state: typing.Optional["VoiceState"] = self.raw.get("voice_state")  # Filled later.
         self.dm_channel_id: typing.Optional[Snowflake] = None
 
     def __str__(self) -> str:
@@ -52,11 +54,12 @@ class User(DiscordObjectBase):
         if self.banner:
             return cdn_url("banners/{user_id}", image_hash=self.banner, extension=extension, size=size, user_id=self.id)
 
-    def set_voice_state(self, voice_state):
-        self.voice_state = voice_state
-        self.raw["voice_state"] = voice_state
+    @property
+    def voice_state(self) -> typing.Optional["VoiceState"]:
+        return self.client.get_voice_state(self)
 
-    def get_voice_state(self) -> "VoiceState":
+    def get_voice_state(self) -> typing.Optional["VoiceState"]:
+        warnings.warn("User.get_voice_state is deprecated, use User.voice_state instead.", DeprecationWarning, stacklevel=2)
         return self.voice_state
       
     def create_dm(self) -> "Channel.RESPONSE":
