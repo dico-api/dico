@@ -48,6 +48,7 @@ class Client(APIClient):
     :ivar Optional[Snowflake] ~.application_id: ID of the application. Can be ``None`` if Ready event is not called, and if it is, you must pass parameter application_id for all methods that has it.
     :ivar bool ~.monoshard: Whether mono-sharding is enabled.
     :ivar Optional[int] ~.shard_count: Current shard count of the bot.
+    :ivar Optional[User] user: Application user of the client.
     """
 
     def __init__(self,
