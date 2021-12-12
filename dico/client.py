@@ -12,8 +12,12 @@ from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
 from .exception import WebsocketClosed
 from .handler import EventHandler
-from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel
+from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel, User
 from .utils import get_shard_id
+from .voice import VoiceClient
+
+if typing.TYPE_CHECKING:
+    from .model import VoiceState
 
 
 class Client(APIClient):
@@ -44,6 +48,7 @@ class Client(APIClient):
     :ivar Optional[Snowflake] ~.application_id: ID of the application. Can be ``None`` if Ready event is not called, and if it is, you must pass parameter application_id for all methods that has it.
     :ivar bool ~.monoshard: Whether mono-sharding is enabled.
     :ivar Optional[int] ~.shard_count: Current shard count of the bot.
+    :ivar Optional[User] user: Application user of the client.
     """
 
     def __init__(self,
@@ -72,7 +77,8 @@ class Client(APIClient):
         self.__ready_future = asyncio.Future()
         self.monoshard: bool = monoshard
         self.shard_count: typing.Optional[int] = shard_count
-        self.logger = logging.getLogger("dico.client")
+        self.logger: logging.Logger = logging.getLogger("dico.client")
+        self.user: typing.Optional[User] = None
         self.__shards = {} if self.monoshard else None
         self.__shard_id = shard_id
         self.__shard_ids = []
@@ -80,12 +86,22 @@ class Client(APIClient):
         self.__unavailable_guilds = set()
         self.__compress = False
         self.__reconnect_on_unknown_disconnect = False
+        self.__voice_states = {}
+        self.__voice_client = {}
+        self.__self_voice_states = {}
 
         # Internal events dispatch
         self.events.add("READY", self.__ready)
         self.events.add("VOICE_STATE_UPDATE", self.__voice_state_update)
+        self.events.add("VOICE_SERVER_UPDATE", self.__voice_server_update)
+        self.events.add("VOICE_CLIENT_CLOSED", lambda guild_id: self.__voice_client.pop(guild_id, None))
+        self.loop.create_task(self.__request_user())
 
-    def __ready(self, ready):
+    async def __request_user(self):
+        await self.wait_ready()
+        self.user = await self.request_user()
+
+    async def __ready(self, ready):
         self.application_id = Snowflake(ready.application["id"])
         if not self.__shards:
             if not self.__ready_future.done():
@@ -102,10 +118,18 @@ class Client(APIClient):
                 self.dispatch("shards_ready")
 
     def __voice_state_update(self, voice_state):
-        if self.has_cache:
-            user = self.get(voice_state.user_id)
-            if user:
-                user.set_voice_state(voice_state)
+        if voice_state.user_id == self.user.id:
+            self.__self_voice_states[voice_state.guild_id] = voice_state
+            vc = self.__voice_client.get(voice_state.guild_id)
+            if vc:
+                vc.voice_state_update(voice_state)
+        else:
+            self.__voice_states[voice_state.user_id] = voice_state
+
+    def __voice_server_update(self, payload):
+        vc = self.__voice_client.get(payload.guild_id)
+        if vc:
+            vc.voice_server_update(payload)
 
     def on_(self, name: typing.Optional[str] = None, meth: typing.Optional[typing.Union[typing.Callable, typing.Coroutine]] = None) -> typing.Any:
         """
@@ -211,10 +235,42 @@ class Client(APIClient):
             shard_id = get_shard_id(int(guild), len(self.__shards))
             return self.__shards.get(shard_id)
 
+    def get_voice_state(self, user: User.TYPING) -> typing.Optional["VoiceState"]:
+        """
+        Gets user's voice state.
+
+        :param user: User to get voice state.
+        :return: Optional[:class:`~.VoiceState`]
+        """
+        return self.__voice_states.get(int(user))
+
     async def wait_ready(self):
         """Waits until bot is ready."""
         if not self.__ready_future.done():
             await self.__ready_future
+
+    async def connect_voice(self, guild: Guild.TYPING, channel: Channel.TYPING) -> VoiceClient:
+        """
+        Connects to voice channel and prepares voice client.
+
+        :param guild: Guild to connect voice.
+        :param channel: Channel to connect.
+        :return: :class:`~.VoiceClient`
+        """
+        await self.update_voice_state(guild, channel)
+        resp = await self.wait("VOICE_SERVER_UPDATE", check=lambda res: res.guild_id == int(guild))
+        voice = await VoiceClient.connect(self, resp, self.__self_voice_states.get(int(guild)))
+        self.__voice_client[int(guild)] = voice
+        return voice
+
+    def get_voice_client(self, guild: Guild.TYPING) -> typing.Optional[VoiceClient]:
+        """
+        Gets guild's voice client.
+
+        :param guild: Guild to get voice client.
+        :return: Optional[:class:`~.VoiceClient`]
+        """
+        return self.__voice_client.get(int(guild))
 
     @property
     def get(self):
