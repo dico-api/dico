@@ -600,7 +600,8 @@ class APIClient:
         :param Optional[str] reason: Reason of the action.
         :return: :class:`~.Invite`
         """
-        invite = self.http.create_channel_invite(int(channel), max_age, max_uses, temporary, unique, int(target_type),
+        invite = self.http.create_channel_invite(int(channel), max_age, max_uses, temporary, unique,
+                                                 int(target_type) if target_type is not None else target_type,
                                                  int(target_user) if target_user is not None else target_user,
                                                  int(target_application) if target_application is not None else target_application, reason=reason)
         if isinstance(invite, dict):
