@@ -79,6 +79,10 @@ class Team:
         self.name: str = resp["name"]
         self.owner_user_id: Snowflake = Snowflake(resp["owner_user_id"])
 
+    def icon_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
+        if self.icon:
+            return cdn_url("team-icons/{team_id}", image_hash=self.icon, extension=extension, size=size, team_id=self.id)
+
     @property
     def member_ids(self) -> typing.List[Snowflake]:
         return [x.user.id for x in self.members]

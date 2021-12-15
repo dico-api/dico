@@ -358,6 +358,7 @@ class GuildMember:
         self.__user = resp.get("user")
         self.user: typing.Optional[User] = User.create(client, self.__user) if self.__user and not self.user else self.user if self.user else self.__user
         self.nick: typing.Optional[str] = resp.get("nick")
+        self.avatar: typing.Optional[str] = resp.get("avatar")
         self.roles: typing.Optional[typing.List[Role]] = [client.get(x, "role") for x in resp["roles"]] if client.has_cache else []
         self.role_ids: typing.List[Snowflake] = [Snowflake(x) for x in resp["roles"]]
         self.joined_at: datetime.datetime = datetime.datetime.fromisoformat(resp["joined_at"])
@@ -375,6 +376,12 @@ class GuildMember:
     def __int__(self) -> int:
         if self.user:
             return int(self.user.id)
+
+    def avatar_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
+        if self.avatar:
+            return cdn_url("guilds/{guild_id}/users/{user_id}/avatars", image_hash=self.avatar, extension=extension, size=size, guild_id=self.guild_id, user_id=self.id)
+        elif self.user:
+            return self.user.avatar_url(extension=extension, size=size)
 
     def remove(self):
         return self.client.remove_guild_member(self.guild_id, self)

@@ -2,6 +2,7 @@ import typing
 import datetime
 from .snowflake import Snowflake
 from ..base.model import FlagBase, TypeBase
+from ..utils import cdn_url
 
 
 class GetGateway:
@@ -88,7 +89,7 @@ class Activity:
         self.state = resp.get("state")
         self.emoji = ActivityEmoji.optional(resp.get("emoji"))
         self.party = ActivityParty.optional(resp.get("party"))
-        self.assets = ActivityAssets.optional(resp.get("assets"))
+        self.assets = ActivityAssets.optional(resp.get("assets"), self.application_id)
         self.secrets = ActivitySecrets.optional(resp.get("secrets"))
         self.instance = resp.get("instance")
         self.__flags = resp.get("flags")
@@ -196,11 +197,20 @@ class ActivityParty:
 
 
 class ActivityAssets:
-    def __init__(self, resp):
+    def __init__(self, resp, application_id):
+        self.application_id = application_id
         self.large_image = resp.get("large_image")
         self.large_text = resp.get("large_text")
         self.small_image = resp.get("small_image")
         self.small_text = resp.get("small_text")
+
+    def large_image_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
+        if self.large_image:
+            return cdn_url("app-assets/{application_id}", image_hash=self.large_image, extension=extension, size=size, application_id=self.application_id)
+
+    def small_image_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
+        if self.small_image:
+            return cdn_url("app-assets/{application_id}", image_hash=self.small_image, extension=extension, size=size, application_id=self.application_id)
 
     def to_dict(self):
         ret = {}
@@ -215,9 +225,9 @@ class ActivityAssets:
         return ret
 
     @classmethod
-    def optional(cls, resp):
+    def optional(cls, resp, application_id):
         if resp:
-            return cls(resp)
+            return cls(resp, application_id)
 
 
 class ActivitySecrets:

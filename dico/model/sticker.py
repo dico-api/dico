@@ -33,6 +33,9 @@ class Sticker(DiscordObjectBase):
     def __str__(self) -> str:
         return self.name
 
+    def image_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
+        return cdn_url("stickers", image_hash=str(self.id), extension=extension, size=size)
+
     def modify(self,
                *,
                name: typing.Optional[str] = None,
@@ -114,7 +117,7 @@ class StickerPack(DiscordObjectBase):
         return self.name
 
     def banner_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
-        return cdn_url("app-assets/710982414301790216/store", image_hash=self.banner_asset_id, extension=extension, size=size)
+        return cdn_url("app-assets/710982414301790216/store", image_hash=str(self.banner_asset_id), extension=extension, size=size)
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
