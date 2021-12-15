@@ -39,6 +39,15 @@ class DiscordObjectBase(CopyableObject):
     def __int__(self) -> int:
         return int(self.id)
 
+    def __eq__(self, other):
+        return int(self.id) == int(other)
+
+    def __ne__(self, other):
+        return int(self.id) != int(other)
+
+    def __hash__(self):
+        return hash(self.id)
+
     def update(self, new_resp: dict, **kwargs: typing.Any):
         orig = self.raw
         for k, v in new_resp.items():
