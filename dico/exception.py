@@ -27,6 +27,12 @@ class DownloadFailed(DicoException):
         super().__init__(f"Download failed with {self.code}: {self.url}")
 
 
+class VoiceTimeout(DicoException):
+    """Failed to connect to voice before timeout. Try again."""
+    def __init__(self):
+        super().__init__(self.__doc__)
+
+
 class HTTPError(DicoException):
     """Special exception class for HTTP."""
     def __init__(self, route: str, code: int, resp: typing.Any):

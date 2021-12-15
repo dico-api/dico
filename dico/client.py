@@ -2,15 +2,15 @@ import sys
 import typing
 import asyncio
 import logging
+import datetime
 import traceback
-from contextlib import suppress
 
 from . import utils
 from .api import APIClient
 from .http.async_http import AsyncHTTPRequest
 from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
-from .exception import WebsocketClosed
+from .exception import WebsocketClosed, VoiceTimeout
 from .handler import EventHandler
 from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel, User
 from .utils import get_shard_id
@@ -249,16 +249,25 @@ class Client(APIClient):
         if not self.__ready_future.done():
             await self.__ready_future
 
-    async def connect_voice(self, guild: Guild.TYPING, channel: Channel.TYPING) -> VoiceClient:
+    async def connect_voice(self, guild: Guild.TYPING, channel: Channel.TYPING, *, timeout: int = 10, raise_hand: bool = False) -> VoiceClient:
         """
         Connects to voice channel and prepares voice client.
 
         :param guild: Guild to connect voice.
         :param channel: Channel to connect.
+        :param int timeout: Timeout for waiting voice server update event. Default 30.
+        :param bool raise_hand: Whether to raise hand in stage channel. Default False.
         :return: :class:`~.VoiceClient`
+        :raises VoiceTimeout: Failed to connect to voice before timeout. Try again.
         """
         await self.update_voice_state(guild, channel)
-        resp = await self.wait("VOICE_SERVER_UPDATE", check=lambda res: res.guild_id == int(guild))
+        if raise_hand:
+            await self.modify_user_voice_state(guild, channel, request_to_speak_timestamp=datetime.datetime.utcnow())
+        try:
+            resp = await self.wait("VOICE_SERVER_UPDATE", check=lambda res: res.guild_id == int(guild), timeout=timeout)
+        except asyncio.TimeoutError:
+            await self.update_voice_state(guild)
+            raise VoiceTimeout from None
         voice = await VoiceClient.connect(self, resp, self.__self_voice_states.get(int(guild)))
         self.__voice_client[int(guild)] = voice
         return voice
