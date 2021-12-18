@@ -146,10 +146,12 @@ class APIClient:
         """
         if permission_overwrites:
             permission_overwrites = [x.to_dict() for x in permission_overwrites]
-        if parent:
-            parent = int(parent)  # noqa
-        channel = self.http.modify_guild_channel(int(channel), name, int(channel_type), position, topic, nsfw, rate_limit_per_user,
-                                                 bitrate, user_limit, permission_overwrites, parent, rtc_region, int(video_quality_mode), reason=reason)
+        if parent is not EmptyObject:
+            parent = int(parent) if parent is not None else parent
+        if video_quality_mode is not EmptyObject:
+            video_quality_mode = int(video_quality_mode) if video_quality_mode is not None else video_quality_mode
+        channel = self.http.modify_guild_channel(int(channel), name, int(channel_type) if channel_type is not None else channel_type, position, topic, nsfw, rate_limit_per_user,
+                                                 bitrate, user_limit, permission_overwrites, parent, rtc_region, video_quality_mode, reason=reason)
         if isinstance(channel, dict):
             return Channel.create(self, channel)
         return wrap_to_async(Channel, self, channel)
