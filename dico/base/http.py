@@ -115,7 +115,7 @@ class HTTPRequestBase(ABC):
         if name is not None:
             body["name"] = name
         if channel_type is not None:
-            body["channel_type"] = channel_type
+            body["type"] = channel_type
         if position is not EmptyObject:
             body["position"] = position
         if topic is not EmptyObject:
@@ -986,7 +986,7 @@ class HTTPRequestBase(ABC):
         """
         body = {"name": name}
         if channel_type is not None:
-            body["channel_type"] = channel_type
+            body["type"] = channel_type
         if topic is not None:
             body["topic"] = topic
         if bitrate is not None:

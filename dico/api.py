@@ -389,7 +389,7 @@ class APIClient:
         :type emoji: Union[str, Emoji]
         :param user: User to delete reaction of. Default "@me" which is the bot itself.
         """
-        return self.http.delete_reaction(int(channel), int(message), from_emoji(emoji), int(user) if user != "@me" else user)
+        return self.http.delete_reaction(int(channel), int(message), from_emoji(emoji), int(user) if not isinstance(user, str) or user != "@me" else user)
 
     def request_reactions(self,
                           channel: Channel.TYPING,
@@ -1778,7 +1778,7 @@ class APIClient:
         :param suppress: Whether to toggle suppress status.
         :param request_to_speak_timestamp: Requests to speak. Time can be present or future.
         """
-        user = int(user) if user != "@me" else user
+        user = int(user) not if isinstance(user, str) or user != "@me" else user
         if request_to_speak_timestamp is not None:
             request_to_speak_timestamp = request_to_speak_timestamp if isinstance(request_to_speak_timestamp, str) else \
                 request_to_speak_timestamp.isoformat()
@@ -2257,7 +2257,7 @@ class APIClient:
         :param user: User to request. Defaults to current user.
         :return: :class:`~.User`
         """
-        resp = self.http.request_user(int(user) if user != "@me" else user)
+        resp = self.http.request_user(int(user) if not isinstance(user, str) or user != "@me" else user)
         if isinstance(resp, dict):
             return User.create(self, resp)
         return wrap_to_async(User, self, resp)
