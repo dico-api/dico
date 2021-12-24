@@ -829,6 +829,14 @@ class MessageFlags(FlagBase):
 
 
 class MessageReference:
+    """
+    Represents Message Reference object.
+
+    :ivar Optiona[Snowflake] ~.message_id: ID of the message to refer.
+    :ivar Optiona[Snowflake] ~.channel_id: ID of the channel of the message to refer.
+    :ivar Optiona[Snowflake] ~.guild_id: ID of the guild of the message to refer.
+    :ivar bool ~.fail_if_not_exists: Whether to raise error if message to refer does not exist.
+    """
     def __init__(self, resp: dict):
         self.message_id: Optional[Snowflake] = Snowflake.optional(resp.get("message_id"))
         self.channel_id: Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
@@ -836,6 +844,11 @@ class MessageReference:
         self.fail_if_not_exists: bool = resp.get("fail_if_not_exists", True)
 
     def to_dict(self) -> dict:
+        """
+        Exports the instance to dict.
+        
+        :return: dict
+        """
         resp = {}
         if self.message_id:
             resp["message_id"] = str(self.message_id)
@@ -848,14 +861,34 @@ class MessageReference:
 
     @classmethod
     def from_message(cls, message: Message, fail_if_not_exists: bool = True):
+        """
+        Creates instance from message to refer.
+
+        :param Message message: Message to refer.
+        :param bool fail_if_not_exists: Whether to raise error if message to refer does not exist.
+        :return: :class:`~.MessageReference`
+        """
         return cls({"message_id": message.id, "channel_id": message.channel_id, "guild_id": message.guild_id, "fail_if_not_exists": fail_if_not_exists})
 
     @classmethod
     def from_id(cls, **kwargs):
+        """
+        Alias of `MessageReference(...)`.
+        This is for internal usage.
+
+        :return: :class:`~.MessageReference`
+        """
         return cls(kwargs)
 
 
 class FollowedChannel:
+    """
+    Represents Followed Channel object.
+
+    :ivar APIClient ~.client: Client of the instance.
+    :ivar Optional[Snowflake] ~.channel_id: ID of the followed channel.
+    :ivar Optional[Snowflake] ~.webhook_id: ID of the webhook of the followed channel.
+    """
     RESPONSE = Union["FollowedChannel", Awaitable["FollowedChannel"]]
 
     def __init__(self, client: "APIClient", resp: dict):
@@ -865,11 +898,22 @@ class FollowedChannel:
 
     @property
     def channel(self) -> Optional[Channel]:
+        """
+        Gets channel object from cache.
+        """
         if self.client.has_cache:
             return self.client.get(self.channel_id)
 
 
 class Reaction:
+    """
+    Represents Reaction object.
+
+    :ivar int ~.count: Count of the reaction.
+    :ivar bool ~.me: Whether client reacted.
+    :ivar Emoji emoji: Emoji of the reaction.
+    """
+
     def __init__(self, client: "APIClient", resp: dict):
         self.count: int = resp["count"]
         self.me: bool = resp["me"]
@@ -880,8 +924,8 @@ class Overwrite(CopyableObject):
     TYPING = Union[int, str, Snowflake, "Overwrite"]
 
     def __init__(self,
-                 user: Union[str, int, Snowflake, User] = None,
-                 role: Union[str, int, Snowflake, Role] = None,
+                 user: User.TYPING = None,
+                 role: Role.TYPING = None,
                  allow: Union[int, PermissionFlags] = 0,
                  deny: Union[int, PermissionFlags] = 0,
                  **kw):
