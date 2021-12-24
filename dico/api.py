@@ -1778,7 +1778,7 @@ class APIClient:
         :param suppress: Whether to toggle suppress status.
         :param request_to_speak_timestamp: Requests to speak. Time can be present or future.
         """
-        user = int(user) not if isinstance(user, str) or user != "@me" else user
+        user = int(user) if not isinstance(user, str) or user != "@me" else user
         if request_to_speak_timestamp is not None:
             request_to_speak_timestamp = request_to_speak_timestamp if isinstance(request_to_speak_timestamp, str) else \
                 request_to_speak_timestamp.isoformat()
