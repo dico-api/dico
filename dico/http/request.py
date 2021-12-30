@@ -3,7 +3,11 @@ import json
 import time
 import typing
 import logging
+
 import requests
+
+from urllib.parse import quote
+
 from .. import exception, __version__
 from ..base.http import HTTPRequestBase, EmptyObject, _R
 
@@ -32,7 +36,7 @@ class HTTPRequest(HTTPRequestBase):
                 body = json.dumps(body)
             kwargs["data"] = body
         if reason_header is not None:
-            headers["X-Audit-Log-Reason"] = reason_header
+            headers["X-Audit-Log-Reason"] = quote(reason_header, encoding="UTF-8")
         code = 429  # Empty code in case of rate limit fail.
         resp = {}   # Empty resp in case of rate limit fail.
         retry = (retry if retry > 0 else 1) if retry is not None else self.default_retry

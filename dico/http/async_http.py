@@ -3,7 +3,11 @@ import json
 import typing
 import logging
 import asyncio
+
 import aiohttp
+
+from urllib.parse import quote
+
 from .ratelimit import RatelimitHandler
 from .. import exception, __version__
 from ..base.http import HTTPRequestBase, EmptyObject, _R
@@ -120,7 +124,7 @@ class AsyncHTTPRequest(HTTPRequestBase):
                     body = json.dumps(body)
                 kwargs["data"] = body
             if reason_header is not None:
-                headers["X-Audit-Log-Reason"] = reason_header
+                headers["X-Audit-Log-Reason"] = quote(reason_header, encoding="UTF-8")
             async with self.session.request(meth, self.BASE_URL + route, headers=headers, **kwargs) as resp:
                 self.logger.debug(f"{route}: {meth} request - {resp.status}")
                 bucket = resp.headers.get("X-RateLimit-Bucket")
