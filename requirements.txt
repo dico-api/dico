@@ -1,4 +1,2 @@
 aiohttp
 requests
-sphinx
-sphinx-press-theme
