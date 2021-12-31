@@ -7,7 +7,11 @@ from ...base.model import TypeBase, CopyableObject
 
 class Component(CopyableObject):
     def __init__(self, component_type: typing.Union[int, "ComponentTypes"]):
-        self.type: ComponentTypes = ComponentTypes(component_type) if isinstance(component_type, int) else component_type
+        self.type: ComponentTypes = (
+            ComponentTypes(component_type)
+            if isinstance(component_type, int)
+            else component_type
+        )
 
     def to_dict(self) -> dict:
         return {"type": self.type.value}
@@ -33,10 +37,16 @@ class ComponentTypes(TypeBase):
 class ActionRow(Component):
     def __init__(self, *components: typing.Union[Component, dict]):
         super().__init__(ComponentTypes.ACTION_ROW)
-        self.components: typing.List[Component] = [Component.auto_detect(x) if isinstance(x, dict) else x for x in components or []]
+        self.components: typing.List[Component] = [
+            Component.auto_detect(x) if isinstance(x, dict) else x
+            for x in components or []
+        ]
 
     def to_dict(self) -> dict:
-        return {"type": self.type.value, "components": [x.to_dict() for x in self.components]}
+        return {
+            "type": self.type.value,
+            "components": [x.to_dict() for x in self.components],
+        }
 
     @classmethod
     def create(cls, resp):
@@ -44,21 +54,31 @@ class ActionRow(Component):
 
 
 class Button(Component):
-    def __init__(self,
-                 *,
-                 style: typing.Union["ButtonStyles", int],
-                 label: typing.Optional[str] = None,
-                 emoji: typing.Optional[typing.Union[Emoji, dict, "PartialEmoji", str]] = None,
-                 custom_id: typing.Optional[str] = None,
-                 url: typing.Optional[str] = None,
-                 disabled: typing.Optional[bool] = False,
-                 **_):  # Dummy.
+    def __init__(
+        self,
+        *,
+        style: typing.Union["ButtonStyles", int],
+        label: typing.Optional[str] = None,
+        emoji: typing.Optional[typing.Union[Emoji, dict, "PartialEmoji", str]] = None,
+        custom_id: typing.Optional[str] = None,
+        url: typing.Optional[str] = None,
+        disabled: typing.Optional[bool] = False,
+        **_
+    ):  # Dummy.
         super().__init__(ComponentTypes.BUTTON)
-        self.style: ButtonStyles = ButtonStyles(style) if isinstance(style, int) else style
+        self.style: ButtonStyles = (
+            ButtonStyles(style) if isinstance(style, int) else style
+        )
         self.label: typing.Optional[str] = label
-        self.emoji: typing.Optional[PartialEmoji] = PartialEmoji(emoji) if isinstance(emoji, dict) else \
-            PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else \
-            PartialEmoji.from_str(emoji) if isinstance(emoji, str) else emoji
+        self.emoji: typing.Optional[PartialEmoji] = (
+            PartialEmoji(emoji)
+            if isinstance(emoji, dict)
+            else PartialEmoji.from_full_emoji(emoji)
+            if isinstance(emoji, Emoji)
+            else PartialEmoji.from_str(emoji)
+            if isinstance(emoji, str)
+            else emoji
+        )
         self.custom_id: typing.Optional[str] = custom_id
         self.url: typing.Optional[str] = url
         self.disabled: bool = disabled
@@ -93,18 +113,22 @@ class ButtonStyles(TypeBase):
 
 
 class SelectMenu(Component):
-    def __init__(self,
-                 *,
-                 custom_id: str,
-                 options: typing.List[typing.Union["SelectOption", dict]],
-                 placeholder: typing.Optional[str] = None,
-                 min_values: typing.Optional[int] = None,
-                 max_values: typing.Optional[int] = None,
-                 disabled: typing.Optional[bool] = None,
-                 **_):  # Dummy.
+    def __init__(
+        self,
+        *,
+        custom_id: str,
+        options: typing.List[typing.Union["SelectOption", dict]],
+        placeholder: typing.Optional[str] = None,
+        min_values: typing.Optional[int] = None,
+        max_values: typing.Optional[int] = None,
+        disabled: typing.Optional[bool] = None,
+        **_
+    ):  # Dummy.
         super().__init__(ComponentTypes.SELECT_MENU)
         self.custom_id: str = custom_id
-        self.options: typing.List[SelectOption] = [SelectOption.create(x) if isinstance(x, dict) else x for x in options]
+        self.options: typing.List[SelectOption] = [
+            SelectOption.create(x) if isinstance(x, dict) else x for x in options
+        ]
         self.placeholder: typing.Optional[str] = placeholder
         self.min_values: typing.Optional[int] = min_values
         self.max_values: typing.Optional[int] = max_values
@@ -132,19 +156,27 @@ class SelectMenu(Component):
 
 
 class SelectOption:
-    def __init__(self,
-                 *,
-                 label: str,
-                 value: str,
-                 description: typing.Optional[str] = None,
-                 emoji: typing.Optional[typing.Union["PartialEmoji", Emoji, dict, str]] = None,
-                 default: typing.Optional[bool] = None):
+    def __init__(
+        self,
+        *,
+        label: str,
+        value: str,
+        description: typing.Optional[str] = None,
+        emoji: typing.Optional[typing.Union["PartialEmoji", Emoji, dict, str]] = None,
+        default: typing.Optional[bool] = None
+    ):
         self.label: str = label
         self.value: str = value
         self.description: typing.Optional[str] = description
-        self.emoji: typing.Optional[PartialEmoji] = PartialEmoji(emoji) if isinstance(emoji, dict) else \
-            PartialEmoji.from_full_emoji(emoji) if isinstance(emoji, Emoji) else \
-            PartialEmoji.from_str(emoji) if isinstance(emoji, str) else emoji
+        self.emoji: typing.Optional[PartialEmoji] = (
+            PartialEmoji(emoji)
+            if isinstance(emoji, dict)
+            else PartialEmoji.from_full_emoji(emoji)
+            if isinstance(emoji, Emoji)
+            else PartialEmoji.from_str(emoji)
+            if isinstance(emoji, str)
+            else emoji
+        )
         self.default: typing.Optional[bool] = default
 
     def to_dict(self) -> dict:
@@ -177,7 +209,9 @@ class PartialEmoji:
 
     @classmethod
     def from_full_emoji(cls, emoji: Emoji):
-        return cls({"name": emoji.name, "id": str(int(emoji.id)), "animated": emoji.animated})
+        return cls(
+            {"name": emoji.name, "id": str(int(emoji.id)), "animated": emoji.animated}
+        )
 
     @classmethod
     def from_str(cls, emoji: str):

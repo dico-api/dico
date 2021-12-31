@@ -26,6 +26,7 @@ class VoiceClient:
     :param Client ~.client: Client of your bot.
     :param VoiceWebsocket ~.ws: Voice Websocket instance.
     """
+
     def __init__(self, client: "Client", ws: VoiceWebsocket):
         self.client: "Client" = client
         self.ws: VoiceWebsocket = ws
@@ -39,7 +40,11 @@ class VoiceClient:
         self.__audio_task = None
 
     def __del__(self):
-        if self.__audio_task and not self.__audio_task.cancelled() and not self.__audio_task.done():
+        if (
+            self.__audio_task
+            and not self.__audio_task.cancelled()
+            and not self.__audio_task.done()
+        ):
             self.__audio_task.cancel()
 
     async def close(self):
@@ -87,7 +92,9 @@ class VoiceClient:
                 await task
         self.__playing = True
         self.logger.debug("Loaded new audio.")
-        self.__audio_task = self.client.loop.create_task(self.__play(audio, lock_audio=lock_audio))
+        self.__audio_task = self.client.loop.create_task(
+            self.__play(audio, lock_audio=lock_audio)
+        )
 
     async def __play(self, audio: "AudioBase", *, lock_audio: bool = False):
         start = time.perf_counter()
@@ -184,7 +191,13 @@ class VoiceClient:
         return self.__audio
 
     @classmethod
-    async def connect(cls, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState", wait_ready: bool = True) -> "VoiceClient":
+    async def connect(
+        cls,
+        client: "Client",
+        payload: "VoiceServerUpdate",
+        voice_state: "VoiceState",
+        wait_ready: bool = True,
+    ) -> "VoiceClient":
         """
         Connects to the voice.
 

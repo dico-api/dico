@@ -13,11 +13,21 @@ class VoiceState:
     def __init__(self, client: "APIClient", resp: dict):
         self.raw: dict = resp
         self.client: "APIClient" = client
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
-        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp["channel_id"])
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
+        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp["channel_id"]
+        )
         self.user_id: Snowflake = Snowflake(resp["user_id"])
         self.__member = resp.get("member")
-        self.member: typing.Optional[GuildMember] = GuildMember.create(client, self.__member, user=self.user, guild_id=self.guild_id) if self.__member else self.__member
+        self.member: typing.Optional[GuildMember] = (
+            GuildMember.create(
+                client, self.__member, user=self.user, guild_id=self.guild_id
+            )
+            if self.__member
+            else self.__member
+        )
         self.session_id: str = resp["session_id"]
         self.deaf: bool = resp["deaf"]
         self.mute: bool = resp["mute"]
@@ -27,8 +37,11 @@ class VoiceState:
         self.self_video: bool = resp["self_video"]
         self.suppress: bool = resp["suppress"]
         self.__request_to_speak_timestamp = resp["request_to_speak_timestamp"]
-        self.request_to_speak_timestamp: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__request_to_speak_timestamp) \
-            if self.__request_to_speak_timestamp else self.__request_to_speak_timestamp
+        self.request_to_speak_timestamp: typing.Optional[datetime.datetime] = (
+            datetime.datetime.fromisoformat(self.__request_to_speak_timestamp)
+            if self.__request_to_speak_timestamp
+            else self.__request_to_speak_timestamp
+        )
 
     @property
     def guild(self) -> typing.Optional[Guild]:
@@ -55,7 +68,9 @@ class VoiceState:
 
 class VoiceRegion:
     RESPONSE = typing.Union["VoiceRegion", typing.Awaitable["VoiceRegion"]]
-    RESPONSE_AS_LIST = typing.Union[typing.List["VoiceRegion"], typing.Awaitable[typing.List["VoiceRegion"]]]
+    RESPONSE_AS_LIST = typing.Union[
+        typing.List["VoiceRegion"], typing.Awaitable[typing.List["VoiceRegion"]]
+    ]
 
     def __init__(self, resp: dict):
         self.id: str = resp["id"]
@@ -64,10 +79,10 @@ class VoiceRegion:
         self.optimal: bool = resp["optimal"]
         self.deprecated: bool = resp["deprecated"]
         self.custom: bool = resp["custom"]
-         
+
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
-          
+
 
 class VoiceOpcodes:
     IDENTIFY = 0
@@ -84,17 +99,19 @@ class VoiceOpcodes:
 
     @staticmethod
     def as_string(code: int) -> str:
-        opcodes = {0: "Identify",
-                   1: "Select Protocol",
-                   2: "Ready",
-                   3: "Heartbeat",
-                   4: "Session Description",
-                   5: "Speaking",
-                   6: "Heartbeat ACK",
-                   7: "Resume",
-                   8: "Hello",
-                   9: "Resumed",
-                   13: "Client Disconnect"}
+        opcodes = {
+            0: "Identify",
+            1: "Select Protocol",
+            2: "Ready",
+            3: "Heartbeat",
+            4: "Session Description",
+            5: "Speaking",
+            6: "Heartbeat ACK",
+            7: "Resume",
+            8: "Hello",
+            9: "Resumed",
+            13: "Client Disconnect",
+        }
         return opcodes.get(code)
 
 

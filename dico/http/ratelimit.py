@@ -22,6 +22,7 @@ class RatelimitHandler:
     :ivar buckets: Dictionary of buckets to be used for the route.
     :ivar global_locker: Locker for global rate limit situation.
     """
+
     def __init__(self):
         self.lockers: typing.Dict[str, typing.Optional[str]] = {}
         self.buckets: typing.Dict[str, dict] = {}
@@ -30,7 +31,7 @@ class RatelimitHandler:
     @staticmethod
     def to_locker_key(meth: str, route: str):
         """Merges method and route."""
-        return meth+route
+        return meth + route
 
     @property
     def utc(self):
@@ -49,9 +50,19 @@ class RatelimitHandler:
         if locker_key not in self.lockers:
             self.lockers[locker_key] = None
         empty_resp = {"lock": EmptyLocker, "reset_at": self.utc, "remaining": 6974}
-        return self.buckets.get(self.lockers.get(locker_key, "ㅁㄴㅇㄹ"), empty_resp)  # prevent a chance that maybe temporary key matches bucket
+        return self.buckets.get(
+            self.lockers.get(locker_key, "ㅁㄴㅇㄹ"), empty_resp
+        )  # prevent a chance that maybe temporary key matches bucket
 
-    def set_bucket(self, meth: str, route: str, bucket: str, reset_after: typing.Union[str, int, float], reset_at: typing.Union[str, int, float], remaining: typing.Union[str, int]):
+    def set_bucket(
+        self,
+        meth: str,
+        route: str,
+        bucket: str,
+        reset_after: typing.Union[str, int, float],
+        reset_at: typing.Union[str, int, float],
+        remaining: typing.Union[str, int],
+    ):
         """
         Creates bucket based on rate limit response headers.
 
@@ -68,7 +79,11 @@ class RatelimitHandler:
             self.buckets[bucket] = {}
             self.buckets[bucket]["lock"] = asyncio.Lock()
         if reset_after or reset_at:
-            reset_time = (self.utc + datetime.timedelta(seconds=float(reset_after))) if reset_after else datetime.datetime.utcfromtimestamp(float(reset_at))
+            reset_time = (
+                (self.utc + datetime.timedelta(seconds=float(reset_after)))
+                if reset_after
+                else datetime.datetime.utcfromtimestamp(float(reset_at))
+            )
             self.buckets[bucket]["reset_at"] = reset_time
         if remaining:
             self.buckets[bucket]["remaining"] = int(remaining)

@@ -24,9 +24,14 @@ class EventBase:
 
 
 class DiscordObjectBase(CopyableObject):
-    TYPING = typing.Union[int, str, Snowflake, "DiscordObjectBase", typing.Type["DiscordObjectBase"]]
+    TYPING = typing.Union[
+        int, str, Snowflake, "DiscordObjectBase", typing.Type["DiscordObjectBase"]
+    ]
     RESPONSE = typing.Union["DiscordObjectBase", typing.Awaitable["DiscordObjectBase"]]
-    RESPONSE_AS_LIST = typing.Union[typing.List["DiscordObjectBase"], typing.Awaitable[typing.List["DiscordObjectBase"]]]
+    RESPONSE_AS_LIST = typing.Union[
+        typing.List["DiscordObjectBase"],
+        typing.Awaitable[typing.List["DiscordObjectBase"]],
+    ]
     _cache_type = None
 
     def __init__(self, client: "APIClient", resp: dict, **kwargs: typing.Any):
@@ -59,7 +64,9 @@ class DiscordObjectBase(CopyableObject):
     def create(cls, client: "APIClient", resp: dict, **kwargs: typing.Any):
         ensure_cache_type = kwargs.pop("ensure_cache_type", cls._cache_type)
         prevent_caching = kwargs.pop("prevent_caching", False)
-        maybe_exist = client.has_cache and client.cache.get(resp["id"], ensure_cache_type)
+        maybe_exist = client.has_cache and client.cache.get(
+            resp["id"], ensure_cache_type
+        )
         if maybe_exist:
             if prevent_caching:
                 maybe_exist = maybe_exist.copy()
@@ -77,13 +84,17 @@ class DiscordObjectBase(CopyableObject):
             if client.has_cache and not prevent_caching:
                 client.cache.add(ret.id, ret._cache_type, ret)
                 if hasattr(ret, "guild_id") and ret.guild_id:
-                    client.cache.get_guild_container(ret.guild_id).add(ret.id, ret._cache_type, ret)
+                    client.cache.get_guild_container(ret.guild_id).add(
+                        ret.id, ret._cache_type, ret
+                    )
             return ret
 
 
 class AbstractObject(dict):
     RESPONSE = typing.Union["AbstractObject", typing.Awaitable["AbstractObject"]]
-    RESPONSE_AS_LIST = typing.Union[typing.List["AbstractObject"], typing.Awaitable[typing.List["AbstractObject"]]]
+    RESPONSE_AS_LIST = typing.Union[
+        typing.List["AbstractObject"], typing.Awaitable[typing.List["AbstractObject"]]
+    ]
 
     def __init__(self, resp: dict):
         super().__init__(**resp)
@@ -97,7 +108,9 @@ class AbstractObject(dict):
 
 class FlagBase:
     def __init__(self, *args: str, **kwargs: bool):
-        self.values: typing.Dict[str, int] = {x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.values: typing.Dict[str, int] = {
+            x: getattr(self, x) for x in dir(self) if isinstance(getattr(self, x), int)
+        }
         self.value: int = 0
         for x in args:
             if x.upper() not in self.values:
@@ -155,7 +168,9 @@ class FlagBase:
 
 class TypeBase:
     def __init__(self, value):
-        self.values: typing.Dict[int, str] = {getattr(self, x): x for x in dir(self) if isinstance(getattr(self, x), int)}
+        self.values: typing.Dict[int, str] = {
+            getattr(self, x): x for x in dir(self) if isinstance(getattr(self, x), int)
+        }
         self.value: int = value
 
         if self.value not in self.values:
@@ -180,5 +195,7 @@ class TypeBase:
 
     @classmethod
     def to_string(cls, value: int) -> str:
-        values = {getattr(cls, x): x for x in dir(cls) if isinstance(getattr(cls, x), int)}
+        values = {
+            getattr(cls, x): x for x in dir(cls) if isinstance(getattr(cls, x), int)
+        }
         return values.get(value)

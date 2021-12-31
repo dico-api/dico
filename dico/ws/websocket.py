@@ -12,22 +12,24 @@ from ..handler import EventHandler
 
 
 class WebSocketClient:
-    ZLIB_SUFFIX = b'\x00\x00\xff\xff'
+    ZLIB_SUFFIX = b"\x00\x00\xff\xff"
     RECONNECT_CODES = [1000, 1001, 1006, 4000, 4001, 4002, 4003, 4005, 4007, 4009]
     INPUT_WARN = [4001, 4002, 4003, 4005]
     WS_KWARGS = {"autoclose": False, "autoping": False, "timeout": 60}
 
-    def __init__(self,
-                 http: AsyncHTTPRequest,
-                 ws: aiohttp.ClientWebSocketResponse,
-                 base_url: str,
-                 intents: typing.Union[gateway.Intents, int],
-                 event_handler: EventHandler,
-                 try_reconnect: bool,
-                 compress: typing.Optional[bool] = None,
-                 large_threshold: typing.Optional[int] = None,
-                 shard: typing.Optional[typing.List[int]] = None,
-                 presence: typing.Optional[dict] = None):
+    def __init__(
+        self,
+        http: AsyncHTTPRequest,
+        ws: aiohttp.ClientWebSocketResponse,
+        base_url: str,
+        intents: typing.Union[gateway.Intents, int],
+        event_handler: EventHandler,
+        try_reconnect: bool,
+        compress: typing.Optional[bool] = None,
+        large_threshold: typing.Optional[int] = None,
+        shard: typing.Optional[typing.List[int]] = None,
+        presence: typing.Optional[dict] = None,
+    ):
         self.ws: aiohttp.ClientWebSocketResponse = ws
         self.http: AsyncHTTPRequest = http
         self.base_url: str = base_url
@@ -84,14 +86,22 @@ class WebSocketClient:
                 except WSClosing as ex:
                     self.logger.warning(f"Websocket is closing with code: {ex.code}")
                     self.intended_shutdown = True
-                    if ex.code in self.RECONNECT_CODES or (ex.code is not None and 1000 <= ex.code < 2000) or self.try_reconnect:
+                    if (
+                        ex.code in self.RECONNECT_CODES
+                        or (ex.code is not None and 1000 <= ex.code < 2000)
+                        or self.try_reconnect
+                    ):
                         self.logger.warning("Trying to reconnect...")
                         if ex.code in self.INPUT_WARN:
-                            self.logger.warning("Next time, be aware with your websocket request.")
+                            self.logger.warning(
+                                "Next time, be aware with your websocket request."
+                            )
                         await self.reconnect(fresh=True)
                     elif ex.code == 4008:  # Rate limit, we may reconnect after 60 secs?
                         reset_after = self.ratelimit.reset_after()
-                        self.logger.error(f"We are rate limited, retrying reconnection after {round(reset_after)} seconds...")
+                        self.logger.error(
+                            f"We are rate limited, retrying reconnection after {round(reset_after)} seconds..."
+                        )
                         await asyncio.sleep(reset_after)
                         self.logger.warning("Trying to reconnect...")
                         await self.reconnect(fresh=True)
@@ -100,7 +110,9 @@ class WebSocketClient:
                         if self.intended_shutdown:
                             self.logger.info("This client will now be terminated.")
                         else:
-                            self.logger.error(f"Unexpected websocket disconnection; this client will now be terminated.")
+                            self.logger.error(
+                                f"Unexpected websocket disconnection; this client will now be terminated."
+                            )
                     break
                 if not resp:
                     # self.logger.warning("Empty response detected, ignoring.")
@@ -108,11 +120,15 @@ class WebSocketClient:
 
                     # Actually, we should terminate or we might have 500MB+ logger file ¯\_(ツ)_/¯
                     await self.close(1001)
-                    raise Exception("Uh oh, it looks like you just encountered some annoying issue. For the safety, this client will be automatically closed.\n"
-                                    "If you have the logger set to DEBUG mode, please report this issue with 4~5 previous raw response log to GitHub issue #1 or our support server.\n"
-                                    "Sorry for the inconvenience.")
-                self.logger.debug(f"Received `{gateway.Opcodes.as_string(resp.op)}` payload"
-                                  f"{f' with event name `{resp.t}`' if resp.op == gateway.Opcodes.DISPATCH else ''}.")
+                    raise Exception(
+                        "Uh oh, it looks like you just encountered some annoying issue. For the safety, this client will be automatically closed.\n"
+                        "If you have the logger set to DEBUG mode, please report this issue with 4~5 previous raw response log to GitHub issue #1 or our support server.\n"
+                        "Sorry for the inconvenience."
+                    )
+                self.logger.debug(
+                    f"Received `{gateway.Opcodes.as_string(resp.op)}` payload"
+                    f"{f' with event name `{resp.t}`' if resp.op == gateway.Opcodes.DISPATCH else ''}."
+                )
                 if resp.s:
                     self.seq = resp.s
 
@@ -122,7 +138,9 @@ class WebSocketClient:
                     break
 
             if self._reconnecting or self._fresh_reconnecting:
-                self.ws = await self.http.session.ws_connect(self.base_url, **self.WS_KWARGS)
+                self.ws = await self.http.session.ws_connect(
+                    self.base_url, **self.WS_KWARGS
+                )
                 self._closed = False
                 self.intended_shutdown = False
             else:
@@ -164,7 +182,11 @@ class WebSocketClient:
             return self.to_gateway_response(json.loads(msg.decode("UTF-8")))
         elif resp.type == aiohttp.WSMsgType.CONTINUATION:
             raise Ignore
-        elif resp.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
+        elif resp.type in (
+            aiohttp.WSMsgType.CLOSE,
+            aiohttp.WSMsgType.CLOSED,
+            aiohttp.WSMsgType.CLOSING,
+        ):
             raise WSClosing(resp.data or self.ws.close_code)
 
     async def process(self, resp) -> typing.Optional[int]:
@@ -176,7 +198,7 @@ class WebSocketClient:
 
         elif resp.op == gateway.Opcodes.HELLO:
             self.heartbeat_interval = resp.d["heartbeat_interval"]
-            self.ratelimit.reload_heartbeat(self.heartbeat_interval/1000)
+            self.ratelimit.reload_heartbeat(self.heartbeat_interval / 1000)
             self._heartbeat_task = self.http.loop.create_task(self.run_heartbeat())
             if self._reconnecting:
                 await self.resume()
@@ -190,13 +212,17 @@ class WebSocketClient:
             self.ping = self.last_heartbeat_ack - self._ping_start
 
         elif resp.op == gateway.Opcodes.INVALID_SESSION:
-            await asyncio.sleep(2)  # https://discord.com/developers/docs/topics/gateway#resuming
+            await asyncio.sleep(
+                2
+            )  # https://discord.com/developers/docs/topics/gateway#resuming
             if resp.d:
                 self.logger.warning("Invalid session, reconnecting to gateway.")
                 await self.reconnect()
                 return -1
             else:
-                self.logger.warning("Invalid session, reconnecting to gateway without resuming.")
+                self.logger.warning(
+                    "Invalid session, reconnecting to gateway without resuming."
+                )
                 await self.reconnect(fresh=True)
                 return -1
 
@@ -206,7 +232,9 @@ class WebSocketClient:
 
     async def reconnect(self, fresh: bool = False):
         if self._reconnecting or self._fresh_reconnecting:
-            self.logger.warning("Reconnection is already running, but another reconnection is requested. This request is ignored.")
+            self.logger.warning(
+                "Reconnection is already running, but another reconnection is requested. This request is ignored."
+            )
             return
         await self.cancel_heartbeat()
         self._reconnecting = not fresh
@@ -221,8 +249,8 @@ class WebSocketClient:
             "d": {
                 "token": self.http.token,
                 "session_id": self.session_id,
-                "seq": self.seq
-            }
+                "seq": self.seq,
+            },
         }
         await self.request(data)
         self._reconnecting = False
@@ -232,7 +260,11 @@ class WebSocketClient:
             while not self._closed:
                 if self._reconnecting or self._fresh_reconnecting:
                     break  # Just making sure
-                if not self.last_heartbeat_send <= self.last_heartbeat_ack <= time.time():
+                if (
+                    not self.last_heartbeat_send
+                    <= self.last_heartbeat_ack
+                    <= time.time()
+                ):
                     if self._reconnecting or self._fresh_reconnecting:
                         break
                     self.logger.warning("Heartbeat timeout, reconnecting...")
@@ -263,12 +295,8 @@ class WebSocketClient:
             "d": {
                 "token": self.http.token,
                 "intents": int(self.intents),
-                "properties": {
-                    "$os": "linux",
-                    "$browser": "dico",
-                    "$device": "dico"
-                }
-            }
+                "properties": {"$os": "linux", "$browser": "dico", "$device": "dico"},
+            },
         }
         if self.compress is not None:
             data["d"]["compress"] = self.compress
@@ -280,7 +308,16 @@ class WebSocketClient:
             data["d"]["presence"] = self.presence
         await self.request(data)
 
-    async def request_guild_members(self, guild_id: str, *, query: str = None, limit: int = None, presences: bool = None, user_ids: typing.List[str] = None, nonce: bool = None):
+    async def request_guild_members(
+        self,
+        guild_id: str,
+        *,
+        query: str = None,
+        limit: int = None,
+        presences: bool = None,
+        user_ids: typing.List[str] = None,
+        nonce: bool = None,
+    ):
         d = {"guild_id": guild_id}
         if query is not None:
             d["query"] = query
@@ -291,33 +328,42 @@ class WebSocketClient:
             d["user_ids"] = user_ids
         if nonce is not None:
             d["nonce"] = nonce
-        data = {
-            "op": gateway.Opcodes.REQUEST_GUILD_MEMBERS,
-            "d": d
-        }
+        data = {"op": gateway.Opcodes.REQUEST_GUILD_MEMBERS, "d": d}
         await self.request(data)
 
-    async def update_voice_state(self, guild_id: str, channel_id: typing.Optional[str], self_mute: bool, self_deaf: bool):
+    async def update_voice_state(
+        self,
+        guild_id: str,
+        channel_id: typing.Optional[str],
+        self_mute: bool,
+        self_deaf: bool,
+    ):
         data = {
             "op": gateway.Opcodes.VOICE_STATE_UPDATE,
             "d": {
                 "guild_id": guild_id,
                 "channel_id": channel_id,
                 "self_mute": self_mute,
-                "self_deaf": self_deaf
-            }
+                "self_deaf": self_deaf,
+            },
         }
         await self.request(data)
 
-    async def update_presence(self, since: typing.Optional[int], activities: typing.List[dict], status: str, afk: bool):
+    async def update_presence(
+        self,
+        since: typing.Optional[int],
+        activities: typing.List[dict],
+        status: str,
+        afk: bool,
+    ):
         data = {
             "op": gateway.Opcodes.PRESENCE_UPDATE,
             "d": {
                 "since": since,
                 "activities": activities,
                 "status": status,
-                "afk": afk
-            }
+                "afk": afk,
+            },
         }
         await self.request(data)
 
@@ -326,41 +372,68 @@ class WebSocketClient:
         return self._closed
 
     @classmethod
-    async def connect(cls,
-                      http,
-                      intents,
-                      event_handler,
-                      try_reconnect,
-                      compress,
-                      large_threshold: typing.Optional[int] = None,
-                      shard: typing.Optional[typing.List[int]] = None,
-                      presence: typing.Optional[dict] = None):
+    async def connect(
+        cls,
+        http,
+        intents,
+        event_handler,
+        try_reconnect,
+        compress,
+        large_threshold: typing.Optional[int] = None,
+        shard: typing.Optional[typing.List[int]] = None,
+        presence: typing.Optional[dict] = None,
+    ):
         resp = await http.request("/gateway/bot", "GET")
         gw = gateway.GetGateway(resp)
         extra = "compress=zlib-stream" if compress else ""
-        base_url = gw.url+f"?v=9&encoding=json" + extra
+        base_url = gw.url + f"?v=9&encoding=json" + extra
         ws = await http.session.ws_connect(base_url, **cls.WS_KWARGS)
-        return cls(http, ws, base_url, intents, event_handler, try_reconnect, None, large_threshold, shard, presence)
+        return cls(
+            http,
+            ws,
+            base_url,
+            intents,
+            event_handler,
+            try_reconnect,
+            None,
+            large_threshold,
+            shard,
+            presence,
+        )
 
     @classmethod
-    async def connect_without_request(cls,
-                                      gw_response: gateway.GetGateway,
-                                      http,
-                                      intents,
-                                      event_handler,
-                                      try_reconnect,
-                                      compress,
-                                      large_threshold: typing.Optional[int] = None,
-                                      shard: typing.Optional[typing.List[int]] = None,
-                                      presence: typing.Optional[dict] = None):
+    async def connect_without_request(
+        cls,
+        gw_response: gateway.GetGateway,
+        http,
+        intents,
+        event_handler,
+        try_reconnect,
+        compress,
+        large_threshold: typing.Optional[int] = None,
+        shard: typing.Optional[typing.List[int]] = None,
+        presence: typing.Optional[dict] = None,
+    ):
         extra = "compress=zlib-stream" if compress else ""
-        base_url = gw_response.url+f"?v=9&encoding=json" + extra
+        base_url = gw_response.url + f"?v=9&encoding=json" + extra
         ws = await http.session.ws_connect(base_url, **cls.WS_KWARGS)
-        return cls(http, ws, base_url, intents, event_handler, try_reconnect, None, large_threshold, shard, presence)
+        return cls(
+            http,
+            ws,
+            base_url,
+            intents,
+            event_handler,
+            try_reconnect,
+            None,
+            large_threshold,
+            shard,
+            presence,
+        )
 
 
 class WSClosing(Exception):
     """Internal exception class for controlling WS close event. You should not see this exception in normal situation."""
+
     def __init__(self, code: int):
         self.code: int = code
 

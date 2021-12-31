@@ -92,11 +92,16 @@ class ChannelDelete(Channel):
 class ChannelPinsUpdate(EventBase):
     def __init__(self, client: "Client", resp: dict):
         super().__init__(client, resp)
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.__last_pin_timestamp = resp.get("last_pin_timestamp")
-        self.last_pin_timestamp: typing.Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__last_pin_timestamp) \
-            if self.__last_pin_timestamp else self.__last_pin_timestamp
+        self.last_pin_timestamp: typing.Optional[datetime.datetime] = (
+            datetime.datetime.fromisoformat(self.__last_pin_timestamp)
+            if self.__last_pin_timestamp
+            else self.__last_pin_timestamp
+        )
 
     @property
     def channel(self) -> typing.Optional[Channel]:
@@ -118,9 +123,15 @@ class ThreadListSync(EventBase):
     def __init__(self, client: "Client", resp: dict):
         super().__init__(client, resp)
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
-        self.channel_ids: typing.List[Snowflake] = [Snowflake(x) for x in resp.get("channel_ids", [])]
-        self.threads: typing.List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
-        self.members: typing.List[ThreadMember] = [ThreadMember(client, x) for x in resp["members"]]
+        self.channel_ids: typing.List[Snowflake] = [
+            Snowflake(x) for x in resp.get("channel_ids", [])
+        ]
+        self.threads: typing.List[Channel] = [
+            Channel.create(client, x) for x in resp["threads"]
+        ]
+        self.members: typing.List[ThreadMember] = [
+            ThreadMember(client, x) for x in resp["members"]
+        ]
 
     @property
     def guild(self) -> typing.Optional[Guild]:
@@ -142,8 +153,12 @@ class ThreadMembersUpdate(EventBase):
         self.id: Snowflake = Snowflake(resp["id"])
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
         self.member_count: int = resp["member_count"]
-        self.added_members: typing.Optional[typing.List[ThreadMember]] = [ThreadMember(client, x) for x in resp.get("added_members", [])]
-        self.removed_member_ids: typing.Optional[typing.List[Snowflake]] = [Snowflake(x) for x in resp.get("removed_member_ids", [])]
+        self.added_members: typing.Optional[typing.List[ThreadMember]] = [
+            ThreadMember(client, x) for x in resp.get("added_members", [])
+        ]
+        self.removed_member_ids: typing.Optional[typing.List[Snowflake]] = [
+            Snowflake(x) for x in resp.get("removed_member_ids", [])
+        ]
 
     @property
     def thread(self) -> typing.Optional[Channel]:
@@ -206,7 +221,9 @@ class GuildEmojisUpdate(EventBase):
     def __init__(self, client: "Client", resp: dict):
         super().__init__(client, resp)
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
-        self.emojis: typing.List[Emoji] = [Emoji(self.client, x) for x in resp["emojis"]]
+        self.emojis: typing.List[Emoji] = [
+            Emoji(self.client, x) for x in resp["emojis"]
+        ]
 
     @property
     def guild(self) -> typing.Optional[Guild]:
@@ -218,7 +235,9 @@ class GuildStickersUpdate(EventBase):
     def __init__(self, client: "Client", resp: dict):
         super().__init__(client, resp)
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
-        self.stickers: typing.List[Sticker] = [Sticker.create(client, x) for x in resp["stickers"]]
+        self.stickers: typing.List[Sticker] = [
+            Sticker.create(client, x) for x in resp["stickers"]
+        ]
 
     @property
     def guild(self) -> typing.Optional[Guild]:
@@ -263,16 +282,30 @@ class GuildMemberRemove(EventBase):
 
 class GuildMemberUpdate(GuildMember):
     def __del__(self):
-        super().create(self.client, self.raw, user=self.user, guild_id=self.guild_id, cache=True)
+        super().create(
+            self.client, self.raw, user=self.user, guild_id=self.guild_id, cache=True
+        )
 
     @classmethod
-    def create(cls, client: "Client", resp: dict, *, user=None, guild_id=None, cache: bool = False):
+    def create(
+        cls,
+        client: "Client",
+        resp: dict,
+        *,
+        user=None,
+        guild_id=None,
+        cache: bool = False,
+    ):
         return super().create(client, resp, user=user, guild_id=guild_id, cache=False)
 
     @property
     def original(self) -> typing.Optional[GuildMember]:
         if self.client.has_cache:
-            return self.client.cache.get_guild_container(self.guild_id).get_storage("member").get(self.user.id)
+            return (
+                self.client.cache.get_guild_container(self.guild_id)
+                .get_storage("member")
+                .get(self.user.id)
+            )
 
 
 class GuildRoleCreate(EventBase):
@@ -356,7 +389,9 @@ class IntegrationDelete(EventBase):
         super().__init__(client, resp)
         self.id: Snowflake = Snowflake(resp["id"])
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
-        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
+        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("application_id")
+        )
 
     @property
     def guild(self) -> typing.Optional[Guild]:
@@ -372,18 +407,36 @@ class InviteCreate(EventBase):
         super().__init__(client, resp)
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.code: str = resp["code"]
-        self.created_at: datetime.datetime = datetime.datetime.fromisoformat(resp["created_at"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.created_at: datetime.datetime = datetime.datetime.fromisoformat(
+            resp["created_at"]
+        )
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
         self.__inviter = resp.get("inviter")
-        self.inviter: typing.Optional[User] = User.create(client, self.__inviter) if self.__inviter else self.__inviter
+        self.inviter: typing.Optional[User] = (
+            User.create(client, self.__inviter) if self.__inviter else self.__inviter
+        )
         self.max_age: int = resp["max_age"]
         self.max_uses: int = resp["max_uses"]
         self.__target_type = resp.get("target_type")
-        self.target_type: typing.Optional[InviteTargetTypes] = InviteTargetTypes(self.__target_type) if self.__target_type else self.__target_type
+        self.target_type: typing.Optional[InviteTargetTypes] = (
+            InviteTargetTypes(self.__target_type)
+            if self.__target_type
+            else self.__target_type
+        )
         self.__target_user = resp.get("target_user")
-        self.target_user: typing.Optional[User] = User.create(client, self.__target_user) if self.__target_user else self.__target_user
+        self.target_user: typing.Optional[User] = (
+            User.create(client, self.__target_user)
+            if self.__target_user
+            else self.__target_user
+        )
         self.__target_application = resp.get("target_application")
-        self.target_application: typing.Optional[Application] = Application(client, self.__target_application) if self.__target_application else self.__target_application
+        self.target_application: typing.Optional[Application] = (
+            Application(client, self.__target_application)
+            if self.__target_application
+            else self.__target_application
+        )
         self.temporary: bool = resp["temporary"]
         self.uses: int = resp["uses"]
 
@@ -403,7 +456,9 @@ class InviteDelete(EventBase):
         super().__init__(client, resp)
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.code: str = resp["code"]
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
 
     @property
     def channel(self) -> typing.Optional[Channel]:
@@ -452,7 +507,9 @@ class MessageDelete(EventBase):
         super().__init__(client, resp)
         self.id: Snowflake = Snowflake(resp["id"])
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
 
     def __del__(self):
         if self.client.has_cache:
@@ -479,7 +536,9 @@ class MessageDeleteBulk(EventBase):
         super().__init__(client, resp)
         self.ids: typing.List[Snowflake] = [Snowflake(x) for x in resp["ids"]]
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
 
     def __del__(self):
         if self.client.has_cache:
@@ -508,9 +567,13 @@ class MessageReactionAdd(EventBase):
         self.user_id: Snowflake = Snowflake(resp["user_id"])
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.message_id: Snowflake = Snowflake(resp["message_id"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
         self.__member = resp.get("member")
-        self.member: typing.Optional[GuildMember] = GuildMember.create(client, self.__member, guild_id=self.guild_id)
+        self.member: typing.Optional[GuildMember] = GuildMember.create(
+            client, self.__member, guild_id=self.guild_id
+        )
         self.emoji: Emoji = Emoji(client, resp["emoji"])
 
     @property
@@ -540,7 +603,9 @@ class MessageReactionRemove(EventBase):
         self.user_id: Snowflake = Snowflake(resp["user_id"])
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.message_id: Snowflake = Snowflake(resp["message_id"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
         self.emoji: Emoji = Emoji(client, resp["emoji"])
 
     @property
@@ -569,7 +634,9 @@ class MessageReactionRemoveAll(EventBase):
         super().__init__(client, resp)
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.message_id: Snowflake = Snowflake(resp["message_id"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
 
     @property
     def channel(self) -> typing.Optional[Channel]:
@@ -592,7 +659,9 @@ class MessageReactionRemoveEmoji(EventBase):
         super().__init__(client, resp)
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
         self.message_id: Snowflake = Snowflake(resp["message_id"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
         self.emoji: Emoji = Emoji(client, resp["emoji"])
 
     @property
@@ -622,9 +691,13 @@ class PresenceUpdate(EventBase):
     def __init__(self, client: "Client", resp: dict):
         super().__init__(client, resp)
         self.user: User = User.create(self.client, resp["user"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
         self.status: str = resp["status"]
-        self.activities: typing.List[Activity] = [Activity(x) for x in resp["activities"]]
+        self.activities: typing.List[Activity] = [
+            Activity(x) for x in resp["activities"]
+        ]
         self.client_status: ClientStatus = ClientStatus(resp["client_status"])
 
     @property
@@ -660,9 +733,13 @@ class TypingStart(EventBase):
     def __init__(self, client: "Client", resp: dict):
         super().__init__(client, resp)
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
         self.user_id: Snowflake = Snowflake(resp["user_id"])
-        self.timestamp: datetime.datetime = datetime.datetime.fromtimestamp(resp["timestamp"])
+        self.timestamp: datetime.datetime = datetime.datetime.fromtimestamp(
+            resp["timestamp"]
+        )
 
     @property
     def channel(self) -> typing.Optional[Channel]:

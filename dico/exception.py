@@ -13,6 +13,7 @@ class WebsocketClosed(DicoException):
 
 class WebsocketRateLimited(DicoException):
     """Websocket is rate limit, try again later."""
+
     def __init__(self, left: float):
         self.left: float = left
         super().__init__(f"Please try again after {self.left} seconds.")
@@ -20,6 +21,7 @@ class WebsocketRateLimited(DicoException):
 
 class DownloadFailed(DicoException):
     """Downloading something has failed."""
+
     def __init__(self, url: str, code: int, resp: typing.Any):
         self.url: str = url
         self.code: int = code
@@ -29,12 +31,14 @@ class DownloadFailed(DicoException):
 
 class VoiceTimeout(DicoException):
     """Failed to connect to voice before timeout. Try again."""
+
     def __init__(self):
         super().__init__(self.__doc__)
 
 
 class HTTPError(DicoException):
     """Special exception class for HTTP."""
+
     def __init__(self, route: str, code: int, resp: typing.Any):
         self.route: str = route
         self.code: int = code

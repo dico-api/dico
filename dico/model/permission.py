@@ -52,19 +52,25 @@ class PermissionFlags(FlagBase):
 class Role(DiscordObjectBase):
     TYPING = typing.Union[int, str, Snowflake, "Role"]
     RESPONSE = typing.Union["Role", typing.Awaitable["Role"]]
-    RESPONSE_AS_LIST = typing.Union[typing.List["Role"], typing.Awaitable[typing.List["Role"]]]
+    RESPONSE_AS_LIST = typing.Union[
+        typing.List["Role"], typing.Awaitable[typing.List["Role"]]
+    ]
     _cache_type = "role"
 
     def __init__(self, client: "APIClient", resp: dict, *, guild_id: Snowflake = None):
         super().__init__(client, resp)
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(guild_id)  # This isn't actually in payload, but role is always created at the guild, so why not?
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            guild_id
+        )  # This isn't actually in payload, but role is always created at the guild, so why not?
         self.name: str = resp["name"]
         self.color: int = resp["color"]
         self.hoist: bool = resp["hoist"]
         self.icon: typing.Optional[str] = resp.get("icon")
         self.unicode_emoji: typing.Optional[str] = resp.get("unicode_emoji")
         self.position: int = resp["position"]
-        self.permissions: PermissionFlags = PermissionFlags.from_value(int(resp["permissions"]))
+        self.permissions: PermissionFlags = PermissionFlags.from_value(
+            int(resp["permissions"])
+        )
         self.managed: bool = resp["managed"]
         self.mentionable: bool = resp["mentionable"]
         self.tags: typing.Optional[RoleTags] = RoleTags.optional(resp.get("tags"))
@@ -80,8 +86,16 @@ class Role(DiscordObjectBase):
             body["position"] = position
         return body
 
-    def icon_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
-        return cdn_url("role-icons/{role_id}", image_hash=self.icon, extension=extension, size=size, role_id=self.id)
+    def icon_url(
+        self, *, extension: str = "webp", size: int = 1024
+    ) -> typing.Optional[str]:
+        return cdn_url(
+            "role-icons/{role_id}",
+            image_hash=self.icon,
+            extension=extension,
+            size=size,
+            role_id=self.id,
+        )
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
@@ -90,7 +104,9 @@ class Role(DiscordObjectBase):
 class RoleTags:
     def __init__(self, resp: dict):
         self.bot_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("bot_id"))
-        self.integration_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("integration_id"))
+        self.integration_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("integration_id")
+        )
         self.premium_subscriber: bool = "premium_subscriber" in resp
 
     @classmethod

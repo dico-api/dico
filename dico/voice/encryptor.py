@@ -3,6 +3,7 @@ try:
     from nacl import utils
 except ImportError:
     import sys
+
     print("PyNaCl not found, voice won't be available.", file=sys.stderr)
     secret = None
     utils = None

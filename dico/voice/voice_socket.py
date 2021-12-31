@@ -15,7 +15,7 @@ class VoiceSocket:
         self.parent = parent
         self.seq = 0
         self.timestamp = 0
-    
+
     @classmethod
     async def connect(cls, parent: "VoiceWebsocket", ip_discovery: bool = True):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -27,7 +27,7 @@ class VoiceSocket:
             struct.pack_into(">I", packet, 4, parent.ssrc)
             sock.sendto(packet, (parent.ip, parent.port))
             resp = await parent.loop.sock_recv(sock, 70)
-            self_ip = resp[4:resp.index(0, 4)].decode("ascii")
+            self_ip = resp[4 : resp.index(0, 4)].decode("ascii")
             self_port = struct.unpack_from(">H", resp, len(resp) - 2)[0]
             parent.set_self_ip(self_ip, self_port)
         return cls(parent, sock)

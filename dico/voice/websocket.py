@@ -21,14 +21,22 @@ class VoiceWebsocket:
     AVAILABLE_MODES = Encryptor.AVAILABLE
     WS_KWARGS = {"autoclose": False, "autoping": False, "timeout": 60}
 
-    def __init__(self, ws: aiohttp.ClientWebSocketResponse, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState"):
+    def __init__(
+        self,
+        ws: aiohttp.ClientWebSocketResponse,
+        client: "Client",
+        payload: "VoiceServerUpdate",
+        voice_state: "VoiceState",
+    ):
         self.client: "Client" = client
         self.ws: aiohttp.ClientWebSocketResponse = ws
         self.guild_id: "Snowflake" = payload.guild_id
         self.endpoint: str = f"wss://{payload.endpoint}?v=4"
         self.token: str = payload.token
         self.session_id = voice_state.session_id
-        self.logger: logging.Logger = logging.getLogger(f"dico.voice.{self.guild_id}.ws")
+        self.logger: logging.Logger = logging.getLogger(
+            f"dico.voice.{self.guild_id}.ws"
+        )
         self.__keep_running: bool = True
         self.ssrc: Optional[int] = None
         self.ip: Optional[str] = None
@@ -79,7 +87,9 @@ class VoiceWebsocket:
                 except Ignore:
                     continue
                 except WSClosing as ex:
-                    self.logger.warning(f"Voice websocket is closing with code: {ex.code}")
+                    self.logger.warning(
+                        f"Voice websocket is closing with code: {ex.code}"
+                    )
                     self.__ready = asyncio.Future()
                     if ex.code in (4009,):
                         await self.reconnect(fresh=True)
@@ -92,7 +102,9 @@ class VoiceWebsocket:
                     break
                 await self.process(resp)
             if self._reconnecting or self._fresh_reconnecting:
-                self.ws = await self.client.http.session.ws_connect(self.endpoint, **self.WS_KWARGS)
+                self.ws = await self.client.http.session.ws_connect(
+                    self.endpoint, **self.WS_KWARGS
+                )
             else:
                 self.__keep_running = False
 
@@ -102,7 +114,11 @@ class VoiceWebsocket:
             return GatewayResponse(resp.json())
         elif resp.type == aiohttp.WSMsgType.CONTINUATION:
             raise Ignore
-        elif resp.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING):
+        elif resp.type in (
+            aiohttp.WSMsgType.CLOSE,
+            aiohttp.WSMsgType.CLOSED,
+            aiohttp.WSMsgType.CLOSING,
+        ):
             raise WSClosing(resp.data or self.ws.close_code)
 
     async def process(self, resp: GatewayResponse):
@@ -132,7 +148,9 @@ class VoiceWebsocket:
 
     async def reconnect(self, fresh: bool = False):
         if self._reconnecting or self._fresh_reconnecting:
-            self.logger.warning("Reconnection is already running, but another reconnection is requested. This request is ignored.")
+            self.logger.warning(
+                "Reconnection is already running, but another reconnection is requested. This request is ignored."
+            )
             return
         await self.cancel_heartbeat()
         self._reconnecting = not fresh
@@ -166,7 +184,7 @@ class VoiceWebsocket:
                 "user_id": str(self.client.user.id),
                 "session_id": self.session_id,
                 "token": self.token,
-            }
+            },
         }
         await self.ws.send_json(payload)
 
@@ -177,7 +195,7 @@ class VoiceWebsocket:
                 "server_id": str(self.guild_id),
                 "session_id": self.session_id,
                 "token": self.token,
-            }
+            },
         }
         await self.ws.send_json(payload)
         self._reconnecting = False
@@ -192,18 +210,22 @@ class VoiceWebsocket:
                     "port": self.self_port,
                     "mode": self.mode,
                 },
-            }
+            },
         }
         await self.ws.send_json(payload)
 
-    async def speaking(self, speaking_flag: Union[SpeakingFlags, int] = SpeakingFlags.MICROPHONE, is_speaking: bool = True):
+    async def speaking(
+        self,
+        speaking_flag: Union[SpeakingFlags, int] = SpeakingFlags.MICROPHONE,
+        is_speaking: bool = True,
+    ):
         payload = {
             "op": VoiceOpcodes.SPEAKING,
             "d": {
                 "speaking": speaking_flag if is_speaking else 0,
                 "delay": 0,
-                "ssrc": self.ssrc
-            }
+                "ssrc": self.ssrc,
+            },
         }
         await self.ws.send_json(payload)
 
@@ -212,14 +234,21 @@ class VoiceWebsocket:
             while self:
                 if self._reconnecting or self._fresh_reconnecting:
                     break  # Just making sure
-                if not self.last_heartbeat_send <= self.last_heartbeat_ack <= time.time():
+                if (
+                    not self.last_heartbeat_send
+                    <= self.last_heartbeat_ack
+                    <= time.time()
+                ):
                     if self._reconnecting or self._fresh_reconnecting:
                         break
                     self.logger.warning("Heartbeat timeout, reconnecting...")
                     self.loop.create_task(self.reconnect())
                     break
                 self.last_heartbeat_send = time.time()
-                data = {"op": VoiceOpcodes.HEARTBEAT, "d": int(self.last_heartbeat_send * 1000)}
+                data = {
+                    "op": VoiceOpcodes.HEARTBEAT,
+                    "d": int(self.last_heartbeat_send * 1000),
+                }
                 await self.ws.send_json(data)
                 await asyncio.sleep(self.heartbeat_interval / 1000)
         except asyncio.CancelledError:
@@ -255,7 +284,11 @@ class VoiceWebsocket:
 
     @property
     def parent_ws(self):
-        return self.client.ws if not self.client.monoshard else self.client.get_shard(self.guild_id)
+        return (
+            self.client.ws
+            if not self.client.monoshard
+            else self.client.get_shard(self.guild_id)
+        )
 
     @property
     def closed(self):
@@ -263,10 +296,14 @@ class VoiceWebsocket:
 
     @property
     def destroyed(self):
-        return self.ws.closed and not self._reconnecting and not self._fresh_reconnecting
+        return (
+            self.ws.closed and not self._reconnecting and not self._fresh_reconnecting
+        )
 
     @classmethod
-    async def connect(cls, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState"):
+    async def connect(
+        cls, client: "Client", payload: "VoiceServerUpdate", voice_state: "VoiceState"
+    ):
         url = f"wss://{payload.endpoint}?v=4"
         ws = await client.http.session.ws_connect(url, **cls.WS_KWARGS)
         resp = cls(ws, client, payload, voice_state)

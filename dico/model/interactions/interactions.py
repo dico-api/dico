@@ -1,6 +1,10 @@
 import typing
 
-from .commands import ApplicationCommandInteractionDataOption, ApplicationCommandTypes, ApplicationCommandOptionChoice
+from .commands import (
+    ApplicationCommandInteractionDataOption,
+    ApplicationCommandTypes,
+    ApplicationCommandOptionChoice,
+)
 from .components import Component, ComponentTypes
 from ..channel import Channel, Message, Embed, AllowedMentions
 from ..guild import GuildMember
@@ -22,17 +26,33 @@ class Interaction:
         self.id: Snowflake = Snowflake(resp["id"])
         self.application_id: Snowflake = Snowflake(resp["application_id"])
         self.type: InteractionRequestType = InteractionRequestType(resp["type"])
-        self.data: typing.Optional[InteractionData] = InteractionData(client, resp.get("data")) if "data" in resp else resp.get("data")
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
-        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
+        self.data: typing.Optional[InteractionData] = (
+            InteractionData(client, resp.get("data"))
+            if "data" in resp
+            else resp.get("data")
+        )
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
+        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("channel_id")
+        )
         self.__member = resp.get("member")
-        self.member: typing.Optional[GuildMember] = GuildMember.create(client, self.__member, guild_id=self.guild_id) if self.__member else None
+        self.member: typing.Optional[GuildMember] = (
+            GuildMember.create(client, self.__member, guild_id=self.guild_id)
+            if self.__member
+            else None
+        )
         self.__user = resp.get("user")
-        self.user: typing.Optional[User] = User.create(client, self.__user) if self.__user else None
+        self.user: typing.Optional[User] = (
+            User.create(client, self.__user) if self.__user else None
+        )
         self.token: str = resp["token"]
         self.version: int = resp["version"]
         self.__message = resp.get("message")
-        self._message: typing.Optional[Message] = Message.create(client, self.__message) if self.__message else self.__message
+        self._message: typing.Optional[Message] = (
+            Message.create(client, self.__message) if self.__message else self.__message
+        )
 
     def __int__(self) -> int:
         return int(self.id)
@@ -46,7 +66,9 @@ class Interaction:
     def request_original_response(self) -> Message.RESPONSE:
         return self.client.request_interaction_response(self)
 
-    def request_response(self, message: Message.TYPING = "@original") -> Message.RESPONSE:
+    def request_response(
+        self, message: Message.TYPING = "@original"
+    ) -> Message.RESPONSE:
         return self.client.request_interaction_response(self, message)
 
     def edit_original_response(self, **kwargs):
@@ -87,27 +109,61 @@ class InteractionData:
     def __init__(self, client: "APIClient", resp: dict):
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
         self.name: typing.Optional[str] = resp.get("name")
-        self.type: typing.Optional[ApplicationCommandTypes] = ApplicationCommandTypes(resp.get("type")) if resp.get("type") is not None else None
+        self.type: typing.Optional[ApplicationCommandTypes] = (
+            ApplicationCommandTypes(resp.get("type"))
+            if resp.get("type") is not None
+            else None
+        )
         self.__resolved = resp.get("resolved")
-        self.resolved: typing.Optional[ResolvedData] = ResolvedData(client, resp.get("resolved")) if self.__resolved else self.__resolved
-        self.options: typing.List[ApplicationCommandInteractionDataOption] = [ApplicationCommandInteractionDataOption(x) for x in resp.get("options", [])]
+        self.resolved: typing.Optional[ResolvedData] = (
+            ResolvedData(client, resp.get("resolved"))
+            if self.__resolved
+            else self.__resolved
+        )
+        self.options: typing.List[ApplicationCommandInteractionDataOption] = [
+            ApplicationCommandInteractionDataOption(x) for x in resp.get("options", [])
+        ]
         self.custom_id: typing.Optional[str] = resp.get("custom_id")
-        self.component_type: typing.Optional[ComponentTypes] = ComponentTypes(resp.get("component_type")) if resp.get("component_type") is not None else None
+        self.component_type: typing.Optional[ComponentTypes] = (
+            ComponentTypes(resp.get("component_type"))
+            if resp.get("component_type") is not None
+            else None
+        )
         self.values: typing.List[str] = resp.get("values", [])
-        self.target_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("target_id"))
+        self.target_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("target_id")
+        )
 
 
 class ResolvedData:
     def __init__(self, client, resp: dict):
-        self.users: typing.Dict[Snowflake, User] = {Snowflake(k): User.create(client, v) for k, v in resp.get("users", {}).items()}
+        self.users: typing.Dict[Snowflake, User] = {
+            Snowflake(k): User.create(client, v)
+            for k, v in resp.get("users", {}).items()
+        }
         self.__users = {x: Snowflake(x) for x in resp.get("users", {})}
-        self.members: typing.Dict[Snowflake, GuildMember] = {Snowflake(k): GuildMember.create(client, v, user=self.users.get(self.__users.get(k)))
-                                                             for k, v in resp.get("members", {}).items()}
-        self.roles: typing.Dict[Snowflake, Role] = {Snowflake(k): Role.create(client, v) for k, v in resp.get("roles", {}).items()}
-        self.channels: typing.Dict[Snowflake, Channel] = {Snowflake(k): Channel.create(client, v) for k, v in resp.get("channels", {}).items()}
-        self.messages: typing.Dict[Snowflake, Message] = {Snowflake(k): Message.create(client, v) for k, v in resp.get("messages", {}).items()}
+        self.members: typing.Dict[Snowflake, GuildMember] = {
+            Snowflake(k): GuildMember.create(
+                client, v, user=self.users.get(self.__users.get(k))
+            )
+            for k, v in resp.get("members", {}).items()
+        }
+        self.roles: typing.Dict[Snowflake, Role] = {
+            Snowflake(k): Role.create(client, v)
+            for k, v in resp.get("roles", {}).items()
+        }
+        self.channels: typing.Dict[Snowflake, Channel] = {
+            Snowflake(k): Channel.create(client, v)
+            for k, v in resp.get("channels", {}).items()
+        }
+        self.messages: typing.Dict[Snowflake, Message] = {
+            Snowflake(k): Message.create(client, v)
+            for k, v in resp.get("messages", {}).items()
+        }
 
-    def get(self, value: Snowflake.TYPING) -> typing.Optional[typing.Union[User, GuildMember, Role, Channel, Message]]:
+    def get(
+        self, value: Snowflake.TYPING
+    ) -> typing.Optional[typing.Union[User, GuildMember, Role, Channel, Message]]:
         value = Snowflake.ensure_snowflake(value)
         for x in [self.members, self.users, self.roles, self.channels, self.messages]:
             if value in x:
@@ -124,12 +180,19 @@ class MessageInteraction:
 
 
 class InteractionResponse:
-    def __init__(self, callback_type: typing.Union[int, "InteractionCallbackType"], data: typing.Union[dict, "InteractionApplicationCommandCallbackData"]):
+    def __init__(
+        self,
+        callback_type: typing.Union[int, "InteractionCallbackType"],
+        data: typing.Union[dict, "InteractionApplicationCommandCallbackData"],
+    ):
         self.type: InteractionCallbackType = callback_type
         self.data: InteractionApplicationCommandCallbackData = data
 
     def to_dict(self) -> dict:
-        return {"type": int(self.type), "data": self.data if isinstance(self.data, dict) else self.data.to_dict()}
+        return {
+            "type": int(self.type),
+            "data": self.data if isinstance(self.data, dict) else self.data.to_dict(),
+        }
 
 
 class InteractionCallbackType(TypeBase):
@@ -142,22 +205,34 @@ class InteractionCallbackType(TypeBase):
 
 
 class InteractionApplicationCommandCallbackData:
-    def __init__(self, *,
-                 tts: typing.Optional[bool] = None,
-                 content: typing.Optional[str] = None,
-                 embeds: typing.Optional[typing.List[Embed]] = None,
-                 allowed_mentions: typing.Optional[AllowedMentions] = None,
-                 flags: typing.Optional[typing.Union["InteractionApplicationCommandCallbackDataFlags", int]] = None,
-                 components: typing.Optional[typing.List[typing.Union[dict, Component]]] = None,
-                 choices: typing.Optional[typing.List[typing.Union[dict, ApplicationCommandOptionChoice]]] = None):
+    def __init__(
+        self,
+        *,
+        tts: typing.Optional[bool] = None,
+        content: typing.Optional[str] = None,
+        embeds: typing.Optional[typing.List[Embed]] = None,
+        allowed_mentions: typing.Optional[AllowedMentions] = None,
+        flags: typing.Optional[
+            typing.Union["InteractionApplicationCommandCallbackDataFlags", int]
+        ] = None,
+        components: typing.Optional[typing.List[typing.Union[dict, Component]]] = None,
+        choices: typing.Optional[
+            typing.List[typing.Union[dict, ApplicationCommandOptionChoice]]
+        ] = None
+    ):
         self.tts: typing.Optional[bool] = tts
         self.content: typing.Optional[str] = content
         self.embeds: typing.Optional[typing.List[Embed]] = embeds
         self.allowed_mentions: typing.Optional[AllowedMentions] = allowed_mentions
-        self.flags: typing.Optional[InteractionApplicationCommandCallbackDataFlags] = \
-            InteractionApplicationCommandCallbackDataFlags.from_value(flags) if isinstance(flags, int) else flags
+        self.flags: typing.Optional[InteractionApplicationCommandCallbackDataFlags] = (
+            InteractionApplicationCommandCallbackDataFlags.from_value(flags)
+            if isinstance(flags, int)
+            else flags
+        )
         self.components: typing.Optional[typing.List[Component]] = components
-        self.choices: typing.Optional[typing.List[ApplicationCommandOptionChoice]] = choices
+        self.choices: typing.Optional[
+            typing.List[ApplicationCommandOptionChoice]
+        ] = choices
 
     def to_dict(self) -> dict:
         ret = {}
@@ -172,9 +247,13 @@ class InteractionApplicationCommandCallbackData:
         if self.flags is not None:
             ret["flags"] = int(self.flags)
         if self.components is not None:
-            ret["components"] = [x if isinstance(x, dict) else x.to_dict() for x in self.components]
+            ret["components"] = [
+                x if isinstance(x, dict) else x.to_dict() for x in self.components
+            ]
         if self.choices is not None:
-            ret["choices"] = [x if isinstance(x, dict) else x.to_dict() for x in self.choices]
+            ret["choices"] = [
+                x if isinstance(x, dict) else x.to_dict() for x in self.choices
+            ]
         return ret
 
 

@@ -44,10 +44,21 @@ def load_libopus(name: str = None):
             name = ctypes.util.find_library("opus")
     global libopus
     libopus = ctypes.cdll.LoadLibrary(name)
-    libopus.opus_encoder_create.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, c_int_ptr]
+    libopus.opus_encoder_create.argtypes = [
+        ctypes.c_int,
+        ctypes.c_int,
+        ctypes.c_int,
+        c_int_ptr,
+    ]
     libopus.opus_encoder_create.restype = ctypes.c_void_p
     libopus.opus_encoder_ctl.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_int]
-    libopus.opus_encode.argtypes = [ctypes.c_void_p, c_int16_ptr, ctypes.c_int, ctypes.c_char_p, ctypes.c_int32]
+    libopus.opus_encode.argtypes = [
+        ctypes.c_void_p,
+        c_int16_ptr,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int32,
+    ]
     libopus.opus_encoder_destroy.argtypes = [ctypes.c_void_p]
     return libopus
 
@@ -70,7 +81,9 @@ class OpusEncoder:
 
     def create_encoder(self):
         ret = ctypes.c_int()
-        return libopus.opus_encoder_create(SAMPLE_RATE, 2, OPUS_APPLICATION_AUDIO, ctypes.byref(ret))
+        return libopus.opus_encoder_create(
+            SAMPLE_RATE, 2, OPUS_APPLICATION_AUDIO, ctypes.byref(ret)
+        )
 
     def set_bitrate(self):
         kbps = min(512, max(16, int(BITRATE)))
@@ -92,5 +105,7 @@ class OpusEncoder:
         max_data_bytes = len(pcm)
         pcm = ctypes.cast(pcm, c_int16_ptr)
         data = (ctypes.c_char * max_data_bytes)()
-        resp = libopus.opus_encode(self.encoder, pcm, SAMPLES_PER_FRAME, data, max_data_bytes)
+        resp = libopus.opus_encode(
+            self.encoder, pcm, SAMPLES_PER_FRAME, data, max_data_bytes
+        )
         return array.array("b", data[:resp]).tobytes()

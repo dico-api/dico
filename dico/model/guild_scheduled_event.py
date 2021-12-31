@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 class GuildScheduledEvent:
     TYPING = Union[int, str, Snowflake, "GuildScheduledEvent"]
     RESPONSE = Union["GuildScheduledEvent", Awaitable["GuildScheduledEvent"]]
-    RESPONSE_AS_LIST = Union[List["GuildScheduledEvent"], Awaitable[List["GuildScheduledEvent"]]]
+    RESPONSE_AS_LIST = Union[
+        List["GuildScheduledEvent"], Awaitable[List["GuildScheduledEvent"]]
+    ]
 
     def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
@@ -24,15 +26,31 @@ class GuildScheduledEvent:
         self.creator_id: Optional[Snowflake] = Snowflake.optional(resp["creator_id"])
         self.name: str = resp["name"]
         self.description: Optional[str] = resp.get("description")
-        self.scheduled_start_time: datetime.datetime = datetime.datetime.fromisoformat(resp["scheduled_start_time"])
+        self.scheduled_start_time: datetime.datetime = datetime.datetime.fromisoformat(
+            resp["scheduled_start_time"]
+        )
         self.__scheduled_end_time = resp["scheduled_end_time"]
-        self.scheduled_end_time: Optional[datetime.datetime] = datetime.datetime.fromisoformat(self.__scheduled_end_time) if self.__scheduled_end_time else self.__scheduled_end_time
-        self.privacy_level: "GuildScheduledEventPrivacyLevel" = GuildScheduledEventPrivacyLevel(resp["privacy_level"])
-        self.status: "GuildScheduledEventStatus" = GuildScheduledEventStatus(resp["status"])
-        self.entity_type: "GuildScheduledEventEntityTypes" = GuildScheduledEventEntityTypes(resp["entity_type"])
+        self.scheduled_end_time: Optional[datetime.datetime] = (
+            datetime.datetime.fromisoformat(self.__scheduled_end_time)
+            if self.__scheduled_end_time
+            else self.__scheduled_end_time
+        )
+        self.privacy_level: "GuildScheduledEventPrivacyLevel" = (
+            GuildScheduledEventPrivacyLevel(resp["privacy_level"])
+        )
+        self.status: "GuildScheduledEventStatus" = GuildScheduledEventStatus(
+            resp["status"]
+        )
+        self.entity_type: "GuildScheduledEventEntityTypes" = (
+            GuildScheduledEventEntityTypes(resp["entity_type"])
+        )
         self.entity_id: Optional[Snowflake] = Snowflake.optional(resp["entity_id"])
-        self.entity_metadata: Optional["GuildScheduledEventEntityMetadata"] = GuildScheduledEventEntityMetadata.optional(resp.get("entity_metadata"))
-        self.creator: Optional[User] = User.create(client, resp["creator"]) if "creator" in resp else None
+        self.entity_metadata: Optional[
+            "GuildScheduledEventEntityMetadata"
+        ] = GuildScheduledEventEntityMetadata.optional(resp.get("entity_metadata"))
+        self.creator: Optional[User] = (
+            User.create(client, resp["creator"]) if "creator" in resp else None
+        )
         self.user_count: Optional[int] = resp.get("user_count")
 
     def __int__(self):
@@ -74,11 +92,17 @@ class GuildScheduledEventEntityMetadata:
 
 
 class GuildScheduledEventUser:
-    RESPONSE_AS_LIST = Union[List["GuildScheduledEventUser"], Awaitable[List["GuildScheduledEventUser"]]]
+    RESPONSE_AS_LIST = Union[
+        List["GuildScheduledEventUser"], Awaitable[List["GuildScheduledEventUser"]]
+    ]
 
     def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
         self.raw: dict = resp
-        self.guild_scheduled_event_id: Snowflake = Snowflake(resp["guild_scheduled_event_id"])
+        self.guild_scheduled_event_id: Snowflake = Snowflake(
+            resp["guild_scheduled_event_id"]
+        )
         self.user: User = User.create(client, resp["user"])
-        self.member: Optional[GuildMember] = GuildMember.create(client, resp["member"]) if "member" in resp else None
+        self.member: Optional[GuildMember] = (
+            GuildMember.create(client, resp["member"]) if "member" in resp else None
+        )

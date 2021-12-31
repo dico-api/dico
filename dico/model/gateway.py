@@ -9,10 +9,16 @@ class GetGateway:
     def __init__(self, resp: dict):
         self.url: str = resp["url"]
         self.shards: typing.Optional[int] = resp.get("shards", 0)
-        self.session_start_limit: typing.Optional[SessionStartLimit] = SessionStartLimit.optional(resp.get("session_start_limit"))
+        self.session_start_limit: typing.Optional[
+            SessionStartLimit
+        ] = SessionStartLimit.optional(resp.get("session_start_limit"))
 
     def to_dict(self) -> dict:
-        return {"url": self.url, "shards": self.shards, "session_start_limit": self.session_start_limit}
+        return {
+            "url": self.url,
+            "shards": self.shards,
+            "session_start_limit": self.session_start_limit,
+        }
 
 
 class SessionStartLimit:
@@ -28,7 +34,12 @@ class SessionStartLimit:
             return cls(resp)
 
     def to_dict(self):
-        return {"total": self.total, "remaining": self.remaining, "reset_after": self.reset_after, "max_concurrency": self.max_concurrency}
+        return {
+            "total": self.total,
+            "remaining": self.remaining,
+            "reset_after": self.reset_after,
+            "max_concurrency": self.max_concurrency,
+        }
 
 
 class Intents(FlagBase):
@@ -82,7 +93,11 @@ class Activity:
         self.type = ActivityTypes(resp["type"])
         self.url = resp.get("url")
         self.__created_at = resp.get("created_at")
-        self.created_at = datetime.datetime.fromtimestamp(self.__created_at/1000) if self.__created_at else self.__created_at
+        self.created_at = (
+            datetime.datetime.fromtimestamp(self.__created_at / 1000)
+            if self.__created_at
+            else self.__created_at
+        )
         self.timestamps = ActivityTimestamps.optional(resp.get("timestamps"))
         self.application_id = Snowflake.optional(resp.get("application_id"))
         self.details = resp.get("details")
@@ -93,7 +108,9 @@ class Activity:
         self.secrets = ActivitySecrets.optional(resp.get("secrets"))
         self.instance = resp.get("instance")
         self.__flags = resp.get("flags")
-        self.flags = ActivityFlags.from_value(self.__flags) if self.__flags else self.__flags
+        self.flags = (
+            ActivityFlags.from_value(self.__flags) if self.__flags else self.__flags
+        )
         self.buttons = resp.get("buttons")
 
     def to_dict(self):
@@ -139,9 +156,17 @@ class ActivityTypes(TypeBase):
 class ActivityTimestamps:
     def __init__(self, resp):
         self.__start = resp.get("start")
-        self.start = datetime.datetime.fromtimestamp(self.__start/1000) if self.__start else self.__start
+        self.start = (
+            datetime.datetime.fromtimestamp(self.__start / 1000)
+            if self.__start
+            else self.__start
+        )
         self.__end = resp.get("end")
-        self.end = datetime.datetime.fromtimestamp(self.__end/1000) if self.__end else self.__end
+        self.end = (
+            datetime.datetime.fromtimestamp(self.__end / 1000)
+            if self.__end
+            else self.__end
+        )
 
     def to_dict(self):
         ret = {}
@@ -204,13 +229,29 @@ class ActivityAssets:
         self.small_image = resp.get("small_image")
         self.small_text = resp.get("small_text")
 
-    def large_image_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
+    def large_image_url(
+        self, *, extension: str = "webp", size: int = 1024
+    ) -> typing.Optional[str]:
         if self.large_image:
-            return cdn_url("app-assets/{application_id}", image_hash=self.large_image, extension=extension, size=size, application_id=self.application_id)
+            return cdn_url(
+                "app-assets/{application_id}",
+                image_hash=self.large_image,
+                extension=extension,
+                size=size,
+                application_id=self.application_id,
+            )
 
-    def small_image_url(self, *, extension: str = "webp", size: int = 1024) -> typing.Optional[str]:
+    def small_image_url(
+        self, *, extension: str = "webp", size: int = 1024
+    ) -> typing.Optional[str]:
         if self.small_image:
-            return cdn_url("app-assets/{application_id}", image_hash=self.small_image, extension=extension, size=size, application_id=self.application_id)
+            return cdn_url(
+                "app-assets/{application_id}",
+                image_hash=self.small_image,
+                extension=extension,
+                size=size,
+                application_id=self.application_id,
+            )
 
     def to_dict(self):
         ret = {}
@@ -277,6 +318,7 @@ class ActivityButtons:
 
 # https://discord.com/developers/docs/topics/opcodes-and-status-codes#gateway
 
+
 class Opcodes:
     DISPATCH = 0
     HEARTBEAT = 1
@@ -292,15 +334,17 @@ class Opcodes:
 
     @staticmethod
     def as_string(code: int) -> str:
-        opcodes = {0: "Dispatch",
-                   1: "Heartbeat",
-                   2: "Identify",
-                   3: "Presence Update",
-                   4: "Voice State Update",
-                   6: "Resume",
-                   7: "Reconnect",
-                   8: "Request Guild Members",
-                   9: "Invalid Session",
-                   10: "Hello",
-                   11: "Heartbeat ACK"}
+        opcodes = {
+            0: "Dispatch",
+            1: "Heartbeat",
+            2: "Identify",
+            3: "Presence Update",
+            4: "Voice State Update",
+            6: "Resume",
+            7: "Reconnect",
+            8: "Request Guild Members",
+            9: "Invalid Session",
+            10: "Hello",
+            11: "Heartbeat ACK",
+        }
         return opcodes.get(code)

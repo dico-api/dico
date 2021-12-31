@@ -51,23 +51,34 @@ class Client(APIClient):
     :ivar Optional[User] user: Application user of the client.
     """
 
-    def __init__(self,
-                 token: str, *,
-                 intents: Intents = Intents.no_privileged(),
-                 default_allowed_mentions: typing.Optional[AllowedMentions] = None,
-                 loop: typing.Optional[asyncio.AbstractEventLoop] = None,
-                 cache: bool = True,
-                 application_id: typing.Optional[Snowflake.TYPING] = None,
-                 monoshard: bool = False,
-                 shard_count: typing.Optional[int] = None,
-                 shard_id: typing.Optional[int] = None,
-                 **cache_max_sizes: int):
+    def __init__(
+        self,
+        token: str,
+        *,
+        intents: Intents = Intents.no_privileged(),
+        default_allowed_mentions: typing.Optional[AllowedMentions] = None,
+        loop: typing.Optional[asyncio.AbstractEventLoop] = None,
+        cache: bool = True,
+        application_id: typing.Optional[Snowflake.TYPING] = None,
+        monoshard: bool = False,
+        shard_count: typing.Optional[int] = None,
+        shard_id: typing.Optional[int] = None,
+        **cache_max_sizes: int,
+    ):
         cache_max_sizes.setdefault("message", 1000)
         self.loop: asyncio.AbstractEventLoop = loop or asyncio.get_event_loop()
-        super().__init__(token, base=AsyncHTTPRequest, default_allowed_mentions=default_allowed_mentions, loop=loop, application_id=application_id)
+        super().__init__(
+            token,
+            base=AsyncHTTPRequest,
+            default_allowed_mentions=default_allowed_mentions,
+            loop=loop,
+            application_id=application_id,
+        )
         self.token: str = token
         self.__use_cache = cache
-        self.cache: typing.Optional[CacheContainer] = CacheContainer(**cache_max_sizes) if self.__use_cache else None
+        self.cache: typing.Optional[CacheContainer] = (
+            CacheContainer(**cache_max_sizes) if self.__use_cache else None
+        )
         # The reason only supporting caching with WS is to ensure up-to-date object.
         self.__ws_class = WebSocketClient
         self.intents: Intents = intents
@@ -94,7 +105,10 @@ class Client(APIClient):
         self.events.add("READY", self.__ready)
         self.events.add("VOICE_STATE_UPDATE", self.__voice_state_update)
         self.events.add("VOICE_SERVER_UPDATE", self.__voice_server_update)
-        self.events.add("VOICE_CLIENT_CLOSED", lambda guild_id: self.__voice_client.pop(guild_id, None))
+        self.events.add(
+            "VOICE_CLIENT_CLOSED",
+            lambda guild_id: self.__voice_client.pop(guild_id, None),
+        )
         self.loop.create_task(self.__request_user())
 
     async def __request_user(self):
@@ -131,7 +145,11 @@ class Client(APIClient):
         if vc:
             vc.voice_server_update(payload)
 
-    def on_(self, name: typing.Optional[str] = None, meth: typing.Optional[typing.Union[typing.Callable, typing.Coroutine]] = None) -> typing.Any:
+    def on_(
+        self,
+        name: typing.Optional[str] = None,
+        meth: typing.Optional[typing.Union[typing.Callable, typing.Coroutine]] = None,
+    ) -> typing.Any:
         """
         Adds new event listener. This can be used as decorator or function.
 
@@ -154,10 +172,14 @@ class Client(APIClient):
         :param meth: Method or Coroutine, if you don't want to use as decorator.
         :type meth: Optional[Union[Callable, Coroutine]]
         """
+
         def wrap(func=None):
             func = func or meth
-            self.events.add(name.upper() if name else func.__name__.upper().lstrip("ON_"), func)
+            self.events.add(
+                name.upper() if name else func.__name__.upper().lstrip("ON_"), func
+            )
             return func
+
         return wrap if meth is None else wrap()
 
     @property
@@ -165,7 +187,12 @@ class Client(APIClient):
         """Alias of :meth:`.on_`"""
         return self.on_
 
-    def wait(self, event_name: str, timeout: typing.Optional[float] = None, check: typing.Optional[typing.Callable[[typing.Any], bool]] = None) -> typing.Any:
+    def wait(
+        self,
+        event_name: str,
+        timeout: typing.Optional[float] = None,
+        check: typing.Optional[typing.Callable[[typing.Any], bool]] = None,
+    ) -> typing.Any:
         """
         Waits for the event dispatch.
 
@@ -177,6 +204,7 @@ class Client(APIClient):
         :raises TimeoutError: Timeout occurred.
         :raises WebsocketClosed: Websocket is closed, therefore further action could not be performed.
         """
+
         async def wrap():
             while not self.websocket_closed:
                 future = asyncio.Future()
@@ -190,6 +218,7 @@ class Client(APIClient):
                 elif not check:
                     return ret
             raise WebsocketClosed
+
         return asyncio.wait_for(wrap(), timeout=timeout)
 
     def dispatch(self, name: str, *args: typing.Any):
@@ -199,7 +228,10 @@ class Client(APIClient):
         :param str name: Name of the event.
         :param Any args: Arguments of the event.
         """
-        [self.loop.create_task(utils.safe_call(x(*args))) for x in self.events.get(name.upper())]
+        [
+            self.loop.create_task(utils.safe_call(x(*args)))
+            for x in self.events.get(name.upper())
+        ]
         # [self.__wait_futures[name.upper()].pop(x).set_result(args) for x in range(len(self.__wait_futures.get(name.upper(), [])))]
         """
         for x in range(len(self.__wait_futures.get(name.upper(), []))):
@@ -249,7 +281,14 @@ class Client(APIClient):
         if not self.__ready_future.done():
             await self.__ready_future
 
-    async def connect_voice(self, guild: Guild.TYPING, channel: Channel.TYPING, *, timeout: int = 10, raise_hand: bool = False) -> VoiceClient:
+    async def connect_voice(
+        self,
+        guild: Guild.TYPING,
+        channel: Channel.TYPING,
+        *,
+        timeout: int = 10,
+        raise_hand: bool = False,
+    ) -> VoiceClient:
         """
         Connects to voice channel and prepares voice client.
 
@@ -262,13 +301,21 @@ class Client(APIClient):
         """
         await self.update_voice_state(guild, channel)
         if raise_hand:
-            await self.modify_user_voice_state(guild, channel, request_to_speak_timestamp=datetime.datetime.utcnow())
+            await self.modify_user_voice_state(
+                guild, channel, request_to_speak_timestamp=datetime.datetime.utcnow()
+            )
         try:
-            resp = await self.wait("VOICE_SERVER_UPDATE", check=lambda res: res.guild_id == int(guild), timeout=timeout)
+            resp = await self.wait(
+                "VOICE_SERVER_UPDATE",
+                check=lambda res: res.guild_id == int(guild),
+                timeout=timeout,
+            )
         except asyncio.TimeoutError:
             await self.update_voice_state(guild)
             raise VoiceTimeout from None
-        voice = await VoiceClient.connect(self, resp, self.__self_voice_states.get(int(guild)))
+        voice = await VoiceClient.connect(
+            self, resp, self.__self_voice_states.get(int(guild))
+        )
         self.__voice_client[int(guild)] = voice
         return voice
 
@@ -292,7 +339,9 @@ class Client(APIClient):
         if self.has_cache:
             return self.cache.get
 
-    async def start(self, reconnect_on_unknown_disconnect: bool = False, compress: bool = False):
+    async def start(
+        self, reconnect_on_unknown_disconnect: bool = False, compress: bool = False
+    ):
         """
         Starts websocket connection.
 
@@ -310,15 +359,32 @@ class Client(APIClient):
             self.__shard_ids = [*range(shard_count)]
             for x in self.__shard_ids:
                 ws = await self.__ws_class.connect_without_request(
-                    gateway, self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress, shard=[x, shard_count]
+                    gateway,
+                    self.http,
+                    self.intents,
+                    self.events,
+                    reconnect_on_unknown_disconnect,
+                    compress,
+                    shard=[x, shard_count],
                 )
                 self.__shards[x] = ws
                 await ws.receive_once()
                 self.loop.create_task(ws.run())
                 await asyncio.sleep(5)
         else:
-            maybe_shard = {"shard": [self.__shard_id, self.shard_count]} if self.__shard_id else {}
-            self.ws = await self.__ws_class.connect(self.http, self.intents, self.events, reconnect_on_unknown_disconnect, compress, **maybe_shard)
+            maybe_shard = (
+                {"shard": [self.__shard_id, self.shard_count]}
+                if self.__shard_id
+                else {}
+            )
+            self.ws = await self.__ws_class.connect(
+                self.http,
+                self.intents,
+                self.events,
+                reconnect_on_unknown_disconnect,
+                compress,
+                **maybe_shard,
+            )
             await self.ws.run()
 
     async def close(self):
@@ -330,7 +396,14 @@ class Client(APIClient):
                 await x.close()
         await self.http.close()  # noqa
 
-    async def update_presence(self, *, since: typing.Optional[int] = None, activities: typing.List[typing.Union[Activity, dict]], status: str = "online", afk: bool = False):
+    async def update_presence(
+        self,
+        *,
+        since: typing.Optional[int] = None,
+        activities: typing.List[typing.Union[Activity, dict]],
+        status: str = "online",
+        afk: bool = False,
+    ):
         """
         Updates the bot presence.
 
@@ -349,11 +422,13 @@ class Client(APIClient):
             for x in self.__shards.values():
                 await x.update_presence(since, activities, status, afk)
 
-    def update_voice_state(self,
-                           guild: Guild.TYPING,
-                           channel: typing.Optional[Channel.TYPING] = None,
-                           self_mute: bool = False,
-                           self_deaf: bool = False):
+    def update_voice_state(
+        self,
+        guild: Guild.TYPING,
+        channel: typing.Optional[Channel.TYPING] = None,
+        self_mute: bool = False,
+        self_deaf: bool = False,
+    ):
         """
         Changes the voice state of the bot in guild. (Connecting/Disconnecting from the guild, etc...)
 
@@ -370,7 +445,12 @@ class Client(APIClient):
                 raise AttributeError(f"shard for guild {int(guild)} not found.")
         else:
             raise AttributeError(f"shard for guild {int(guild)} not found.")
-        return ws.update_voice_state(str(int(guild)), str(int(channel)) if channel else None, self_mute, self_deaf)
+        return ws.update_voice_state(
+            str(int(guild)),
+            str(int(channel)) if channel else None,
+            self_mute,
+            self_deaf,
+        )
 
     async def increase_shards(self, number: int = 1, *, auto: bool = False):
         """
@@ -392,7 +472,12 @@ class Client(APIClient):
             self.shard_count = resp.shards
         else:
             self.shard_count += number
-        self.loop.create_task(self.start(reconnect_on_unknown_disconnect=self.__reconnect_on_unknown_disconnect, compress=self.__compress))
+        self.loop.create_task(
+            self.start(
+                reconnect_on_unknown_disconnect=self.__reconnect_on_unknown_disconnect,
+                compress=self.__compress,
+            )
+        )
 
     @property
     def has_cache(self) -> bool:
@@ -448,12 +533,16 @@ class Client(APIClient):
 
     def __getattr__(self, item):
         if item.startswith("get_"):
+
             def wrap(snowflake_id):
                 return self.get(snowflake_id, item[4:])  # noqa
+
             return wrap
 
         if not item.lower().startswith("on_") or item.lower() in ["on", "on_", "get"]:
-            return super().__getattribute__(item)  # Should raise AttributeError or whatever.
+            return super().__getattribute__(
+                item
+            )  # Should raise AttributeError or whatever.
 
         event_name = item.lower().lstrip("on_")
 
@@ -462,7 +551,9 @@ class Client(APIClient):
 
         return deco
 
-    def run(self, *, reconnect_on_unknown_disconnect: bool = False, compress: bool = False):
+    def run(
+        self, *, reconnect_on_unknown_disconnect: bool = False, compress: bool = False
+    ):
         """
         Runs client and clears every connections after stopping due to error or KeyboardInterrupt.
 

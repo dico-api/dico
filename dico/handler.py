@@ -20,7 +20,9 @@ class EventHandler:
     def remove(self, event: str, func: typing.Callable):
         self.events[event].remove(func)
 
-    def get(self, event: str) -> typing.List[typing.Callable[[typing.Any, typing.Any], typing.Awaitable]]:
+    def get(
+        self, event: str
+    ) -> typing.List[typing.Callable[[typing.Any, typing.Any], typing.Awaitable]]:
         return [ensure_coro(x) for x in self.events.get(event, [])]
 
     def process_response(self, name: str, resp: dict):
@@ -78,7 +80,7 @@ class EventHandler:
             "USER_UPDATE": UserUpdate,
             "VOICE_STATE_UPDATE": VoiceStateUpdate,
             "VOICE_SERVER_UPDATE": VoiceServerUpdate,
-            "WEBHOOKS_UPDATE": WebhooksUpdate
+            "WEBHOOKS_UPDATE": WebhooksUpdate,
         }
         if name in model_dict:
             ret = model_dict[name].create(self.client, resp)

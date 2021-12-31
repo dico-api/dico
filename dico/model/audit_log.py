@@ -18,24 +18,42 @@ class AuditLog:
     def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
         self.raw: dict = resp
-        self.webhooks: typing.List[Webhook] = [Webhook(client, x) for x in resp["webhooks"]]
+        self.webhooks: typing.List[Webhook] = [
+            Webhook(client, x) for x in resp["webhooks"]
+        ]
         self.users: typing.List[User] = [User.create(client, x) for x in resp["users"]]
-        self.audit_log_entries: typing.List[AuditLogEntry] = [AuditLogEntry(client, x) for x in resp["audit_log_entries"]]
-        self.integrations: typing.List[Integration] = [Integration(client, x) for x in resp["integrations"]]
-        self.threads: typing.List[Channel] = [Channel.create(client, x) for x in resp["threads"]]
+        self.audit_log_entries: typing.List[AuditLogEntry] = [
+            AuditLogEntry(client, x) for x in resp["audit_log_entries"]
+        ]
+        self.integrations: typing.List[Integration] = [
+            Integration(client, x) for x in resp["integrations"]
+        ]
+        self.threads: typing.List[Channel] = [
+            Channel.create(client, x) for x in resp["threads"]
+        ]
 
 
 class AuditLogEntry:
     def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
         self.raw: dict = resp
-        self.target_id: typing.Optional[str] = resp.get("target_id")  # or is this snowflake?
-        self.changes: typing.List[AuditLogChange] = [AuditLogChange(client, x) for x in resp.get("changes", [])]
-        self.user_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("user_id"))
+        self.target_id: typing.Optional[str] = resp.get(
+            "target_id"
+        )  # or is this snowflake?
+        self.changes: typing.List[AuditLogChange] = [
+            AuditLogChange(client, x) for x in resp.get("changes", [])
+        ]
+        self.user_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("user_id")
+        )
         self.id: Snowflake = Snowflake(resp["id"])
         self.action_type: AuditLogEvents = AuditLogEvents(int(resp["action_type"]))
         self.__options = resp.get("options")
-        self.options: typing.Optional[OptionalAuditEntryInfo] = OptionalAuditEntryInfo(self.client, self.__options) if self.__options else self.__options
+        self.options: typing.Optional[OptionalAuditEntryInfo] = (
+            OptionalAuditEntryInfo(self.client, self.__options)
+            if self.__options
+            else self.__options
+        )
         self.reason: typing.Optional[str] = resp.get("reason")
 
     @property
@@ -108,8 +126,12 @@ class OptionalAuditEntryInfo:
         self.client: "APIClient" = client
         self.delete_member_days: typing.Optional[str] = resp.get("delete_member_days")
         self.members_removed: typing.Optional[str] = resp.get("members_removed")
-        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
-        self.message_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("message_id"))
+        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("channel_id")
+        )
+        self.message_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("message_id")
+        )
         self.count: typing.Optional[str] = resp.get("count")
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
         self.type: typing.Optional[str] = resp.get("type")
@@ -128,7 +150,10 @@ class OptionalAuditEntryInfo:
     @property
     def overwrite_entry(self) -> typing.Optional[typing.Union["Role", User]]:
         if self.id and self.client.has_cache:
-            return self.client.get(self.id, "role" if self.type == "0" else "user" if self.type == "1" else None)
+            return self.client.get(
+                self.id,
+                "role" if self.type == "0" else "user" if self.type == "1" else None,
+            )
 
 
 class AuditLogChange:
@@ -163,33 +188,55 @@ class AuditLogChanges:
         self.description: typing.Optional[str] = resp.get("description")
         self.icon_hash: typing.Optional[str] = resp.get("icon_hash")
         self.splash_hash: typing.Optional[str] = resp.get("splash_hash")
-        self.discovery_splash_hash: typing.Optional[str] = resp.get("discovery_splash_hash")
+        self.discovery_splash_hash: typing.Optional[str] = resp.get(
+            "discovery_splash_hash"
+        )
         self.banner_hash: typing.Optional[str] = resp.get("banner_hash")
-        self.owner_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("owner_id"))
+        self.owner_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("owner_id")
+        )
         self.region: typing.Optional[str] = resp.get("region")
         self.preferred_locale: typing.Optional[str] = resp.get("preferred_locale")
-        self.afk_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("afk_channel_id"))
+        self.afk_channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("afk_channel_id")
+        )
         self.afk_timeout: typing.Optional[int] = resp.get("afk_timeout")
-        self.rules_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("rules_channel_id"))
-        self.public_updates_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("public_updates_channel_id"))
+        self.rules_channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("rules_channel_id")
+        )
+        self.public_updates_channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("public_updates_channel_id")
+        )
         self.mfa_level: typing.Optional[int] = resp.get("mfa_level")
         self.verification_level: typing.Optional[int] = resp.get("verification_level")
-        self.explicit_content_filter: typing.Optional[int] = resp.get("explicit_content_filter")
-        self.default_message_notifications: typing.Optional[int] = resp.get("default_message_notifications")
+        self.explicit_content_filter: typing.Optional[int] = resp.get(
+            "explicit_content_filter"
+        )
+        self.default_message_notifications: typing.Optional[int] = resp.get(
+            "default_message_notifications"
+        )
         self.vanity_url_code: typing.Optional[str] = resp.get("vanity_url_code")
         self.add: typing.Optional[typing.List[dict]] = resp.get("$add")
         self.remove: typing.Optional[typing.List[dict]] = resp.get("$remove")
         self.prune_delete_days: typing.Optional[int] = resp.get("prune_delete_days")
         self.widget_enabled: typing.Optional[bool] = resp.get("widget_enabled")
-        self.widget_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("widget_channel_id"))
-        self.system_channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("system_channel_id"))
+        self.widget_channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("widget_channel_id")
+        )
+        self.system_channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("system_channel_id")
+        )
 
         self.position: typing.Optional[int] = resp.get("position")
         self.topic: typing.Optional[str] = resp.get("topic")
         self.bitrate: typing.Optional[int] = resp.get("bitrate")
-        self.permission_overwrites: typing.Optional[typing.List[dict]] = resp.get("permission_overwrites")
+        self.permission_overwrites: typing.Optional[typing.List[dict]] = resp.get(
+            "permission_overwrites"
+        )
         self.nsfw: typing.Optional[bool] = resp.get("nsfw")
-        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("application_id"))
+        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("application_id")
+        )
         self.rate_limit_per_user: typing.Optional[int] = resp.get("rate_limit_per_user")
 
         self.permissions: typing.Optional[str] = resp.get("permissions")
@@ -200,8 +247,12 @@ class AuditLogChanges:
         self.deny: typing.Optional[str] = resp.get("deny")
 
         self.code: typing.Optional[str] = resp.get("code")
-        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("channel_id"))
-        self.inviter_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("inviter_id"))
+        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("channel_id")
+        )
+        self.inviter_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("inviter_id")
+        )
         self.max_uses: typing.Optional[int] = resp.get("max_uses")
         self.uses: typing.Optional[int] = resp.get("uses")
         self.max_age: typing.Optional[int] = resp.get("max_age")
@@ -222,10 +273,16 @@ class AuditLogChanges:
         self.format_type: typing.Optional[int] = resp.get("format_type")
         self.asset: typing.Optional[str] = resp.get("asset")
         self.available: typing.Optional[bool] = resp.get("available")
-        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("guild_id"))
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
 
         self.archived: typing.Optional[bool] = resp.get("archived")
         self.locked: typing.Optional[bool] = resp.get("locked")
-        self.auto_archive_duration: typing.Optional[int] = resp.get("auto_archive_duration")
+        self.auto_archive_duration: typing.Optional[int] = resp.get(
+            "auto_archive_duration"
+        )
 
-        self.default_auto_archive_duration: typing.Optional[int] = resp.get("default_auto_archive_duration")
+        self.default_auto_archive_duration: typing.Optional[int] = resp.get(
+            "default_auto_archive_duration"
+        )

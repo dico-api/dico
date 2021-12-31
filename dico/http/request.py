@@ -20,16 +20,21 @@ class HTTPRequest(HTTPRequestBase):
         self.default_retry = default_retry
         self.logger: logging.Logger = logging.getLogger("dico.http")
 
-    def request(self,
-                route: str,
-                meth: str,
-                body: typing.Any = None,
-                *,
-                is_json: bool = False,
-                reason_header: str = None,
-                retry: int = 3,
-                **kwargs) -> RESPONSE:
-        headers = {"Authorization": f"Bot {self.token}", "User-Agent": f"DiscordBot (https://github.com/dico-api/dico, {__version__})"}
+    def request(
+        self,
+        route: str,
+        meth: str,
+        body: typing.Any = None,
+        *,
+        is_json: bool = False,
+        reason_header: str = None,
+        retry: int = 3,
+        **kwargs,
+    ) -> RESPONSE:
+        headers = {
+            "Authorization": f"Bot {self.token}",
+            "User-Agent": f"DiscordBot (https://github.com/dico-api/dico, {__version__})",
+        }
         if meth not in ["GET"] and body is not None:
             if is_json:
                 headers["Content-Type"] = "application/json"
@@ -38,11 +43,21 @@ class HTTPRequest(HTTPRequestBase):
         if reason_header is not None:
             headers["X-Audit-Log-Reason"] = quote(reason_header, encoding="UTF-8")
         code = 429  # Empty code in case of rate limit fail.
-        resp = {}   # Empty resp in case of rate limit fail.
+        resp = {}  # Empty resp in case of rate limit fail.
         retry = (retry if retry > 0 else 1) if retry is not None else self.default_retry
         for x in range(retry):
-            response = requests.request(meth, self.BASE_URL + route, headers=headers, **kwargs)
-            resp = (response.json() if response.headers.get("Content-Type") == "application/json" else response.text) if response.status_code != 204 else None
+            response = requests.request(
+                meth, self.BASE_URL + route, headers=headers, **kwargs
+            )
+            resp = (
+                (
+                    response.json()
+                    if response.headers.get("Content-Type") == "application/json"
+                    else response.text
+                )
+                if response.status_code != 204
+                else None
+            )
             code = response.status_code
             self.logger.debug(f"{route}: {meth} request - {code}")
             if 200 <= code < 300:
@@ -55,7 +70,9 @@ class HTTPRequest(HTTPRequestBase):
                 raise exception.NotFound(route, code, resp)
             elif code == 429:
                 wait_sec = float(resp["retry_after"])
-                self.logger.warning(f"Rate limited, waiting for {wait_sec} second{'s' if wait_sec == 1 else ''}...")
+                self.logger.warning(
+                    f"Rate limited, waiting for {wait_sec} second{'s' if wait_sec == 1 else ''}..."
+                )
                 time.sleep(wait_sec)
                 continue
             elif 500 <= code < 600:
@@ -64,20 +81,24 @@ class HTTPRequest(HTTPRequestBase):
                 raise exception.Unknown(route, code, resp)
         raise exception.RateLimited(route, code, resp)
 
-    def create_message_with_files(self,
-                                  channel_id,
-                                  content: str = None,
-                                  files: typing.List[io.FileIO] = None,
-                                  nonce: typing.Union[int, str] = None,
-                                  tts: bool = None,
-                                  embeds: typing.List[dict] = None,
-                                  allowed_mentions: dict = None,
-                                  message_reference: dict = None,
-                                  components: typing.List[dict] = None,
-                                  sticker_ids: typing.List[str] = None,
-                                  attachments: typing.List[dict] = None) -> RESPONSE:
+    def create_message_with_files(
+        self,
+        channel_id,
+        content: str = None,
+        files: typing.List[io.FileIO] = None,
+        nonce: typing.Union[int, str] = None,
+        tts: bool = None,
+        embeds: typing.List[dict] = None,
+        allowed_mentions: dict = None,
+        message_reference: dict = None,
+        components: typing.List[dict] = None,
+        sticker_ids: typing.List[str] = None,
+        attachments: typing.List[dict] = None,
+    ) -> RESPONSE:
         if not (content or embeds or files or sticker_ids):
-            raise ValueError("either content or embed or files or sticker_ids must be passed.")
+            raise ValueError(
+                "either content or embed or files or sticker_ids must be passed."
+            )
         payload_json = {}
         if content:
             payload_json["content"] = content
@@ -106,16 +127,18 @@ class HTTPRequest(HTTPRequestBase):
                 _files[name] = (sel.name, f, "application/octet-stream")
         return self.request(f"/channels/{channel_id}/messages", "POST", files=_files)
 
-    def edit_message_with_files(self,
-                                channel_id,
-                                message_id,
-                                content: str = EmptyObject,
-                                embeds: typing.List[dict] = EmptyObject,
-                                flags: int = EmptyObject,
-                                files: typing.List[io.FileIO] = EmptyObject,
-                                allowed_mentions: dict = EmptyObject,
-                                attachments: typing.List[dict] = EmptyObject,
-                                components: typing.List[dict] = EmptyObject) -> RESPONSE:
+    def edit_message_with_files(
+        self,
+        channel_id,
+        message_id,
+        content: str = EmptyObject,
+        embeds: typing.List[dict] = EmptyObject,
+        flags: int = EmptyObject,
+        files: typing.List[io.FileIO] = EmptyObject,
+        allowed_mentions: dict = EmptyObject,
+        attachments: typing.List[dict] = EmptyObject,
+        components: typing.List[dict] = EmptyObject,
+    ) -> RESPONSE:
         payload_json = {}
         if content is not EmptyObject:
             payload_json["content"] = content
@@ -136,34 +159,46 @@ class HTTPRequest(HTTPRequestBase):
                 sel = files[x]
                 f = sel.read()
                 _files[name] = (sel.name, f, "application/octet-stream")
-        return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", files=_files)
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}", "PATCH", files=_files
+        )
 
-    def create_guild_sticker(self,
-                             guild_id,
-                             name: str,
-                             description: str,
-                             tags: str,
-                             file: io.FileIO,
-                             reason: str = None) -> RESPONSE:
+    def create_guild_sticker(
+        self,
+        guild_id,
+        name: str,
+        description: str,
+        tags: str,
+        file: io.FileIO,
+        reason: str = None,
+    ) -> RESPONSE:
         data = {"name": name, "description": description, "tags": tags}
         file = {"file": (file.name, file, "application/octet-stream")}
-        return self.request(f"/guilds/{guild_id}/stickers", "POST", data, files=file, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/stickers",
+            "POST",
+            data,
+            files=file,
+            reason_header=reason,
+        )
 
-    def execute_webhook_with_files(self,
-                                   webhook_id,
-                                   webhook_token,
-                                   wait: bool = None,
-                                   thread_id=None,
-                                   content: str = None,
-                                   username: str = None,
-                                   avatar_url: str = None,
-                                   tts: bool = False,
-                                   files: typing.List[io.FileIO] = None,
-                                   embeds: typing.List[dict] = None,
-                                   allowed_mentions: dict = None,
-                                   components: typing.List[dict] = None,
-                                   attachments: typing.List[dict] = None,
-                                   flags: int = None) -> RESPONSE:
+    def execute_webhook_with_files(
+        self,
+        webhook_id,
+        webhook_token,
+        wait: bool = None,
+        thread_id=None,
+        content: str = None,
+        username: str = None,
+        avatar_url: str = None,
+        tts: bool = False,
+        files: typing.List[io.FileIO] = None,
+        embeds: typing.List[dict] = None,
+        allowed_mentions: dict = None,
+        components: typing.List[dict] = None,
+        attachments: typing.List[dict] = None,
+        flags: int = None,
+    ) -> RESPONSE:
         payload_json = {}
         if content is not None:
             payload_json["content"] = content
@@ -195,12 +230,25 @@ class HTTPRequest(HTTPRequestBase):
                 sel = files[x]
                 f = sel.read()
                 _files[name] = (sel.name, f, "application/octet-stream")
-        return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "POST", files=_files, params=params)
+        return self.request(
+            f"/webhooks/{webhook_id}/{webhook_token}",
+            "POST",
+            files=_files,
+            params=params,
+        )
 
-    def edit_webhook_message(self, webhook_id, webhook_token, message_id, content: str = EmptyObject,
-                             embeds: typing.List[dict] = EmptyObject, files: typing.List[io.FileIO] = EmptyObject,
-                             allowed_mentions: dict = EmptyObject, attachments: typing.List[dict] = EmptyObject,
-                             components: typing.List[dict] = EmptyObject) -> RESPONSE:
+    def edit_webhook_message(
+        self,
+        webhook_id,
+        webhook_token,
+        message_id,
+        content: str = EmptyObject,
+        embeds: typing.List[dict] = EmptyObject,
+        files: typing.List[io.FileIO] = EmptyObject,
+        allowed_mentions: dict = EmptyObject,
+        attachments: typing.List[dict] = EmptyObject,
+        components: typing.List[dict] = EmptyObject,
+    ) -> RESPONSE:
         payload_json = {}
         if content is not EmptyObject:
             payload_json["content"] = content
@@ -219,7 +267,11 @@ class HTTPRequest(HTTPRequestBase):
                 sel = files[x]
                 f = sel.read()
                 _files[name] = (sel.name, f, "application/octet-stream")
-        return self.request(f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "PATCH", files=_files)
+        return self.request(
+            f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}",
+            "PATCH",
+            files=_files,
+        )
 
     def download(self, url) -> RESPONSE:
         resp = requests.get(url)

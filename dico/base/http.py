@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 
 class __EmptyObject:
     """An empty object. Can be used as an alternative of ``None``."""
+
     def __bool__(self) -> bool:
         return False
 
@@ -38,7 +39,17 @@ class HTTPRequestBase(ABC):
     BASE_URL: str = "https://discord.com/api/v9"
 
     @abstractmethod
-    def request(self, route: str, meth: str, body: typing.Any = None, *, is_json: bool = False, reason_header: str = None, retry: int = 3, **kwargs) -> RESPONSE:
+    def request(
+        self,
+        route: str,
+        meth: str,
+        body: typing.Any = None,
+        *,
+        is_json: bool = False,
+        reason_header: str = None,
+        retry: int = 3,
+        **kwargs,
+    ) -> RESPONSE:
         """
         This function includes requesting REST API.
         :return: Response.
@@ -47,7 +58,14 @@ class HTTPRequestBase(ABC):
 
     # Audit Log Requests
 
-    def request_guild_audit_log(self, guild_id, user_id: str = None, action_type: int = None, before: str = None, limit: int = None) -> RESPONSE:
+    def request_guild_audit_log(
+        self,
+        guild_id,
+        user_id: str = None,
+        action_type: int = None,
+        before: str = None,
+        limit: int = None,
+    ) -> RESPONSE:
         """
         Sends get guild audit log request.
 
@@ -78,21 +96,23 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}", "GET")
 
-    def modify_guild_channel(self,
-                             channel_id,
-                             name: str = None,
-                             channel_type: int = None,
-                             position: int = EmptyObject,
-                             topic: str = EmptyObject,
-                             nsfw: bool = EmptyObject,
-                             rate_limit_per_user: int = EmptyObject,
-                             bitrate: int = EmptyObject,
-                             user_limit: int = EmptyObject,
-                             permission_overwrites: typing.List[dict] = EmptyObject,
-                             parent_id: str = EmptyObject,
-                             rtc_region: str = EmptyObject,
-                             video_quality_mode: int = EmptyObject,
-                             reason: str = None) -> RESPONSE:
+    def modify_guild_channel(
+        self,
+        channel_id,
+        name: str = None,
+        channel_type: int = None,
+        position: int = EmptyObject,
+        topic: str = EmptyObject,
+        nsfw: bool = EmptyObject,
+        rate_limit_per_user: int = EmptyObject,
+        bitrate: int = EmptyObject,
+        user_limit: int = EmptyObject,
+        permission_overwrites: typing.List[dict] = EmptyObject,
+        parent_id: str = EmptyObject,
+        rtc_region: str = EmptyObject,
+        video_quality_mode: int = EmptyObject,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify channel request, for guild channel.
 
@@ -136,9 +156,13 @@ class HTTPRequestBase(ABC):
             body["rtc_region"] = rtc_region
         if video_quality_mode is not EmptyObject:
             body["video_quality_mode"] = video_quality_mode
-        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason
+        )
 
-    def modify_group_dm_channel(self, channel_id, name: str = None, icon: bin = None, reason: str = None) -> RESPONSE:
+    def modify_group_dm_channel(
+        self, channel_id, name: str = None, icon: bin = None, reason: str = None
+    ) -> RESPONSE:
         """
         Sends modify channel request, for group DM.
 
@@ -152,16 +176,20 @@ class HTTPRequestBase(ABC):
             body["name"] = name
         if icon is not None:
             body["icon"] = icon
-        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason
+        )
 
-    def modify_thread_channel(self,
-                              channel_id,
-                              name: str = None,
-                              archived: bool = None,
-                              auto_archive_duration: int = None,
-                              locked: bool = None,
-                              rate_limit_per_user: int = EmptyObject,
-                              reason: str = None) -> RESPONSE:
+    def modify_thread_channel(
+        self,
+        channel_id,
+        name: str = None,
+        archived: bool = None,
+        auto_archive_duration: int = None,
+        locked: bool = None,
+        rate_limit_per_user: int = EmptyObject,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify channel request, for thread channel.
 
@@ -184,7 +212,9 @@ class HTTPRequestBase(ABC):
             body["locked"] = locked
         if rate_limit_per_user is not EmptyObject:
             body["rate_limit_per_user"] = rate_limit_per_user
-        return self.request(f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}", "PATCH", body, is_json=True, reason_header=reason
+        )
 
     def delete_channel(self, channel_id, reason: str = None) -> RESPONSE:
         """
@@ -200,7 +230,9 @@ class HTTPRequestBase(ABC):
         """Alias of :meth:`.delete_channel`."""
         return self.delete_channel
 
-    def request_channel_messages(self, channel_id, around=None, before=None, after=None, limit: int = None) -> RESPONSE:
+    def request_channel_messages(
+        self, channel_id, around=None, before=None, after=None, limit: int = None
+    ) -> RESPONSE:
         """
         Sends channel messages get request.
 
@@ -232,16 +264,18 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/messages/{message_id}", "GET")
 
-    def create_message(self,
-                       channel_id,
-                       content: str = None,
-                       nonce: typing.Union[int, str] = None,
-                       tts: bool = False,
-                       embeds: typing.List[dict] = None,
-                       allowed_mentions: dict = None,
-                       message_reference: dict = None,
-                       components: typing.List[dict] = None,
-                       sticker_ids: typing.List[str] = None) -> RESPONSE:
+    def create_message(
+        self,
+        channel_id,
+        content: str = None,
+        nonce: typing.Union[int, str] = None,
+        tts: bool = False,
+        embeds: typing.List[dict] = None,
+        allowed_mentions: dict = None,
+        message_reference: dict = None,
+        components: typing.List[dict] = None,
+        sticker_ids: typing.List[str] = None,
+    ) -> RESPONSE:
         """
         Sends create message request.
 
@@ -274,21 +308,25 @@ class HTTPRequestBase(ABC):
             body["components"] = components
         if sticker_ids is not None:
             body["sticker_ids"] = sticker_ids
-        return self.request(f"/channels/{channel_id}/messages", "POST", body, is_json=True)
+        return self.request(
+            f"/channels/{channel_id}/messages", "POST", body, is_json=True
+        )
 
     @abstractmethod
-    def create_message_with_files(self,
-                                  channel_id,
-                                  content: str = None,
-                                  files: typing.List[io.FileIO] = None,
-                                  nonce: typing.Union[int, str] = None,
-                                  tts: bool = None,
-                                  embeds: typing.List[dict] = None,
-                                  allowed_mentions: dict = None,
-                                  message_reference: dict = None,
-                                  components: typing.List[dict] = None,
-                                  sticker_ids: typing.List[str] = None,
-                                  attachments: typing.List[dict] = None) -> RESPONSE:
+    def create_message_with_files(
+        self,
+        channel_id,
+        content: str = None,
+        files: typing.List[io.FileIO] = None,
+        nonce: typing.Union[int, str] = None,
+        tts: bool = None,
+        embeds: typing.List[dict] = None,
+        allowed_mentions: dict = None,
+        message_reference: dict = None,
+        components: typing.List[dict] = None,
+        sticker_ids: typing.List[str] = None,
+        attachments: typing.List[dict] = None,
+    ) -> RESPONSE:
         """
         Sends create message request with files.
 
@@ -313,7 +351,9 @@ class HTTPRequestBase(ABC):
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to crosspost.
         """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/crosspost", "POST")
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}/crosspost", "POST"
+        )
 
     def create_reaction(self, channel_id, message_id, emoji: str) -> RESPONSE:
         """
@@ -323,9 +363,13 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to react.
         :param emoji: Emoji to add.
         """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me", "PUT")
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/@me", "PUT"
+        )
 
-    def delete_reaction(self, channel_id, message_id, emoji: str, user_id="@me") -> RESPONSE:
+    def delete_reaction(
+        self, channel_id, message_id, emoji: str, user_id="@me"
+    ) -> RESPONSE:
         """
         Sends delete reaction request.
 
@@ -334,9 +378,14 @@ class HTTPRequestBase(ABC):
         :param emoji: Emoji to delete.
         :param user_id: User ID to delete reaction. Pass ``@me`` to remove own.
         """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}", "DELETE")
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}/{user_id}",
+            "DELETE",
+        )
 
-    def request_reactions(self, channel_id, message_id, emoji: str, after=None, limit=None) -> RESPONSE:
+    def request_reactions(
+        self, channel_id, message_id, emoji: str, after=None, limit=None
+    ) -> RESPONSE:
         """
         Sends get reactions request.
 
@@ -351,7 +400,11 @@ class HTTPRequestBase(ABC):
             params["after"] = after
         if limit is not None:
             params["limit"] = limit
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}", "GET", params=params)
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}",
+            "GET",
+            params=params,
+        )
 
     def delete_all_reactions(self, channel_id, message_id) -> RESPONSE:
         """
@@ -360,9 +413,13 @@ class HTTPRequestBase(ABC):
         :param channel_id: ID of the channel.
         :param message_id: ID of the message to request.
         """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions", "DELETE")
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}/reactions", "DELETE"
+        )
 
-    def delete_all_reactions_emoji(self, channel_id, message_id, emoji: str) -> RESPONSE:
+    def delete_all_reactions_emoji(
+        self, channel_id, message_id, emoji: str
+    ) -> RESPONSE:
         """
         Sends delete all reactions emoji request.
 
@@ -370,17 +427,21 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to request.
         :param emoji: Emoji to delete.
         """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}", "DELETE")
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}/reactions/{emoji}", "DELETE"
+        )
 
-    def edit_message(self,
-                     channel_id,
-                     message_id,
-                     content: str = EmptyObject,
-                     embeds: typing.List[dict] = EmptyObject,
-                     flags: int = EmptyObject,
-                     allowed_mentions: dict = EmptyObject,
-                     attachments: typing.List[dict] = EmptyObject,
-                     components: typing.List[dict] = EmptyObject) -> RESPONSE:
+    def edit_message(
+        self,
+        channel_id,
+        message_id,
+        content: str = EmptyObject,
+        embeds: typing.List[dict] = EmptyObject,
+        flags: int = EmptyObject,
+        allowed_mentions: dict = EmptyObject,
+        attachments: typing.List[dict] = EmptyObject,
+        components: typing.List[dict] = EmptyObject,
+    ) -> RESPONSE:
         """
         Sends edit message request.
 
@@ -407,19 +468,23 @@ class HTTPRequestBase(ABC):
             body["attachments"] = attachments
         if components is not EmptyObject:
             body["components"] = components
-        return self.request(f"/channels/{channel_id}/messages/{message_id}", "PATCH", body, is_json=True)
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}", "PATCH", body, is_json=True
+        )
 
     @abstractmethod
-    def edit_message_with_files(self,
-                                channel_id,
-                                message_id,
-                                content: str = EmptyObject,
-                                embeds: typing.List[dict] = EmptyObject,
-                                flags: int = EmptyObject,
-                                files: typing.List[io.FileIO] = EmptyObject,
-                                allowed_mentions: dict = EmptyObject,
-                                attachments: typing.List[dict] = EmptyObject,
-                                components: typing.List[dict] = EmptyObject) -> RESPONSE:
+    def edit_message_with_files(
+        self,
+        channel_id,
+        message_id,
+        content: str = EmptyObject,
+        embeds: typing.List[dict] = EmptyObject,
+        flags: int = EmptyObject,
+        files: typing.List[io.FileIO] = EmptyObject,
+        allowed_mentions: dict = EmptyObject,
+        attachments: typing.List[dict] = EmptyObject,
+        components: typing.List[dict] = EmptyObject,
+    ) -> RESPONSE:
         """
         Sends edit message request with files.
 
@@ -444,9 +509,18 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to edit.
         :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}/messages/{message_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}",
+            "DELETE",
+            reason_header=reason,
+        )
 
-    def bulk_delete_messages(self, channel_id, message_ids: typing.List[typing.Union[int, str]], reason: str = None) -> RESPONSE:
+    def bulk_delete_messages(
+        self,
+        channel_id,
+        message_ids: typing.List[typing.Union[int, str]],
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends bulk delete message request.
 
@@ -455,9 +529,23 @@ class HTTPRequestBase(ABC):
         :param reason: Reason of the action.
         """
         body = {"messages": list(map(str, message_ids))}
-        return self.request(f"/channels/{channel_id}/messages/bulk-delete", "POST", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/messages/bulk-delete",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def edit_channel_permissions(self, channel_id, overwrite_id, allow: str, deny: str, overwrite_type: int, reason: str = None) -> RESPONSE:
+    def edit_channel_permissions(
+        self,
+        channel_id,
+        overwrite_id,
+        allow: str,
+        deny: str,
+        overwrite_type: int,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends edit channel permissions request.
 
@@ -469,7 +557,13 @@ class HTTPRequestBase(ABC):
         :param reason: Reason of the action.
         """
         body = {"allow": allow, "deny": deny, "type": overwrite_type}
-        return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "PUT", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/permissions/{overwrite_id}",
+            "PUT",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def request_channel_invites(self, channel_id) -> RESPONSE:
         """
@@ -479,16 +573,18 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/invites", "GET")
 
-    def create_channel_invite(self,
-                              channel_id,
-                              max_age: int = None,
-                              max_uses: int = None,
-                              temporary: bool = None,
-                              unique: bool = None,
-                              target_type: int = None,
-                              target_user_id: str = None,
-                              target_application_id: str = None,
-                              reason: str = None) -> RESPONSE:
+    def create_channel_invite(
+        self,
+        channel_id,
+        max_age: int = None,
+        max_uses: int = None,
+        temporary: bool = None,
+        unique: bool = None,
+        target_type: int = None,
+        target_user_id: str = None,
+        target_application_id: str = None,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends create channel invite request.
 
@@ -517,9 +613,17 @@ class HTTPRequestBase(ABC):
             body["target_user_id"] = target_user_id
         if target_application_id is not None:
             body["target_application_id"] = target_application_id
-        return self.request(f"/channels/{channel_id}/invites", "POST", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/invites",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def delete_channel_permission(self, channel_id, overwrite_id, reason: str = None) -> RESPONSE:
+    def delete_channel_permission(
+        self, channel_id, overwrite_id, reason: str = None
+    ) -> RESPONSE:
         """
         Sends delete channel permissions request.
 
@@ -527,7 +631,11 @@ class HTTPRequestBase(ABC):
         :param overwrite_id: ID of the target user/role.
         :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}/permissions/{overwrite_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/permissions/{overwrite_id}",
+            "DELETE",
+            reason_header=reason,
+        )
 
     def follow_news_channel(self, channel_id, webhook_channel_id) -> RESPONSE:
         """
@@ -536,7 +644,12 @@ class HTTPRequestBase(ABC):
         :param channel_id: ID of the channel to follow.
         :param webhook_channel_id: Target channel ID.
         """
-        return self.request(f"/channels/{channel_id}/followers", "POST", {"webhook_channel_id": webhook_channel_id}, is_json=True)
+        return self.request(
+            f"/channels/{channel_id}/followers",
+            "POST",
+            {"webhook_channel_id": webhook_channel_id},
+            is_json=True,
+        )
 
     def trigger_typing_indicator(self, channel_id) -> RESPONSE:
         """
@@ -562,7 +675,9 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to pin.
         :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}/pins/{message_id}", "PUT", reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/pins/{message_id}", "PUT", reason_header=reason
+        )
 
     def unpin_message(self, channel_id, message_id, reason: str = None) -> RESPONSE:
         """
@@ -572,9 +687,13 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to unpin.
         :param reason: Reason of the action.
         """
-        return self.request(f"/channels/{channel_id}/pins/{message_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/pins/{message_id}", "DELETE", reason_header=reason
+        )
 
-    def group_dm_add_recipient(self, channel_id, user_id, access_token: str, nick: str) -> RESPONSE:
+    def group_dm_add_recipient(
+        self, channel_id, user_id, access_token: str, nick: str
+    ) -> RESPONSE:
         """
         Sends group dm add recipient request.
 
@@ -584,7 +703,9 @@ class HTTPRequestBase(ABC):
         :param nick: Nickname of the user.
         """
         body = {"access_token": access_token, "nick": nick}
-        return self.request(f"/channels/{channel_id}/recipients/{user_id}", "PUT", body, is_json=True)
+        return self.request(
+            f"/channels/{channel_id}/recipients/{user_id}", "PUT", body, is_json=True
+        )
 
     def group_dm_remove_recipient(self, channel_id, user_id) -> RESPONSE:
         """
@@ -595,7 +716,14 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/recipients/{user_id}", "DELETE")
 
-    def start_thread_with_message(self, channel_id, message_id, name: str, auto_archive_duration: int, reason: str = None) -> RESPONSE:
+    def start_thread_with_message(
+        self,
+        channel_id,
+        message_id,
+        name: str,
+        auto_archive_duration: int,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends start thread with message request.
 
@@ -606,9 +734,23 @@ class HTTPRequestBase(ABC):
         :param reason: Reason of the action.
         """
         body = {"name": name, "auto_archive_duration": auto_archive_duration}
-        return self.request(f"/channels/{channel_id}/messages/{message_id}/threads", "POST", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/messages/{message_id}/threads",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def start_thread_without_message(self, channel_id, name: str, auto_archive_duration: int, thread_type: int = None, invitable: bool = None, reason: str = None) -> RESPONSE:
+    def start_thread_without_message(
+        self,
+        channel_id,
+        name: str,
+        auto_archive_duration: int,
+        thread_type: int = None,
+        invitable: bool = None,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends start thread without message request.
 
@@ -624,7 +766,13 @@ class HTTPRequestBase(ABC):
             body["type"] = thread_type
         if invitable is not None:
             body["invitable"] = invitable
-        return self.request(f"/channels/{channel_id}/threads", "POST", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/channels/{channel_id}/threads",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def join_thread(self, channel_id) -> RESPONSE:
         """
@@ -658,7 +806,9 @@ class HTTPRequestBase(ABC):
         :param channel_id: ID of the thread channel.
         :param user_id: ID of the user to remove.
         """
-        return self.request(f"/channels/{channel_id}/thread-members/{user_id}", "DELETE")
+        return self.request(
+            f"/channels/{channel_id}/thread-members/{user_id}", "DELETE"
+        )
 
     def list_thread_members(self, channel_id) -> RESPONSE:
         """
@@ -676,7 +826,12 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/threads/active", "GET")
 
-    def list_public_archived_threads(self, channel_id, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> RESPONSE:
+    def list_public_archived_threads(
+        self,
+        channel_id,
+        before: typing.Union[str, datetime.datetime] = None,
+        limit: int = None,
+    ) -> RESPONSE:
         """
         Sends list public archived threads request.
 
@@ -689,9 +844,16 @@ class HTTPRequestBase(ABC):
             params["before"] = str(before)
         if limit is not None:
             params["limit"] = limit
-        return self.request(f"/channels/{channel_id}/threads/archived/public", "GET", params=params)
+        return self.request(
+            f"/channels/{channel_id}/threads/archived/public", "GET", params=params
+        )
 
-    def list_private_archived_threads(self, channel_id, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> RESPONSE:
+    def list_private_archived_threads(
+        self,
+        channel_id,
+        before: typing.Union[str, datetime.datetime] = None,
+        limit: int = None,
+    ) -> RESPONSE:
         """
         Sends list private archived threads request.
 
@@ -704,9 +866,16 @@ class HTTPRequestBase(ABC):
             params["before"] = str(before)
         if limit is not None:
             params["limit"] = limit
-        return self.request(f"/channels/{channel_id}/threads/archived/private", "GET", params=params)
+        return self.request(
+            f"/channels/{channel_id}/threads/archived/private", "GET", params=params
+        )
 
-    def list_joined_private_archived_threads(self, channel_id, before: typing.Union[str, datetime.datetime] = None, limit: int = None) -> RESPONSE:
+    def list_joined_private_archived_threads(
+        self,
+        channel_id,
+        before: typing.Union[str, datetime.datetime] = None,
+        limit: int = None,
+    ) -> RESPONSE:
         """
         Sends list joined private archived threads request.
 
@@ -719,7 +888,11 @@ class HTTPRequestBase(ABC):
             params["before"] = str(before)
         if limit is not None:
             params["limit"] = limit
-        return self.request(f"/channels/{channel_id}/users/@me/threads/archived/private", "GET", params=params)
+        return self.request(
+            f"/channels/{channel_id}/users/@me/threads/archived/private",
+            "GET",
+            params=params,
+        )
 
     # Emoji Requests
 
@@ -740,7 +913,14 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "GET")
 
-    def create_guild_emoji(self, guild_id, name: str, image: str, roles: typing.List[str], reason: str = None) -> RESPONSE:
+    def create_guild_emoji(
+        self,
+        guild_id,
+        name: str,
+        image: str,
+        roles: typing.List[str],
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends create guild emoji request.
 
@@ -751,9 +931,22 @@ class HTTPRequestBase(ABC):
         :param reason: Reason of the action.
         """
         body = {"name": name, "image": image, "roles": roles}
-        return self.request(f"/guilds/{guild_id}/emojis", "POST", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/emojis",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def modify_guild_emoji(self, guild_id, emoji_id, name: str = EmptyObject, roles: typing.List[str] = EmptyObject, reason: str = None) -> RESPONSE:
+    def modify_guild_emoji(
+        self,
+        guild_id,
+        emoji_id,
+        name: str = EmptyObject,
+        roles: typing.List[str] = EmptyObject,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify guild emoji request.
 
@@ -768,7 +961,13 @@ class HTTPRequestBase(ABC):
             body["name"] = name
         if roles is not EmptyObject:
             body["roles"] = roles
-        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/emojis/{emoji_id}",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def delete_guild_emoji(self, guild_id, emoji_id, reason: str = None) -> RESPONSE:
         """
@@ -778,22 +977,26 @@ class HTTPRequestBase(ABC):
         :param emoji_id: ID of the emoji to delete.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/emojis/{emoji_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/emojis/{emoji_id}", "DELETE", reason_header=reason
+        )
 
     # Guild Requests
 
-    def create_guild(self,
-                     name: str,
-                     icon: str = None,
-                     verification_level: int = None,
-                     default_message_notifications: int = None,
-                     explicit_content_filter: int = None,
-                     roles: typing.List[dict] = None,
-                     channels: typing.List[dict] = None,
-                     afk_channel_id: str = None,
-                     afk_timeout: int = None,
-                     system_channel_id: str = None,
-                     system_channel_flags: int = None) -> RESPONSE:
+    def create_guild(
+        self,
+        name: str,
+        icon: str = None,
+        verification_level: int = None,
+        default_message_notifications: int = None,
+        explicit_content_filter: int = None,
+        roles: typing.List[dict] = None,
+        channels: typing.List[dict] = None,
+        afk_channel_id: str = None,
+        afk_timeout: int = None,
+        system_channel_id: str = None,
+        system_channel_flags: int = None,
+    ) -> RESPONSE:
         """
         Sends create guild request.
 
@@ -842,7 +1045,11 @@ class HTTPRequestBase(ABC):
         :param guild_id: ID of the guild to request.
         :param with_counts: Whether to return member and presence count.
         """
-        return self.request(f"/guilds/{guild_id}", "GET", params={"with_counts": "true" if with_counts else "false"})
+        return self.request(
+            f"/guilds/{guild_id}",
+            "GET",
+            params={"with_counts": "true" if with_counts else "false"},
+        )
 
     def request_guild_preview(self, guild_id) -> RESPONSE:
         """
@@ -852,27 +1059,29 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/preview", "GET")
 
-    def modify_guild(self,
-                     guild_id,
-                     name: str = None,
-                     verification_level: int = EmptyObject,
-                     default_message_notifications: int = EmptyObject,
-                     explicit_content_filter: int = EmptyObject,
-                     afk_channel_id: str = EmptyObject,
-                     afk_timeout: int = None,
-                     icon: str = EmptyObject,
-                     owner_id: str = None,
-                     splash: str = EmptyObject,
-                     discovery_splash: str = EmptyObject,
-                     banner: str = EmptyObject,
-                     system_channel_id: str = EmptyObject,
-                     system_channel_flags: int = None,
-                     rules_channel_id: str = EmptyObject,
-                     public_updates_channel_id: str = EmptyObject,
-                     preferred_locale: str = EmptyObject,
-                     features: typing.List[str] = None,
-                     description: str = EmptyObject,
-                     reason: str = None) -> RESPONSE:
+    def modify_guild(
+        self,
+        guild_id,
+        name: str = None,
+        verification_level: int = EmptyObject,
+        default_message_notifications: int = EmptyObject,
+        explicit_content_filter: int = EmptyObject,
+        afk_channel_id: str = EmptyObject,
+        afk_timeout: int = None,
+        icon: str = EmptyObject,
+        owner_id: str = None,
+        splash: str = EmptyObject,
+        discovery_splash: str = EmptyObject,
+        banner: str = EmptyObject,
+        system_channel_id: str = EmptyObject,
+        system_channel_flags: int = None,
+        rules_channel_id: str = EmptyObject,
+        public_updates_channel_id: str = EmptyObject,
+        preferred_locale: str = EmptyObject,
+        features: typing.List[str] = None,
+        description: str = EmptyObject,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends create guild request.
 
@@ -937,7 +1146,9 @@ class HTTPRequestBase(ABC):
             body["features"] = features
         if description is not None:
             body["description"] = description
-        return self.request(f"/guilds/{guild_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}", "PATCH", body, is_json=True, reason_header=reason
+        )
 
     def delete_guild(self, guild_id) -> RESPONSE:
         """
@@ -955,19 +1166,21 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/channels", "GET")
 
-    def create_guild_channel(self,
-                             guild_id,
-                             name: str,
-                             channel_type: int = None,
-                             topic: str = None,
-                             bitrate: int = None,
-                             user_limit: int = None,
-                             rate_limit_per_user: int = None,
-                             position: int = None,
-                             permission_overwrites: typing.List[dict] = None,
-                             parent_id: str = None,
-                             nsfw: bool = None,
-                             reason: str = None) -> RESPONSE:
+    def create_guild_channel(
+        self,
+        guild_id,
+        name: str,
+        channel_type: int = None,
+        topic: str = None,
+        bitrate: int = None,
+        user_limit: int = None,
+        rate_limit_per_user: int = None,
+        position: int = None,
+        permission_overwrites: typing.List[dict] = None,
+        parent_id: str = None,
+        nsfw: bool = None,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends create guild channel request.
 
@@ -1003,9 +1216,17 @@ class HTTPRequestBase(ABC):
             body["parent_id"] = parent_id
         if nsfw is not None:
             body["nsfw"] = nsfw
-        return self.request(f"/guilds/{guild_id}/channels", "POST", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/channels",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def modify_guild_channel_positions(self, guild_id, params: typing.List[dict], reason: str = None) -> RESPONSE:
+    def modify_guild_channel_positions(
+        self, guild_id, params: typing.List[dict], reason: str = None
+    ) -> RESPONSE:
         """
         Sends modify guild channel positions request.
 
@@ -1013,7 +1234,13 @@ class HTTPRequestBase(ABC):
         :param params: List of channel params to modify.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/channels", "PATCH", params, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/channels",
+            "PATCH",
+            params,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def list_active_threads_as_guild(self, guild_id) -> RESPONSE:
         """
@@ -1032,7 +1259,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/members/{user_id}", "GET")
 
-    def list_guild_members(self, guild_id, limit: int = None, after: str = None) -> RESPONSE:
+    def list_guild_members(
+        self, guild_id, limit: int = None, after: str = None
+    ) -> RESPONSE:
         """
         Sends list guild members request.
 
@@ -1060,7 +1289,16 @@ class HTTPRequestBase(ABC):
             params["limit"] = limit
         return self.request(f"/guilds/{guild_id}/members/search", "GET", params=params)
 
-    def add_guild_member(self, guild_id, user_id, access_token: str, nick: str = None, roles: typing.List[str] = None, mute: bool = None, deaf: bool = None) -> RESPONSE:
+    def add_guild_member(
+        self,
+        guild_id,
+        user_id,
+        access_token: str,
+        nick: str = None,
+        roles: typing.List[str] = None,
+        mute: bool = None,
+        deaf: bool = None,
+    ) -> RESPONSE:
         """
         Sends add guild member request.
 
@@ -1084,17 +1322,21 @@ class HTTPRequestBase(ABC):
             body["mute"] = mute
         if deaf is not None:
             body["deaf"] = deaf
-        return self.request(f"/guilds/{guild_id}/members/{user_id}", "PUT", body, is_json=True)
+        return self.request(
+            f"/guilds/{guild_id}/members/{user_id}", "PUT", body, is_json=True
+        )
 
-    def modify_guild_member(self,
-                            guild_id,
-                            user_id,
-                            nick: str = EmptyObject,
-                            roles: typing.List[str] = EmptyObject,
-                            mute: bool = EmptyObject,
-                            deaf: bool = EmptyObject,
-                            channel_id: str = EmptyObject,
-                            reason: str = None) -> RESPONSE:
+    def modify_guild_member(
+        self,
+        guild_id,
+        user_id,
+        nick: str = EmptyObject,
+        roles: typing.List[str] = EmptyObject,
+        mute: bool = EmptyObject,
+        deaf: bool = EmptyObject,
+        channel_id: str = EmptyObject,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify guild member request.
 
@@ -1121,9 +1363,17 @@ class HTTPRequestBase(ABC):
             body["deaf"] = deaf
         if channel_id is not EmptyObject:
             body["channel_id"] = channel_id
-        return self.request(f"/guilds/{guild_id}/members/{user_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/members/{user_id}",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def modify_current_user_nick(self, guild_id, nick: typing.Union[str, None] = EmptyObject, reason: str = None) -> RESPONSE:
+    def modify_current_user_nick(
+        self, guild_id, nick: typing.Union[str, None] = EmptyObject, reason: str = None
+    ) -> RESPONSE:
         """
         Sends modify current user nick request.
 
@@ -1134,9 +1384,17 @@ class HTTPRequestBase(ABC):
         body = {}
         if nick is not EmptyObject:
             body["nick"] = nick
-        return self.request(f"/guilds/{guild_id}/members/@me/nick", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/members/@me/nick",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def add_guild_member_role(self, guild_id, user_id, role_id, reason: str = None) -> RESPONSE:
+    def add_guild_member_role(
+        self, guild_id, user_id, role_id, reason: str = None
+    ) -> RESPONSE:
         """
         Sends add guild member role request.
 
@@ -1145,9 +1403,15 @@ class HTTPRequestBase(ABC):
         :param role_id: ID of the role to add.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}", "PUT", reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+            "PUT",
+            reason_header=reason,
+        )
 
-    def remove_guild_member_role(self, guild_id, user_id, role_id, reason: str = None) -> RESPONSE:
+    def remove_guild_member_role(
+        self, guild_id, user_id, role_id, reason: str = None
+    ) -> RESPONSE:
         """
         Sends remove guild member role request.
 
@@ -1156,7 +1420,11 @@ class HTTPRequestBase(ABC):
         :param role_id: ID of the role to remove.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
+            "DELETE",
+            reason_header=reason,
+        )
 
     def remove_guild_member(self, guild_id, user_id) -> RESPONSE:
         """
@@ -1184,7 +1452,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/bans/{user_id}", "GET")
 
-    def create_guild_ban(self, guild_id, user_id, delete_message_days: int = None, reason: str = None) -> RESPONSE:
+    def create_guild_ban(
+        self, guild_id, user_id, delete_message_days: int = None, reason: str = None
+    ) -> RESPONSE:
         """
         Sends create guild ban request.
 
@@ -1196,7 +1466,13 @@ class HTTPRequestBase(ABC):
         body = {}
         if delete_message_days is not None:
             body["delete_message_days"] = delete_message_days
-        return self.request(f"/guilds/{guild_id}/bans/{user_id}", "PUT", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/bans/{user_id}",
+            "PUT",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def remove_guild_ban(self, guild_id, user_id, reason: str = None) -> RESPONSE:
         """
@@ -1206,7 +1482,9 @@ class HTTPRequestBase(ABC):
         :param user_id: ID of the user tom remove ban.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/bans/{user_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/bans/{user_id}", "DELETE", reason_header=reason
+        )
 
     def request_guild_roles(self, guild_id) -> RESPONSE:
         """
@@ -1216,7 +1494,16 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/roles", "GET")
 
-    def create_guild_role(self, guild_id, name: str = None, permissions: str = None, color: int = None, hoist: bool = None, mentionable: bool = None, reason: str = None) -> RESPONSE:
+    def create_guild_role(
+        self,
+        guild_id,
+        name: str = None,
+        permissions: str = None,
+        color: int = None,
+        hoist: bool = None,
+        mentionable: bool = None,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends create guild role request.
 
@@ -1239,9 +1526,17 @@ class HTTPRequestBase(ABC):
             body["hoist"] = hoist
         if mentionable is not None:
             body["mentionable"] = mentionable
-        return self.request(f"/guilds/{guild_id}/roles", "POST", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/roles",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def modify_guild_role_positions(self, guild_id, params: typing.List[dict], reason: str = None) -> RESPONSE:
+    def modify_guild_role_positions(
+        self, guild_id, params: typing.List[dict], reason: str = None
+    ) -> RESPONSE:
         """
         Sends modify guild role positions request.
 
@@ -1249,17 +1544,25 @@ class HTTPRequestBase(ABC):
         :param params: List of ``{"id": role ID, "position": position}``.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/roles", "PATCH", params, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/roles",
+            "PATCH",
+            params,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def modify_guild_role(self,
-                          guild_id,
-                          role_id,
-                          name: str = EmptyObject,
-                          permissions: str = EmptyObject,
-                          color: int = EmptyObject,
-                          hoist: bool = EmptyObject,
-                          mentionable: bool = EmptyObject,
-                          reason: str = None) -> RESPONSE:
+    def modify_guild_role(
+        self,
+        guild_id,
+        role_id,
+        name: str = EmptyObject,
+        permissions: str = EmptyObject,
+        color: int = EmptyObject,
+        hoist: bool = EmptyObject,
+        mentionable: bool = EmptyObject,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify guild role request.
 
@@ -1283,7 +1586,13 @@ class HTTPRequestBase(ABC):
             body["hoist"] = hoist
         if mentionable is not EmptyObject:
             body["mentionable"] = mentionable
-        return self.request(f"/guilds/{guild_id}/roles/{role_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/roles/{role_id}",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def delete_guild_role(self, guild_id, role_id, reason: str = None) -> RESPONSE:
         """
@@ -1293,9 +1602,13 @@ class HTTPRequestBase(ABC):
         :param role_id: ID of the role to delete.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/roles/{role_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/roles/{role_id}", "DELETE", reason_header=reason
+        )
 
-    def request_guild_prune_count(self, guild_id, days: int = None, include_roles: typing.List[str] = None) -> RESPONSE:
+    def request_guild_prune_count(
+        self, guild_id, days: int = None, include_roles: typing.List[str] = None
+    ) -> RESPONSE:
         """
         Sends get guild prune count request.
 
@@ -1308,10 +1621,17 @@ class HTTPRequestBase(ABC):
         if days is not None:
             params["days"] = days
         if include_roles is not None:
-            params["include_roles"] = ','.join(include_roles)
+            params["include_roles"] = ",".join(include_roles)
         return self.request(f"/guilds/{guild_id}/prune", "GET", params=params)
 
-    def begin_guild_prune(self, guild_id, days: int = None, compute_prune_count: bool = None, include_roles: typing.List[str] = None, reason: str = None) -> RESPONSE:
+    def begin_guild_prune(
+        self,
+        guild_id,
+        days: int = None,
+        compute_prune_count: bool = None,
+        include_roles: typing.List[str] = None,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends begin guild prune request.
 
@@ -1328,7 +1648,9 @@ class HTTPRequestBase(ABC):
             body["compute_prune_count"] = compute_prune_count
         if include_roles is not None:
             body["include_roles"] = include_roles
-        return self.request(f"/guilds/{guild_id}/prune", "POST", body, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/prune", "POST", body, reason_header=reason
+        )
 
     def request_guild_voice_regions(self, guild_id) -> RESPONSE:
         """
@@ -1354,7 +1676,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/integrations", "GET")
 
-    def delete_guild_integration(self, guild_id, integration_id, reason: str = None) -> RESPONSE:
+    def delete_guild_integration(
+        self, guild_id, integration_id, reason: str = None
+    ) -> RESPONSE:
         """
         Sends delete guild integration request.
 
@@ -1362,7 +1686,11 @@ class HTTPRequestBase(ABC):
         :param integration_id: ID of the integration to delete.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/integrations/{integration_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/integrations/{integration_id}",
+            "DELETE",
+            reason_header=reason,
+        )
 
     def request_guild_widget_settings(self, guild_id) -> RESPONSE:
         """
@@ -1372,7 +1700,13 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/widget", "GET")
 
-    def modify_guild_widget(self, guild_id, enabled: bool = None, channel_id: str = EmptyObject, reason: str = None) -> RESPONSE:
+    def modify_guild_widget(
+        self,
+        guild_id,
+        enabled: bool = None,
+        channel_id: str = EmptyObject,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify guild widget request.
 
@@ -1386,7 +1720,13 @@ class HTTPRequestBase(ABC):
             body["enabled"] = enabled
         if channel_id is not EmptyObject:
             body["channel_id"] = channel_id
-        return self.request(f"/guilds/{guild_id}/widget", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/widget",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def request_guild_widget(self, guild_id) -> RESPONSE:
         """
@@ -1422,11 +1762,14 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/welcome-screen", "GET")
 
-    def modify_guild_welcome_screen(self,
-                                    guild_id, enabled: bool = EmptyObject,
-                                    welcome_channels: typing.List[dict] = EmptyObject,
-                                    description: str = EmptyObject,
-                                    reason: str = None) -> RESPONSE:
+    def modify_guild_welcome_screen(
+        self,
+        guild_id,
+        enabled: bool = EmptyObject,
+        welcome_channels: typing.List[dict] = EmptyObject,
+        description: str = EmptyObject,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify guild welcome screen request.
 
@@ -1443,9 +1786,22 @@ class HTTPRequestBase(ABC):
             body["welcome_channels"] = welcome_channels
         if description is not EmptyObject:
             body["description"] = description
-        return self.request(f"/guilds/{guild_id}/welcome-screen", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/welcome-screen",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
-    def modify_user_voice_state(self, guild_id, channel_id: str, user_id="@me", suppress: bool = None, request_to_speak_timestamp: str = None) -> RESPONSE:
+    def modify_user_voice_state(
+        self,
+        guild_id,
+        channel_id: str,
+        user_id="@me",
+        suppress: bool = None,
+        request_to_speak_timestamp: str = None,
+    ) -> RESPONSE:
         """
         Sends modify curren user or user voice state requset.
 
@@ -1462,11 +1818,15 @@ class HTTPRequestBase(ABC):
             body["suppress"] = suppress
         if request_to_speak_timestamp is not None:
             body["request_to_speak_timestamp"] = request_to_speak_timestamp
-        return self.request(f"/guilds/{guild_id}/voice-states/{user_id}", "PATCH", body, is_json=True)
+        return self.request(
+            f"/guilds/{guild_id}/voice-states/{user_id}", "PATCH", body, is_json=True
+        )
 
     # Guild Scheduled Event Requests
 
-    def list_scheduled_events_for_guild(self, guild_id, with_user_count: bool = None) -> RESPONSE:
+    def list_scheduled_events_for_guild(
+        self, guild_id, with_user_count: bool = None
+    ) -> RESPONSE:
         """
         Sends list scheduled events for guild.
 
@@ -1476,19 +1836,23 @@ class HTTPRequestBase(ABC):
         params = {}
         if with_user_count is not None:
             params["with_user_count"] = "true" if with_user_count else "false"
-        return self.request(f"/guilds/{guild_id}/scheduled-events", "GET", params=params)
+        return self.request(
+            f"/guilds/{guild_id}/scheduled-events", "GET", params=params
+        )
 
-    def create_guild_scheduled_event(self,
-                                     guild_id,
-                                     *,
-                                     channel_id: str = None,
-                                     entity_metadata: dict = None,
-                                     name: str,
-                                     privacy_level: int,
-                                     scheduled_start_time: str,
-                                     scheduled_end_time: str = None,
-                                     description: str = None,
-                                     entity_type: int) -> RESPONSE:
+    def create_guild_scheduled_event(
+        self,
+        guild_id,
+        *,
+        channel_id: str = None,
+        entity_metadata: dict = None,
+        name: str,
+        privacy_level: int,
+        scheduled_start_time: str,
+        scheduled_end_time: str = None,
+        description: str = None,
+        entity_type: int,
+    ) -> RESPONSE:
         """
         Sends create guild scheduled event request.
 
@@ -1502,7 +1866,12 @@ class HTTPRequestBase(ABC):
         :param description: Description of the event.
         :param entity_type: Type of the entity of the event.
         """
-        body = {"name": name, "privacy_level": privacy_level, "scheduled_start_time": scheduled_start_time, "entity_type": entity_type}
+        body = {
+            "name": name,
+            "privacy_level": privacy_level,
+            "scheduled_start_time": scheduled_start_time,
+            "entity_type": entity_type,
+        }
         if channel_id is not None:
             body["channel_id"] = channel_id
         if entity_metadata is not None:
@@ -1511,9 +1880,13 @@ class HTTPRequestBase(ABC):
             body["scheduled_end_time"] = scheduled_end_time
         if description is not None:
             body["description"] = description
-        return self.request(f"/guilds/{guild_id}/scheduled-events", "POST", body, is_json=True)
+        return self.request(
+            f"/guilds/{guild_id}/scheduled-events", "POST", body, is_json=True
+        )
 
-    def request_guild_scheduled_event(self, guild_id, guild_scheduled_event_id, with_user_count: bool = None):
+    def request_guild_scheduled_event(
+        self, guild_id, guild_scheduled_event_id, with_user_count: bool = None
+    ):
         """
         Sends get guild scheduled event request.
 
@@ -1524,20 +1897,26 @@ class HTTPRequestBase(ABC):
         params = {}
         if with_user_count is not None:
             params["with_user_count"] = "true" if with_user_count else "false"
-        return self.request(f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}", "GET", params=params)
+        return self.request(
+            f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}",
+            "GET",
+            params=params,
+        )
 
-    def modify_guild_scheduled_event(self,
-                                     guild_id,
-                                     guild_scheduled_event_id,
-                                     channel_id: str = EmptyObject,
-                                     entity_metadata: dict = None,
-                                     name: str = None,
-                                     privacy_level: int = None,
-                                     scheduled_start_time: str = None,
-                                     scheduled_end_time: str = None,
-                                     description: str = None,
-                                     entity_type: int = None,
-                                     status: int = None):
+    def modify_guild_scheduled_event(
+        self,
+        guild_id,
+        guild_scheduled_event_id,
+        channel_id: str = EmptyObject,
+        entity_metadata: dict = None,
+        name: str = None,
+        privacy_level: int = None,
+        scheduled_start_time: str = None,
+        scheduled_end_time: str = None,
+        description: str = None,
+        entity_type: int = None,
+        status: int = None,
+    ):
         """
         Sends modify guild scheduled event request.
 
@@ -1572,7 +1951,12 @@ class HTTPRequestBase(ABC):
             body["entity_type"] = entity_type
         if status is not None:
             body["status"] = status
-        return self.request(f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}", "PATCH", body, is_json=True)
+        return self.request(
+            f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}",
+            "PATCH",
+            body,
+            is_json=True,
+        )
 
     def delete_guild_scheduled_event(self, guild_id, guild_scheduled_event_id):
         """
@@ -1581,15 +1965,19 @@ class HTTPRequestBase(ABC):
         :param guild_id: ID of the guild to delete scheduled event.
         :param guild_scheduled_event_id: ID of the scheduled event to delete.
         """
-        return self.request(f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}", "DELETE")
+        return self.request(
+            f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}", "DELETE"
+        )
 
-    def request_guild_scheduled_event_users(self,
-                                            guild_id,
-                                            guild_scheduled_event_id,
-                                            limit: int = None,
-                                            with_member: bool = None,
-                                            before: str = None,
-                                            after: str = None):
+    def request_guild_scheduled_event_users(
+        self,
+        guild_id,
+        guild_scheduled_event_id,
+        limit: int = None,
+        with_member: bool = None,
+        before: str = None,
+        after: str = None,
+    ):
         """
         Sends get guild scheduled event users request.
 
@@ -1609,7 +1997,11 @@ class HTTPRequestBase(ABC):
             params["before"] = before
         if after is not None:
             params["after"] = after
-        return self.request(f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}/users", "GET", params=params)
+        return self.request(
+            f"/guilds/{guild_id}/scheduled-events/{guild_scheduled_event_id}/users",
+            "GET",
+            params=params,
+        )
 
     # Guild Template Requests
 
@@ -1621,7 +2013,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/templates/{template_code}", "GET")
 
-    def create_guild_from_template(self, template_code, name: str, icon: str = None) -> RESPONSE:
+    def create_guild_from_template(
+        self, template_code, name: str, icon: str = None
+    ) -> RESPONSE:
         """
         Sends create guild from template request.
 
@@ -1632,7 +2026,9 @@ class HTTPRequestBase(ABC):
         body = {"name": name}
         if icon is not None:
             body["icon"] = icon
-        return self.request(f"/guilds/templates/{template_code}", "POST", body, is_json=True)
+        return self.request(
+            f"/guilds/templates/{template_code}", "POST", body, is_json=True
+        )
 
     def request_guild_templates(self, guild_id) -> RESPONSE:
         """
@@ -1642,7 +2038,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/templates", "GET")
 
-    def create_guild_template(self, guild_id, name: str, description: str = EmptyObject) -> RESPONSE:
+    def create_guild_template(
+        self, guild_id, name: str, description: str = EmptyObject
+    ) -> RESPONSE:
         """
         Sends create guild template request.
 
@@ -1664,7 +2062,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/guilds/{guild_id}/templates/{template_code}", "PUT")
 
-    def modify_guild_template(self, guild_id, template_code, name: str = None, description: str = EmptyObject) -> RESPONSE:
+    def modify_guild_template(
+        self, guild_id, template_code, name: str = None, description: str = EmptyObject
+    ) -> RESPONSE:
         """
         Sends modify guild template request.
 
@@ -1678,7 +2078,9 @@ class HTTPRequestBase(ABC):
             body["name"] = name
         if description is not EmptyObject:
             body["description"] = description
-        return self.request(f"/guilds/{guild_id}/templates/{template_code}", "PATCH", body, is_json=True)
+        return self.request(
+            f"/guilds/{guild_id}/templates/{template_code}", "PATCH", body, is_json=True
+        )
 
     def delete_guild_template(self, guild_id, template_code) -> RESPONSE:
         """
@@ -1691,7 +2093,9 @@ class HTTPRequestBase(ABC):
 
     # Invite Requests
 
-    def request_invite(self, invite_code, with_counts: bool = None, with_expiration: bool = None) -> RESPONSE:
+    def request_invite(
+        self, invite_code, with_counts: bool = None, with_expiration: bool = None
+    ) -> RESPONSE:
         """
         Sends get invite request.
 
@@ -1717,7 +2121,9 @@ class HTTPRequestBase(ABC):
 
     # Stage Instance requests
 
-    def create_stage_instance(self, channel_id: str, topic: str, privacy_level: int = None, reason: str = None) -> RESPONSE:
+    def create_stage_instance(
+        self, channel_id: str, topic: str, privacy_level: int = None, reason: str = None
+    ) -> RESPONSE:
         """
         Sends create stage instance request.
 
@@ -1729,7 +2135,9 @@ class HTTPRequestBase(ABC):
         body = {"channel_id": channel_id, "topic": topic}
         if privacy_level is not None:
             body["privacy_level"] = privacy_level
-        return self.request("/stage-instances", "POST", body, is_json=True, reason_header=reason)
+        return self.request(
+            "/stage-instances", "POST", body, is_json=True, reason_header=reason
+        )
 
     def request_stage_instance(self, channel_id) -> RESPONSE:
         """
@@ -1739,7 +2147,13 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/stage-instances/{channel_id}", "GET")
 
-    def modify_stage_instance(self, channel_id, topic: str = None, privacy_level: int = None, reason: str = None) -> RESPONSE:
+    def modify_stage_instance(
+        self,
+        channel_id,
+        topic: str = None,
+        privacy_level: int = None,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify stage instance request.
 
@@ -1753,7 +2167,13 @@ class HTTPRequestBase(ABC):
             body["topic"] = topic
         if privacy_level is not None:
             body["privacy_level"] = privacy_level
-        return self.request(f"/stage-instances/{channel_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/stage-instances/{channel_id}",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def delete_stage_instance(self, channel_id, reason: str = None) -> RESPONSE:
         """
@@ -1762,7 +2182,9 @@ class HTTPRequestBase(ABC):
         :param channel_id: ID of the stage channel.
         :param reason: Reason of the action.
         """
-        return self.request(f"/stage-instances/{channel_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/stage-instances/{channel_id}", "DELETE", reason_header=reason
+        )
 
     # Sticker Requests
 
@@ -1798,7 +2220,15 @@ class HTTPRequestBase(ABC):
         return self.request(f"/guilds/{guild_id}/stickers/{sticker_id}", "GET")
 
     @abstractmethod
-    def create_guild_sticker(self, guild_id, name: str, description: str, tags: str, file: io.FileIO, reason: str = None) -> RESPONSE:
+    def create_guild_sticker(
+        self,
+        guild_id,
+        name: str,
+        description: str,
+        tags: str,
+        file: io.FileIO,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends create guild sticker request.
 
@@ -1811,7 +2241,15 @@ class HTTPRequestBase(ABC):
         """
         pass
 
-    def modify_guild_sticker(self, guild_id, sticker_id, name: str = None, description: str = EmptyObject, tags: str = None, reason: str = None) -> RESPONSE:
+    def modify_guild_sticker(
+        self,
+        guild_id,
+        sticker_id,
+        name: str = None,
+        description: str = EmptyObject,
+        tags: str = None,
+        reason: str = None,
+    ) -> RESPONSE:
         """
         Sends modify guild sticker request.
 
@@ -1829,7 +2267,13 @@ class HTTPRequestBase(ABC):
             body["description"] = description
         if tags is not None:
             body["tags"] = tags
-        return self.request(f"/guilds/{guild_id}/stickers/{sticker_id}", "PATCH", body, is_json=True, reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/stickers/{sticker_id}",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
 
     def delete_guild_sticker(self, guild_id, sticker_id, reason: str = None):
         """
@@ -1839,7 +2283,9 @@ class HTTPRequestBase(ABC):
         :param sticker_id: ID of sticker to delete.
         :param reason: Reason of the action.
         """
-        return self.request(f"/guilds/{guild_id}/stickers/{sticker_id}", "DELETE", reason_header=reason)
+        return self.request(
+            f"/guilds/{guild_id}/stickers/{sticker_id}", "DELETE", reason_header=reason
+        )
 
     # User Requests
 
@@ -1851,7 +2297,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/users/{user_id}", "GET")
 
-    def modify_current_user(self, username: str = None, avatar: str = EmptyObject) -> RESPONSE:
+    def modify_current_user(
+        self, username: str = None, avatar: str = EmptyObject
+    ) -> RESPONSE:
         """
         Sends modify current user request. You can create avatar using ``to_image_data`` of utils.
 
@@ -1885,16 +2333,25 @@ class HTTPRequestBase(ABC):
 
         :param recipient_id: ID of the recipient to add.
         """
-        return self.request(f"/users/@me/channels", "POST", {"recipient_id": recipient_id}, is_json=True)
+        return self.request(
+            f"/users/@me/channels", "POST", {"recipient_id": recipient_id}, is_json=True
+        )
 
-    def create_group_dm(self, access_tokens: typing.List[str], nicks: typing.Dict[str, str]) -> RESPONSE:
+    def create_group_dm(
+        self, access_tokens: typing.List[str], nicks: typing.Dict[str, str]
+    ) -> RESPONSE:
         """
         Sends create group dm request.
 
         :param access_tokens: OAuth2 access tokens of the participants to add.
         :param nicks: Dict of ID-nick to set.
         """
-        return self.request(f"/users/@me/channels", "POST", {"access_tokens": access_tokens, "nicks": nicks}, is_json=True)
+        return self.request(
+            f"/users/@me/channels",
+            "POST",
+            {"access_tokens": access_tokens, "nicks": nicks},
+            is_json=True,
+        )
 
     # Voice Requests
 
@@ -1917,7 +2374,9 @@ class HTTPRequestBase(ABC):
         body = {"name": name}
         if avatar is not None:
             body["avatar"] = avatar
-        return self.request(f"/channels/{channel_id}/webhooks", "POST", body, is_json=True)
+        return self.request(
+            f"/channels/{channel_id}/webhooks", "POST", body, is_json=True
+        )
 
     def request_channel_webhooks(self, channel_id) -> RESPONSE:
         """
@@ -1952,7 +2411,9 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "GET")
 
-    def modify_webhook(self, webhook_id, name: str = None, avatar: str = None, channel_id: str = None) -> RESPONSE:
+    def modify_webhook(
+        self, webhook_id, name: str = None, avatar: str = None, channel_id: str = None
+    ) -> RESPONSE:
         """
         Sends modify webhook request.
 
@@ -1970,7 +2431,9 @@ class HTTPRequestBase(ABC):
             body["channel_id"] = channel_id
         return self.request(f"/webhooks/{webhook_id}", "PATCH", body, is_json=True)
 
-    def modify_webhook_with_token(self, webhook_id, webhook_token, name: str = None, avatar: str = None) -> RESPONSE:
+    def modify_webhook_with_token(
+        self, webhook_id, webhook_token, name: str = None, avatar: str = None
+    ) -> RESPONSE:
         """
         Sends modify webhook request.
 
@@ -1984,7 +2447,9 @@ class HTTPRequestBase(ABC):
             body["name"] = name
         if avatar is not None:
             body["avatar"] = avatar
-        return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "PATCH", body, is_json=True)
+        return self.request(
+            f"/webhooks/{webhook_id}/{webhook_token}", "PATCH", body, is_json=True
+        )
 
     def delete_webhook(self, webhook_id) -> RESPONSE:
         """
@@ -2003,19 +2468,21 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "DELETE")
 
-    def execute_webhook(self,
-                        webhook_id,
-                        webhook_token,
-                        wait: bool = None,
-                        thread_id=None,
-                        content: str = None,
-                        username: str = None,
-                        avatar_url: str = None,
-                        tts: bool = False,
-                        embeds: typing.List[dict] = None,
-                        allowed_mentions: dict = None,
-                        components: typing.List[dict] = None,
-                        flags: int = None) -> RESPONSE:
+    def execute_webhook(
+        self,
+        webhook_id,
+        webhook_token,
+        wait: bool = None,
+        thread_id=None,
+        content: str = None,
+        username: str = None,
+        avatar_url: str = None,
+        tts: bool = False,
+        embeds: typing.List[dict] = None,
+        allowed_mentions: dict = None,
+        components: typing.List[dict] = None,
+        flags: int = None,
+    ) -> RESPONSE:
         """
         Sends execute webhook request.
 
@@ -2057,24 +2524,32 @@ class HTTPRequestBase(ABC):
             params["wait"] = "true" if wait else "false"
         if thread_id is not None:
             params["thread_id"] = thread_id
-        return self.request(f"/webhooks/{webhook_id}/{webhook_token}", "POST", body, is_json=True, params=params)
+        return self.request(
+            f"/webhooks/{webhook_id}/{webhook_token}",
+            "POST",
+            body,
+            is_json=True,
+            params=params,
+        )
 
     @abstractmethod
-    def execute_webhook_with_files(self,
-                                   webhook_id,
-                                   webhook_token,
-                                   wait: bool = None,
-                                   thread_id=None,
-                                   content: str = None,
-                                   username: str = None,
-                                   avatar_url: str = None,
-                                   tts: bool = False,
-                                   files: typing.List[io.FileIO] = None,
-                                   embeds: typing.List[dict] = None,
-                                   allowed_mentions: dict = None,
-                                   components: typing.List[dict] = None,
-                                   attachments: typing.List[dict] = None,
-                                   flags: int = None) -> RESPONSE:
+    def execute_webhook_with_files(
+        self,
+        webhook_id,
+        webhook_token,
+        wait: bool = None,
+        thread_id=None,
+        content: str = None,
+        username: str = None,
+        avatar_url: str = None,
+        tts: bool = False,
+        files: typing.List[io.FileIO] = None,
+        embeds: typing.List[dict] = None,
+        allowed_mentions: dict = None,
+        components: typing.List[dict] = None,
+        attachments: typing.List[dict] = None,
+        flags: int = None,
+    ) -> RESPONSE:
         """
         Sends execute webhook request with files.
 
@@ -2095,7 +2570,9 @@ class HTTPRequestBase(ABC):
         """
         pass
 
-    def request_webhook_message(self, webhook_id, webhook_token, message_id) -> RESPONSE:
+    def request_webhook_message(
+        self, webhook_id, webhook_token, message_id
+    ) -> RESPONSE:
         """
         Sends get webhook message request.
 
@@ -2103,19 +2580,23 @@ class HTTPRequestBase(ABC):
         :param webhook_token: Token of the webhook.
         :param message_id: ID of the message
         """
-        return self.request(f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "GET")
+        return self.request(
+            f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "GET"
+        )
 
     @abstractmethod
-    def edit_webhook_message(self,
-                             webhook_id,
-                             webhook_token,
-                             message_id,
-                             content: str = EmptyObject,
-                             embeds: typing.List[dict] = EmptyObject,
-                             files: typing.List[io.FileIO] = EmptyObject,
-                             allowed_mentions: dict = EmptyObject,
-                             attachments: typing.List[dict] = EmptyObject,
-                             components: typing.List[dict] = EmptyObject) -> RESPONSE:
+    def edit_webhook_message(
+        self,
+        webhook_id,
+        webhook_token,
+        message_id,
+        content: str = EmptyObject,
+        embeds: typing.List[dict] = EmptyObject,
+        files: typing.List[io.FileIO] = EmptyObject,
+        allowed_mentions: dict = EmptyObject,
+        attachments: typing.List[dict] = EmptyObject,
+        components: typing.List[dict] = EmptyObject,
+    ) -> RESPONSE:
         """
         Sends edit webhook message request.
         :param webhook_id: ID of the webhook.
@@ -2138,7 +2619,9 @@ class HTTPRequestBase(ABC):
         :param webhook_token: Token of the webhook.
         :param message_id: ID of the message to edit.
         """
-        return self.request(f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "DELETE")
+        return self.request(
+            f"/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}", "DELETE"
+        )
 
     # Interaction Requests
 
@@ -2149,16 +2632,22 @@ class HTTPRequestBase(ABC):
         :param application_id: ID of the application.
         :param guild_id: ID of the guild. Set to None for global.
         """
-        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "GET")
+        return self.request(
+            f"/applications/{application_id}/"
+            + (f"guilds/{guild_id}/commands" if guild_id else "commands"),
+            "GET",
+        )
 
-    def create_application_command(self,
-                                   application_id,
-                                   name: str,
-                                   description: str = None,
-                                   options: typing.List[dict] = None,
-                                   default_permission: bool = None,
-                                   command_type: int = None,
-                                   guild_id=None) -> RESPONSE:
+    def create_application_command(
+        self,
+        application_id,
+        name: str,
+        description: str = None,
+        options: typing.List[dict] = None,
+        default_permission: bool = None,
+        command_type: int = None,
+        guild_id=None,
+    ) -> RESPONSE:
         """
         Sends create global or guild application command request.
 
@@ -2179,9 +2668,17 @@ class HTTPRequestBase(ABC):
             body["default_permission"] = default_permission
         if command_type is not None:
             body["type"] = command_type
-        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "POST", body, is_json=True)
+        return self.request(
+            f"/applications/{application_id}/"
+            + (f"guilds/{guild_id}/commands" if guild_id else "commands"),
+            "POST",
+            body,
+            is_json=True,
+        )
 
-    def request_application_command(self, application_id, command_id, guild_id=None) -> RESPONSE:
+    def request_application_command(
+        self, application_id, command_id, guild_id=None
+    ) -> RESPONSE:
         """
         Sends get global or guild application command request.
 
@@ -2189,9 +2686,23 @@ class HTTPRequestBase(ABC):
         :param command_id: ID of the command to request.
         :param guild_id: ID of the guild. Set to None for global.
         """
-        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands")+f"/{command_id}", "GET")
+        return self.request(
+            f"/applications/{application_id}/"
+            + (f"guilds/{guild_id}/commands" if guild_id else "commands")
+            + f"/{command_id}",
+            "GET",
+        )
 
-    def edit_application_command(self, application_id, command_id, name: str = None, description: str = None, options: typing.List[dict] = None, default_permission: bool = None, guild_id=None) -> RESPONSE:
+    def edit_application_command(
+        self,
+        application_id,
+        command_id,
+        name: str = None,
+        description: str = None,
+        options: typing.List[dict] = None,
+        default_permission: bool = None,
+        guild_id=None,
+    ) -> RESPONSE:
         """
         Sends edit global or guild application command request.
 
@@ -2212,9 +2723,18 @@ class HTTPRequestBase(ABC):
             body["options"] = options
         if default_permission is not None:
             body["default_permission"] = default_permission
-        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands")+f"/{command_id}", "PATCH", body, is_json=True)
+        return self.request(
+            f"/applications/{application_id}/"
+            + (f"guilds/{guild_id}/commands" if guild_id else "commands")
+            + f"/{command_id}",
+            "PATCH",
+            body,
+            is_json=True,
+        )
 
-    def delete_application_command(self, application_id, command_id, guild_id=None) -> RESPONSE:
+    def delete_application_command(
+        self, application_id, command_id, guild_id=None
+    ) -> RESPONSE:
         """
         Sends delete global or guild application command request.
 
@@ -2222,9 +2742,16 @@ class HTTPRequestBase(ABC):
         :param command_id: ID of the command to request.
         :param guild_id: ID of the guild. Set to None for global.
         """
-        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands")+f"/{command_id}", "DELETE")
+        return self.request(
+            f"/applications/{application_id}/"
+            + (f"guilds/{guild_id}/commands" if guild_id else "commands")
+            + f"/{command_id}",
+            "DELETE",
+        )
 
-    def bulk_overwrite_application_commands(self, application_id, commands: typing.List[dict], guild_id=None) -> RESPONSE:
+    def bulk_overwrite_application_commands(
+        self, application_id, commands: typing.List[dict], guild_id=None
+    ) -> RESPONSE:
         """
         Sends delete global or guild application command request.
 
@@ -2232,9 +2759,17 @@ class HTTPRequestBase(ABC):
         :param commands: List of commands to overwrite.
         :param guild_id: ID of the guild. Set to None for global.
         """
-        return self.request(f"/applications/{application_id}/"+(f"guilds/{guild_id}/commands" if guild_id else "commands"), "PUT", commands, is_json=True)
+        return self.request(
+            f"/applications/{application_id}/"
+            + (f"guilds/{guild_id}/commands" if guild_id else "commands"),
+            "PUT",
+            commands,
+            is_json=True,
+        )
 
-    def create_interaction_response(self, interaction_id, interaction_token, interaction_response: dict) -> RESPONSE:
+    def create_interaction_response(
+        self, interaction_id, interaction_token, interaction_response: dict
+    ) -> RESPONSE:
         """
         Sends create interaction response request.
 
@@ -2242,9 +2777,16 @@ class HTTPRequestBase(ABC):
         :param interaction_token: Token of the interaction.
         :param interaction_response: Interaction Response as dict.
         """
-        return self.request(f"/interactions/{interaction_id}/{interaction_token}/callback", "POST", interaction_response, is_json=True)
+        return self.request(
+            f"/interactions/{interaction_id}/{interaction_token}/callback",
+            "POST",
+            interaction_response,
+            is_json=True,
+        )
 
-    def request_interaction_response(self, application_id, interaction_token, message_id="@original") -> RESPONSE:
+    def request_interaction_response(
+        self, application_id, interaction_token, message_id="@original"
+    ) -> RESPONSE:
         """
         Sends get original interaction response request.
 
@@ -2252,21 +2794,25 @@ class HTTPRequestBase(ABC):
         :param interaction_token: Token of the interaction.
         :param message_id: ID of the message to request.
         """
-        return self.request_webhook_message(application_id, interaction_token, message_id)
+        return self.request_webhook_message(
+            application_id, interaction_token, message_id
+        )
 
-    def create_followup_message(self,
-                                application_id,
-                                interaction_token,
-                                content: str = None,
-                                username: str = None,
-                                avatar_url: str = None,
-                                tts: bool = False,
-                                files: typing.List[io.FileIO] = None,
-                                embeds: typing.List[dict] = None,
-                                allowed_mentions: dict = None,
-                                components: typing.List[dict] = None,
-                                attachments: typing.List[dict] = None,
-                                flags: int = None) -> RESPONSE:
+    def create_followup_message(
+        self,
+        application_id,
+        interaction_token,
+        content: str = None,
+        username: str = None,
+        avatar_url: str = None,
+        tts: bool = False,
+        files: typing.List[io.FileIO] = None,
+        embeds: typing.List[dict] = None,
+        allowed_mentions: dict = None,
+        components: typing.List[dict] = None,
+        attachments: typing.List[dict] = None,
+        flags: int = None,
+    ) -> RESPONSE:
         """
         Sends create followup message request.
 
@@ -2283,20 +2829,52 @@ class HTTPRequestBase(ABC):
         :param attachments: List of attachment objects.
         :param flags: Flags of the message.
         """
-        return self.execute_webhook_with_files(application_id, interaction_token, None, None, content, username, avatar_url,
-                                               tts, files, embeds, allowed_mentions, components, attachments, flags) if files \
-            else self.execute_webhook(application_id, interaction_token, None, None, content, username, avatar_url, tts, embeds, allowed_mentions, components, flags)
+        return (
+            self.execute_webhook_with_files(
+                application_id,
+                interaction_token,
+                None,
+                None,
+                content,
+                username,
+                avatar_url,
+                tts,
+                files,
+                embeds,
+                allowed_mentions,
+                components,
+                attachments,
+                flags,
+            )
+            if files
+            else self.execute_webhook(
+                application_id,
+                interaction_token,
+                None,
+                None,
+                content,
+                username,
+                avatar_url,
+                tts,
+                embeds,
+                allowed_mentions,
+                components,
+                flags,
+            )
+        )
 
-    def edit_interaction_response(self,
-                                  application_id,
-                                  interaction_token,
-                                  message_id="@original",
-                                  content: str = EmptyObject,
-                                  embeds: typing.List[dict] = EmptyObject,
-                                  files: typing.List[io.FileIO] = EmptyObject,
-                                  allowed_mentions: dict = EmptyObject,
-                                  attachments: typing.List[dict] = EmptyObject,
-                                  components: typing.List[dict] = EmptyObject) -> RESPONSE:
+    def edit_interaction_response(
+        self,
+        application_id,
+        interaction_token,
+        message_id="@original",
+        content: str = EmptyObject,
+        embeds: typing.List[dict] = EmptyObject,
+        files: typing.List[io.FileIO] = EmptyObject,
+        allowed_mentions: dict = EmptyObject,
+        attachments: typing.List[dict] = EmptyObject,
+        components: typing.List[dict] = EmptyObject,
+    ) -> RESPONSE:
         """
         Sends edit interaction response request.
 
@@ -2310,14 +2888,26 @@ class HTTPRequestBase(ABC):
         :param attachments: Attachments to keep.
         :param components: Components of the message.
         """
-        return self.edit_webhook_message(application_id, interaction_token, message_id, content, embeds, files, allowed_mentions, attachments, components)
+        return self.edit_webhook_message(
+            application_id,
+            interaction_token,
+            message_id,
+            content,
+            embeds,
+            files,
+            allowed_mentions,
+            attachments,
+            components,
+        )
 
     @property
     def edit_followup_message(self):
         """Sends edit followup message request. Actually an alias of :meth:`.edit_interaction_response`."""
         return self.edit_interaction_response
 
-    def delete_interaction_response(self, application_id, interaction_token, message_id="@original") -> RESPONSE:
+    def delete_interaction_response(
+        self, application_id, interaction_token, message_id="@original"
+    ) -> RESPONSE:
         """
         Sends delete interaction response request.
 
@@ -2325,18 +2915,27 @@ class HTTPRequestBase(ABC):
         :param interaction_token: Token of the interaction.
         :param message_id: ID of the message to delete.
         """
-        return self.delete_webhook_message(application_id, interaction_token, message_id)
+        return self.delete_webhook_message(
+            application_id, interaction_token, message_id
+        )
 
-    def request_guild_application_command_permissions(self, application_id, guild_id) -> RESPONSE:
+    def request_guild_application_command_permissions(
+        self, application_id, guild_id
+    ) -> RESPONSE:
         """
         Sends get guild application command permissions request.
 
         :param application_id: ID of the application.
         :param guild_id: ID of the guild.
         """
-        return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/permissions", "GET")
+        return self.request(
+            f"/applications/{application_id}/guilds/{guild_id}/commands/permissions",
+            "GET",
+        )
 
-    def request_application_command_permissions(self, application_id, guild_id, command_id) -> RESPONSE:
+    def request_application_command_permissions(
+        self, application_id, guild_id, command_id
+    ) -> RESPONSE:
         """
         Sends get application command permissions request.
 
@@ -2344,9 +2943,14 @@ class HTTPRequestBase(ABC):
         :param guild_id: ID of the guild.
         :param command_id: ID of the command to get.
         """
-        return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions", "GET")
+        return self.request(
+            f"/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions",
+            "GET",
+        )
 
-    def edit_application_command_permissions(self, application_id, guild_id, command_id, permissions: typing.List[dict]) -> RESPONSE:
+    def edit_application_command_permissions(
+        self, application_id, guild_id, command_id, permissions: typing.List[dict]
+    ) -> RESPONSE:
         """
         Sends edit application command permissions request.
 
@@ -2357,9 +2961,16 @@ class HTTPRequestBase(ABC):
         :return:
         """
         body = {"permissions": permissions}
-        return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions", "PUT", body, is_json=True)
+        return self.request(
+            f"/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions",
+            "PUT",
+            body,
+            is_json=True,
+        )
 
-    def batch_edit_application_command_permissions(self, application_id, guild_id, permissions: typing.List[dict]) -> RESPONSE:
+    def batch_edit_application_command_permissions(
+        self, application_id, guild_id, permissions: typing.List[dict]
+    ) -> RESPONSE:
         """
         Sends batch edit application command permissions request.
 
@@ -2368,7 +2979,12 @@ class HTTPRequestBase(ABC):
         :param permissions: List of dict of command ID and permissions to edit
         :return:
         """
-        return self.request(f"/applications/{application_id}/guilds/{guild_id}/commands/permissions", "PUT", permissions, is_json=True)
+        return self.request(
+            f"/applications/{application_id}/guilds/{guild_id}/commands/permissions",
+            "PUT",
+            permissions,
+            is_json=True,
+        )
 
     # OAuth2 Requests
 
@@ -2387,7 +3003,7 @@ class HTTPRequestBase(ABC):
         :param bot: Whether it should be bot.
         """
         extra = "/bot" if bot else ""
-        return self.request("/gateway"+extra, "GET")
+        return self.request("/gateway" + extra, "GET")
 
     # Misc
 
