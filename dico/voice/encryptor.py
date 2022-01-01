@@ -1,18 +1,19 @@
 try:
     from nacl import secret
     from nacl import utils
+    nacl_missing = False
 except ImportError:
-    import sys
-
-    print("PyNaCl not found, voice won't be available.", file=sys.stderr)
     secret = None
     utils = None
+    nacl_missing = True
 
 
 class Encryptor:
     AVAILABLE = ["xsalsa20_poly1305_suffix"] if secret and utils else []
 
     def __init__(self, secret_key):
+        if nacl_missing:
+            raise Exception("PyNaCl not found, voice unavailable")
         if secret and utils:
             self.secret_key = bytes(secret_key)
             self.box = secret.SecretBox(self.secret_key)
