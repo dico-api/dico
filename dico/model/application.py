@@ -14,13 +14,15 @@ class Application:
 
     def __init__(self, client: "APIClient", resp: dict):
         self.client: "APIClient" = client
-        self.id: Snowflake = Snowflake(resp["id"])
-        self.name: str = resp["name"]
-        self.icon: typing.Optional[str] = resp["icon"]
-        self.description: str = resp["description"]
+        self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
+        self.name: typing.Optional[str] = resp.get("name")
+        self.icon: typing.Optional[str] = resp.get("icon")
+        self.description: typing.Optional[str] = resp.get("description")
         self.rpc_origins: typing.Optional[typing.List[str]] = resp.get("rpc_origins")
-        self.bot_public: bool = resp["bot_public"]
-        self.bot_require_code_grant: bool = resp["bot_require_code_grant"]
+        self.bot_public: typing.Optional[bool] = resp.get("bot_public")
+        self.bot_require_code_grant: typing.Optional[bool] = resp.get(
+            "bot_require_code_grant"
+        )
         self.terms_of_service_url: typing.Optional[str] = resp.get(
             "terms_of_service_url"
         )
@@ -29,9 +31,9 @@ class Application:
         self.owner: typing.Optional[User] = (
             User.create(client, self.__owner) if self.__owner else self.__owner
         )
-        self.summary: str = resp["summary"]
-        self.verify_key: str = resp["verify_key"]
-        self.__team = resp["team"]
+        self.summary: typing.Optional[str] = resp.get("summary")
+        self.verify_key: typing.Optional[str] = resp.get("verify_key")
+        self.__team = resp.get("team")
         self.team: typing.Optional[Team] = (
             Team(client, self.__team) if self.__team else self.__team
         )
