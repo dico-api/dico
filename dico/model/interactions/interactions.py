@@ -53,6 +53,8 @@ class Interaction:
         self._message: typing.Optional[Message] = (
             Message.create(client, self.__message) if self.__message else self.__message
         )
+        self.locale: str = resp.get("locale")
+        self.guild_locale: str = resp.get("guild_locale")
 
     def __int__(self) -> int:
         return int(self.id)
