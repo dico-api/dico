@@ -362,8 +362,28 @@ class GuildRoleDelete(EventBase):
 
 
 GuildScheduledEventCreate = GuildScheduledEvent
-GuildScheduledEventUpdate = GuildScheduledEvent
-GuildScheduledEventDelete = GuildScheduledEvent
+
+
+class GuildScheduledEventUpdate(GuildScheduledEvent):
+    def __del__(self):
+        GuildScheduledEvent.create(self.client, self.raw)
+
+    @property
+    def original(self) -> typing.Optional[GuildScheduledEvent]:
+        if self.client.has_cache:
+            return self.client.get(self.id, self._cache_type)
+
+    @classmethod
+    def create(
+        cls, client: "Client", resp: dict, **kwargs: typing.Any
+    ) -> GuildScheduledEvent:
+        return GuildScheduledEvent(client, resp)
+
+
+class GuildScheduledEventDelete(GuildScheduledEvent):
+    def __del__(self):
+        if self.client.has_cache:
+            self.client.cache.remove(self.id, self._cache_type)
 
 
 class IntegrationCreate(Integration):

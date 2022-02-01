@@ -1,27 +1,26 @@
 import datetime
 from typing import TYPE_CHECKING, Optional, Union, Awaitable, List
 
-from .guild import GuildMember
 from .snowflake import Snowflake
 from .user import User
 
-from ..base.model import TypeBase
+from ..base.model import DiscordObjectBase, TypeBase
 
 if TYPE_CHECKING:
     from ..api import APIClient
 
 
-class GuildScheduledEvent:
+class GuildScheduledEvent(DiscordObjectBase):
     TYPING = Union[int, str, Snowflake, "GuildScheduledEvent"]
     RESPONSE = Union["GuildScheduledEvent", Awaitable["GuildScheduledEvent"]]
     RESPONSE_AS_LIST = Union[
         List["GuildScheduledEvent"], Awaitable[List["GuildScheduledEvent"]]
     ]
+    _cache_type = "guild_scheduled_event"
 
     def __init__(self, client: "APIClient", resp: dict):
-        self.client: "APIClient" = client
-        self.raw: dict = resp
-        self.id: Snowflake = Snowflake(resp["id"])
+        super().__init__(client, resp)
+        self.guild_id: Snowflake = Snowflake(resp["guild_id"])
         self.channel_id: Optional[Snowflake] = Snowflake.optional(resp["channel_id"])
         self.creator_id: Optional[Snowflake] = Snowflake.optional(resp["creator_id"])
         self.name: str = resp["name"]
@@ -52,9 +51,6 @@ class GuildScheduledEvent:
             User.create(client, resp["creator"]) if "creator" in resp else None
         )
         self.user_count: Optional[int] = resp.get("user_count")
-
-    def __int__(self):
-        return int(self.id)
 
     def __repr__(self):
         return f"<GuildScheduledEvent id={self.id} name={self.name}>"
@@ -97,6 +93,8 @@ class GuildScheduledEventUser:
     ]
 
     def __init__(self, client: "APIClient", resp: dict):
+        from .guild import GuildMember
+
         self.client: "APIClient" = client
         self.raw: dict = resp
         self.guild_scheduled_event_id: Snowflake = Snowflake(

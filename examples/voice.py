@@ -11,7 +11,9 @@ async def on_message(message: dico.MessageCreate):
     if message.content.startswith("!connect"):
         voice_state = message.author.voice_state
         if not voice_state or not voice_state.channel_id:
-            return await message.reply("Please connect or reconnect to the voice channel first.")
+            return await message.reply(
+                "Please connect or reconnect to the voice channel first."
+            )
         await client.connect_voice(message.guild_id, voice_state.channel_id)
 
     if message.content.startswith("!disconnect"):
@@ -24,8 +26,10 @@ async def on_message(message: dico.MessageCreate):
     if message.content.startswith("!play "):
         voice_state = message.author.voice_state
         if not voice_state or not voice_state.channel_id:
-            return await message.reply("Please connect or reconnect to the voice channel first.")
-        url = message.content[len("!play "):]
+            return await message.reply(
+                "Please connect or reconnect to the voice channel first."
+            )
+        url = message.content[len("!play ") :]
         if not re.match("https?://(?:www\.)?.+", url):
             return await message.reply("Only URL is supported.")
         voice_client = client.get_voice_client(message.guild_id)

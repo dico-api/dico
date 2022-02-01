@@ -3,6 +3,7 @@ import datetime
 
 from .emoji import Emoji
 from .extras import BYTES_RESPONSE
+from .guild_scheduled_event import GuildScheduledEvent
 from .permission import Role, PermissionFlags
 from .snowflake import Snowflake
 from .stage import StageInstance
@@ -140,6 +141,12 @@ class Guild(DiscordObjectBase):
         self.stickers: typing.Optional[typing.List[Sticker]] = [
             Sticker.create(client, x) for x in resp.get("stickers", [])
         ]
+        self.__guild_scheduled_events = resp.get("guild_scheduled_events", [])
+        self._guild_scheduled_events: typing.List[GuildScheduledEvent] = [
+            GuildScheduledEvent.create(self.client, x)
+            for x in self.__guild_scheduled_events
+        ]
+        self.premium_progress_bar_enabled: bool = resp["premium_progress_bar_enabled"]
 
     def icon_url(
         self, *, extension: str = "webp", size: int = 1024
@@ -403,6 +410,20 @@ class Guild(DiscordObjectBase):
 
     def leave(self):
         return self.client.leave_guild(self)
+
+    @property
+    def guild_scheduled_events(
+        self,
+    ) -> typing.Optional[typing.List[GuildScheduledEvent]]:
+        if self.client.has_cache:
+            events = [
+                x
+                for x in self.client.cache.get_storage(GuildScheduledEvent._cache_type)
+                if x.guild_id == self.id
+            ]
+            if events:
+                return events
+        return self._guild_scheduled_events
 
     @property
     def cache(self) -> typing.Optional["GuildCacheContainer"]:
