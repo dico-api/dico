@@ -1597,6 +1597,9 @@ class APIClient:
         mute: Optional[bool] = EmptyObject,
         deaf: Optional[bool] = EmptyObject,
         channel: Optional[Channel.TYPING] = EmptyObject,
+        communication_disabled_until: Optional[
+            Union[datetime.datetime, str]
+        ] = EmptyObject,
         reason: Optional[str] = None
     ) -> GuildMember.RESPONSE:
         """
@@ -1609,6 +1612,8 @@ class APIClient:
         :param Optional[bool] mute: Whether this member is muted.
         :param Optional[bool] deaf: Whether this member is deafen.
         :param channel: Channel to move user to.
+        :param communication_disabled_until: When user's timeout will be expired. Set None to remove.
+        :type communication_disabled_until: Optional[Union[datetime.datetime, str]]
         :param Optional[str] reason: Reason of the action.
         :return: :class:`~.GuildMember`
         """
@@ -1623,6 +1628,12 @@ class APIClient:
             kwargs["deaf"] = deaf
         if channel is not EmptyObject:
             kwargs["channel_id"] = int(channel) if channel else channel  # noqa
+        if communication_disabled_until is not EmptyObject:
+            kwargs["communication_disabled_until"] = (
+                communication_disabled_until.isoformat()
+                if isinstance(communication_disabled_until, datetime.datetime)
+                else communication_disabled_until
+            )
         resp = self.http.modify_guild_member(
             int(guild), int(user), **kwargs, reason=reason
         )

@@ -1335,6 +1335,7 @@ class HTTPRequestBase(ABC):
         mute: bool = EmptyObject,
         deaf: bool = EmptyObject,
         channel_id: str = EmptyObject,
+        communication_disabled_until: str = EmptyObject,
         reason: str = None,
     ) -> RESPONSE:
         """
@@ -1350,6 +1351,7 @@ class HTTPRequestBase(ABC):
         :param mute: Whether to mute this user in voice channel.
         :param deaf: Whether to deaf this user in voice channel.
         :param channel_id: Voice channel to move.
+        :param communication_disabled_until: When user's timeout will be expired. Set None to remove.
         :param reason: Reason of the action.
         """
         body = {}
@@ -1363,6 +1365,8 @@ class HTTPRequestBase(ABC):
             body["deaf"] = deaf
         if channel_id is not EmptyObject:
             body["channel_id"] = channel_id
+        if communication_disabled_until is not EmptyObject:
+            body["communication_disabled_until"] = communication_disabled_until
         return self.request(
             f"/guilds/{guild_id}/members/{user_id}",
             "PATCH",
