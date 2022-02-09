@@ -32,6 +32,7 @@ class ComponentTypes(TypeBase):
     ACTION_ROW = 1
     BUTTON = 2
     SELECT_MENU = 3
+    TEXT_INPUT = 4
 
 
 class ActionRow(Component):
@@ -192,6 +193,60 @@ class SelectOption:
     @classmethod
     def create(cls, resp):
         return cls(**resp)
+
+
+class TextInput(Component):
+    def __init__(
+        self,
+        *,
+        custom_id: str,
+        style: typing.Union["TextInputStyles", str],
+        label: typing.Optional[str] = None,
+        min_length: typing.Optional[int] = None,
+        max_length: typing.Optional[int] = None,
+        required: typing.Optional[bool] = None,
+        value: typing.Optional[str] = None,
+        placeholder: typing.Optional[str] = None
+    )
+        super().__init__(ComponentTypes.SELECT_MENU)
+        self.custom_id: str = custom_id
+        self.style: TextInputStyles = TextInputStyles(int(style))
+        self.label: typing.Optional[str] = label
+        self.min_length: typing.Optional[int] = min_length
+        self.max_length: typing.Optional[int] = max_length
+        self.required: typing.Optional[bool] = required
+        self.value: typing.Optional[str] = value
+        self.placeholder: typing.Optional[str] = placeholder
+
+    def to_dict(self) -> dict:
+        ret = {
+            "type": self.type.value,
+            "custom_id": self.custom_id,
+            "style": int(self.style)
+        }
+        if self.label is not None:
+            ret["label"] = self.label
+        if self.min_length is not None:
+            ret["min_length"] = self.min_length
+        if self.max_length is not None:
+            ret["max_length"] = self.max_length
+        if self.required is not None:
+            ret["required"] = self.required
+        if self.value is not None:
+            ret["value"] = self.value
+        if self.placeholder is not None:
+            ret["placeholder"] = self.placeholder
+        return ret
+
+    @classmethod
+    def create(cls, resp):
+        return cls(**resp)
+
+
+class TextInputStyles(TypeBase):
+    SHORT = 1
+    PARAGRAPH = 2
+
 
 
 class PartialEmoji:
