@@ -24,6 +24,11 @@ class Component(CopyableObject):
             return Button.create(resp)
         elif resp["type"] == ComponentTypes.SELECT_MENU:
             return SelectMenu.create(resp)
+        elif resp["type"] == ComponentTypes.TEXT_INPUT:
+            if "style" not in resp:
+                return TextInputResponse(resp)
+            else:
+                return TextInput.create(resp)
         else:
             raise NotImplementedError
 
@@ -101,7 +106,7 @@ class Button(Component):
         return ret
 
     @classmethod
-    def create(cls, resp):
+    def create(cls, resp: dict):
         return cls(**resp)
 
 
@@ -152,7 +157,7 @@ class SelectMenu(Component):
         return ret
 
     @classmethod
-    def create(cls, resp):
+    def create(cls, resp: dict):
         return cls(**resp)
 
 
@@ -191,7 +196,7 @@ class SelectOption:
         return ret
 
     @classmethod
-    def create(cls, resp):
+    def create(cls, resp: dict):
         return cls(**resp)
 
 
@@ -200,18 +205,19 @@ class TextInput(Component):
         self,
         *,
         custom_id: str,
-        style: typing.Union["TextInputStyles", str],
-        label: typing.Optional[str] = None,
+        style: typing.Union["TextInputStyles", int],
+        label: str = None,
         min_length: typing.Optional[int] = None,
         max_length: typing.Optional[int] = None,
         required: typing.Optional[bool] = None,
         value: typing.Optional[str] = None,
-        placeholder: typing.Optional[str] = None
-    )
-        super().__init__(ComponentTypes.SELECT_MENU)
+        placeholder: typing.Optional[str] = None,
+        **_
+    ):
+        super().__init__(ComponentTypes.TEXT_INPUT)
         self.custom_id: str = custom_id
         self.style: TextInputStyles = TextInputStyles(int(style))
-        self.label: typing.Optional[str] = label
+        self.label: str = label
         self.min_length: typing.Optional[int] = min_length
         self.max_length: typing.Optional[int] = max_length
         self.required: typing.Optional[bool] = required
@@ -222,10 +228,9 @@ class TextInput(Component):
         ret = {
             "type": self.type.value,
             "custom_id": self.custom_id,
-            "style": int(self.style)
+            "style": int(self.style),
+            "label": self.label,
         }
-        if self.label is not None:
-            ret["label"] = self.label
         if self.min_length is not None:
             ret["min_length"] = self.min_length
         if self.max_length is not None:
@@ -239,14 +244,23 @@ class TextInput(Component):
         return ret
 
     @classmethod
-    def create(cls, resp):
+    def create(cls, resp: dict):
         return cls(**resp)
+
+
+class TextInputResponse:
+    def __init__(self, resp: dict):
+        self.value: str = resp["value"]
+        self.type: ComponentTypes = ComponentTypes(resp["type"])
+        self.custom_id: str = resp["custom_id"]
+
+    def to_dict(self) -> dict:
+        raise AttributeError("unable to dump response")
 
 
 class TextInputStyles(TypeBase):
     SHORT = 1
     PARAGRAPH = 2
-
 
 
 class PartialEmoji:

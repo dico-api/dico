@@ -100,11 +100,15 @@ class Interaction:
         return cls(client, resp)
 
 
-class InteractionRequestType(TypeBase):
+class InteractionType(TypeBase):
     PING = 1
     APPLICATION_COMMAND = 2
     MESSAGE_COMPONENT = 3
     APPLICATION_COMMAND_AUTOCOMPLETE = 4
+    MODAL_SUBMIT = 5
+
+
+InteractionRequestType = InteractionType  # DEPRECATED
 
 
 class InteractionData:
@@ -135,6 +139,9 @@ class InteractionData:
         self.target_id: typing.Optional[Snowflake] = Snowflake.optional(
             resp.get("target_id")
         )
+        self.components: typing.Optional[typing.List[Component]] = [
+            Component.auto_detect(x) for x in resp.get("components", [])
+        ]
 
 
 class ResolvedData:
@@ -204,6 +211,7 @@ class InteractionCallbackType(TypeBase):
     DEFERRED_UPDATE_MESSAGE = 6
     UPDATE_MESSAGE = 7
     APPLICATION_COMMAND_AUTOCOMPLETE_RESULT = 8
+    MODAL = 9
 
 
 class InteractionApplicationCommandCallbackData:
@@ -220,7 +228,9 @@ class InteractionApplicationCommandCallbackData:
         components: typing.Optional[typing.List[typing.Union[dict, Component]]] = None,
         choices: typing.Optional[
             typing.List[typing.Union[dict, ApplicationCommandOptionChoice]]
-        ] = None
+        ] = None,
+        custom_id: typing.Optional[str] = None,
+        title: typing.Optional[str] = None,
     ):
         self.tts: typing.Optional[bool] = tts
         self.content: typing.Optional[str] = content
@@ -235,6 +245,8 @@ class InteractionApplicationCommandCallbackData:
         self.choices: typing.Optional[
             typing.List[ApplicationCommandOptionChoice]
         ] = choices
+        self.custom_id: typing.Optional[str] = custom_id
+        self.title: typing.Optional[str] = title
 
     def to_dict(self) -> dict:
         ret = {}
@@ -256,6 +268,10 @@ class InteractionApplicationCommandCallbackData:
             ret["choices"] = [
                 x if isinstance(x, dict) else x.to_dict() for x in self.choices
             ]
+        if self.custom_id is not None:
+            ret["custom_id"] = self.custom_id
+        if self.title is not None:
+            ret["title"] = self.title
         return ret
 
 
