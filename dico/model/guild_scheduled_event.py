@@ -22,7 +22,7 @@ class GuildScheduledEvent(DiscordObjectBase):
         super().__init__(client, resp)
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
         self.channel_id: Optional[Snowflake] = Snowflake.optional(resp["channel_id"])
-        self.creator_id: Optional[Snowflake] = Snowflake.optional(resp["creator_id"])
+        self.creator_id: Optional[Snowflake] = Snowflake.optional(resp.get("creator_id"))
         self.name: str = resp["name"]
         self.description: Optional[str] = resp.get("description")
         self.scheduled_start_time: datetime.datetime = datetime.datetime.fromisoformat(

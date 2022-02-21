@@ -206,7 +206,7 @@ class TextInput(Component):
         *,
         custom_id: str,
         style: typing.Union["TextInputStyles", int],
-        label: str = None,
+        label: str,
         min_length: typing.Optional[int] = None,
         max_length: typing.Optional[int] = None,
         required: typing.Optional[bool] = None,
