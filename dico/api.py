@@ -1771,7 +1771,7 @@ class APIClient:
         :param user: User to remove ban.
         :param Optional[str] reason: Reason of the action.
         """
-        return self.remove_guild_ban(int(guild), int(user), reason=reason)
+        return self.http.remove_guild_ban(int(guild), int(user), reason=reason)
 
     def request_guild_roles(self, guild: Guild.TYPING) -> Role.RESPONSE_AS_LIST:
         """

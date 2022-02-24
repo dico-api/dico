@@ -562,6 +562,12 @@ class GuildMember:
         self.mute: typing.Optional[bool] = resp.get("mute", False)
         self.pending: typing.Optional[bool] = resp.get("pending", False)
         self.__permissions = resp.get("permissions")
+        self.__communication_disabled_until = resp.get("communication_disabled_until")
+        self.communication_disabled_until: typing.Optional[datetime.datetime] = (
+            datetime.datetime.fromisoformat(self.__communication_disabled_until)
+            if self.__communication_disabled_until
+            else self.__communication_disabled_until
+        )
         self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
             resp.get("guild_id")
         ) or Snowflake.ensure_snowflake(guild_id)
