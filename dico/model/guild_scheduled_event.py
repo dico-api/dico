@@ -54,6 +54,10 @@ class GuildScheduledEvent(DiscordObjectBase):
         )
         self.user_count: Optional[int] = resp.get("user_count")
 
+    @property
+    def link(self) -> str:
+        return f"https://discord.com/events/{self.guild_id}/{self.id}"
+
     def __repr__(self):
         return f"<GuildScheduledEvent id={self.id} name={self.name}>"
 

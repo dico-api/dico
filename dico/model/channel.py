@@ -601,6 +601,10 @@ class Channel(DiscordObjectBase):
             or self.type.guild_private_thread
         )
 
+    @property
+    def link(self) -> str:
+        return f"https://discord.com/channels/{self.guild_id or '@me'}/{self.id}"
+
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} name={self.name}>"
 
@@ -646,6 +650,10 @@ class SendOnlyChannel:
 
     def send(self, *args, **kwargs) -> "Message.RESPONSE":
         return self.client.create_message(self.id, *args, **kwargs)
+
+    @property
+    def link(self) -> str:
+        return f"https://discord.com/channels/@me/{self.id}"
 
     def __getattr__(self, item):
         return None
@@ -958,6 +966,10 @@ class Message(DiscordObjectBase):
         elif self.author and self.client.has_cache:
             return self.client.get(self.author.dm_channel_id, "channel") or send_only
         return send_only
+
+    @property
+    def link(self) -> str:
+        return f"https://discord.com/channels/{self.guild_id or '@me'}/{self.channel_id}/{self.id}"
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id}>"
