@@ -58,6 +58,8 @@ class Intents(FlagBase):
     DIRECT_MESSAGES = 1 << 12
     DIRECT_MESSAGE_REACTIONS = 1 << 13
     DIRECT_MESSAGE_TYPING = 1 << 14
+    MESSAGE_CONTENT = 1 << 15
+    GUILD_SCHEDULED_EVENTS = 1 << 16
 
     @classmethod
     def full(cls):
@@ -65,10 +67,31 @@ class Intents(FlagBase):
 
     @classmethod
     def no_privileged(cls):
-        ret = cls.full()
-        ret.guild_presences = False
-        ret.guild_members = False
-        return ret
+        intents = cls.full()
+        intents.guild_presences = False
+        intents.guild_members = False
+        intents.message_content = False
+        return intents
+
+    @classmethod
+    def guild(cls):
+        intents = cls.full()
+        intents.direct_messages = False
+        intents.direct_message_reactions = False
+        intents.direct_message_typing = False
+        return intents
+
+    @classmethod
+    def dm(cls):
+        intents = cls.none()
+        intents.direct_messages = True
+        intents.direct_message_reactions = True
+        intents.direct_message_typing = True
+        return intents
+
+    @classmethod
+    def none(cls):
+        return cls()
 
 
 class GatewayResponse:
@@ -348,3 +371,4 @@ class Opcodes:
             11: "Heartbeat ACK",
         }
         return opcodes.get(code)
+
