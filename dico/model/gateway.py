@@ -371,4 +371,3 @@ class Opcodes:
             11: "Heartbeat ACK",
         }
         return opcodes.get(code)
-
