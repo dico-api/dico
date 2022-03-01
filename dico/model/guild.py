@@ -219,7 +219,7 @@ class Guild(DiscordObjectBase):
         return self.client.modify_guild_channel_positions(self, *params, reason=reason)
 
     def list_active_threads(self) -> "Channel.RESPONSE_AS_LIST":
-        return self.client.list_active_threads_as_guild(self)
+        return self.client.list_active_threads(self)
 
     def request_member(self, user: User.TYPING) -> "GuildMember.RESPONSE":
         return self.client.request_guild_member(self, user)

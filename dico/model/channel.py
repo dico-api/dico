@@ -439,14 +439,6 @@ class Channel(DiscordObjectBase):
             )
         return self.client.list_thread_members(self)
 
-    def list_active_threads(self) -> "ListThreadsResponse.RESPONSE":
-        """
-        Returns list of active threads in channel.
-
-        :return: :class:`~.ListThreadsResponse`
-        """
-        return self.client.list_active_threads(self)
-
     def list_public_archived_threads(
         self,
         *,
