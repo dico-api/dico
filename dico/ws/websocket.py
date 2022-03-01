@@ -415,7 +415,7 @@ class WebSocketClient:
         presence: typing.Optional[dict] = None,
     ):
         extra = "compress=zlib-stream" if compress else ""
-        base_url = gw_response.url + f"?v=9&encoding=json" + extra
+        base_url = gw_response.url + f"?v=10&encoding=json" + extra
         ws = await http.session.ws_connect(base_url, **cls.WS_KWARGS)
         return cls(
             http,
