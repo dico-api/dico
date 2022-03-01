@@ -87,9 +87,9 @@ class Guild(DiscordObjectBase):
             if self.__joined_at
             else self.__joined_at
         )
-        self.large: typing.Optional[bool] = resp.get("large", False)
-        self.unavailable: typing.Optional[bool] = resp.get("unavailable", False)
-        self.member_count: typing.Optional[int] = resp.get("member_count", 0)
+        self.large: typing.Optional[bool] = resp.get("large")
+        self.unavailable: typing.Optional[bool] = resp.get("unavailable")
+        self.member_count: typing.Optional[int] = resp.get("member_count")
         self.voice_states: typing.Optional[typing.List[VoiceState]] = [
             VoiceState.create(client, x) for x in resp.get("voice_states", [])
         ]
@@ -114,7 +114,7 @@ class Guild(DiscordObjectBase):
         self.description: typing.Optional[str] = resp["description"]
         self.banner: typing.Optional[str] = resp["banner"]
         self.premium_tier: "PremiumTier" = PremiumTier(resp["premium_tier"])
-        self.premium_subscription_count: int = resp.get("premium_subscription_count", 0)
+        self.premium_subscription_count: int = resp.get("premium_subscription_count")
         self.preferred_locale: str = resp["preferred_locale"]
         self.public_updates_channel_id: typing.Optional[Snowflake] = Snowflake.optional(
             resp["public_updates_channel_id"]
