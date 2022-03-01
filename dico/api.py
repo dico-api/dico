@@ -1471,9 +1471,7 @@ class APIClient:
             int(guild), [*params], reason=reason
         )
 
-    def list_active_threads(
-        self, guild: Guild.TYPING
-    ) -> ListThreadsResponse.RESPONSE:
+    def list_active_threads(self, guild: Guild.TYPING) -> ListThreadsResponse.RESPONSE:
         """
         Lists active threads in guild.
 
