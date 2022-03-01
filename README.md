@@ -9,7 +9,7 @@ Yet another Discord API wrapper for Python, aimed to follow Discord API format a
 [Discord Server](https://discord.gg/QH4AXNySpB)
 
 ## Features
-- Discord v9 API (including Threads, components, context menus, etc.)
+- Discord v10 API (including Threads, components, context menus, etc.)
 - Full interaction support
 - API-Only supported, with aiohttp-based or requests-based HTTP client.
 - More soon™
