@@ -994,20 +994,6 @@ class APIClient:
             return [ThreadMember(self, x) for x in members]
         return wrap_to_async(ThreadMember, self, members, as_create=False)
 
-    def list_active_threads(
-        self, channel: Channel.TYPING
-    ) -> ListThreadsResponse.RESPONSE:
-        """
-        Lists threads in channel that is active.
-
-        :param channel: Channel to list threads.
-        :return: :class:`~.ListThreadsResponse`
-        """
-        resp = self.http.list_active_threads(int(channel))
-        if isinstance(resp, dict):
-            return ListThreadsResponse(self, resp)
-        return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)
-
     def list_public_archived_threads(
         self,
         channel: Channel.TYPING,
@@ -1485,7 +1471,7 @@ class APIClient:
             int(guild), [*params], reason=reason
         )
 
-    def list_active_threads_as_guild(
+    def list_active_threads(
         self, guild: Guild.TYPING
     ) -> ListThreadsResponse.RESPONSE:
         """
@@ -1494,7 +1480,7 @@ class APIClient:
         :param guild: Guild to get active threads.
         :return: :class:`~.ListThreadsResponse`
         """
-        resp = self.http.list_active_threads_as_guild(int(guild))
+        resp = self.http.list_active_threads(int(guild))
         if isinstance(resp, dict):
             return ListThreadsResponse(self, resp)
         return wrap_to_async(ListThreadsResponse, self, resp, as_create=False)

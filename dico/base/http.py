@@ -36,7 +36,7 @@ class HTTPRequestBase(ABC):
         This module isn't intended to be directly used. It is recommended to request via APIClient.
     """
 
-    BASE_URL: str = "https://discord.com/api/v9"
+    BASE_URL: str = "https://discord.com/api/v10"
 
     @abstractmethod
     def request(
@@ -818,14 +818,6 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/thread-members", "GET")
 
-    def list_active_threads(self, channel_id) -> RESPONSE:
-        """
-        Sends list active threads request.
-
-        :param channel_id: ID of the channel.
-        """
-        return self.request(f"/channels/{channel_id}/threads/active", "GET")
-
     def list_public_archived_threads(
         self,
         channel_id,
@@ -1242,9 +1234,9 @@ class HTTPRequestBase(ABC):
             reason_header=reason,
         )
 
-    def list_active_threads_as_guild(self, guild_id) -> RESPONSE:
+    def list_active_threads(self, guild_id) -> RESPONSE:
         """
-        Sends list active threads request but with guild id.
+        Sends list active threads request.
 
         :param guild_id: ID of the guild.
         """
