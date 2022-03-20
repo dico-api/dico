@@ -5,6 +5,7 @@ from .snowflake import Snowflake
 from .user import User
 
 from ..base.model import DiscordObjectBase, TypeBase
+from ..utils import cdn_url
 
 if TYPE_CHECKING:
     from ..api import APIClient
@@ -53,6 +54,7 @@ class GuildScheduledEvent(DiscordObjectBase):
             User.create(client, resp["creator"]) if "creator" in resp else None
         )
         self.user_count: Optional[int] = resp.get("user_count")
+        self.image: Optional[str] = resp.get("image")
 
     @property
     def link(self) -> str:
@@ -60,6 +62,18 @@ class GuildScheduledEvent(DiscordObjectBase):
 
     def __repr__(self):
         return f"<GuildScheduledEvent id={self.id} name={self.name}>"
+
+    def image_url(
+        self, *, extension: str = "webp", size: int = 1024
+    ) -> Optional[str]:
+        if self.image:
+            return cdn_url(
+                "guild-events/{scheduled_event_id}",
+                image_hash=self.image,
+                extension=extension,
+                size=size,
+                scheduled_event_id=self.id,
+            )
 
 
 class GuildScheduledEventPrivacyLevel(TypeBase):
