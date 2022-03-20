@@ -112,7 +112,6 @@ class Client(APIClient):
         self.loop.create_task(self.__request_user())
 
     async def __request_user(self):
-        await self.wait_ready()
         self.user = await self.request_user()
 
     async def __ready(self, ready):

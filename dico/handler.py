@@ -50,7 +50,7 @@ class EventHandler:
             "GUILD_STICKERS_UPDATE": GuildStickersUpdate,
             "GUILD_INTEGRATIONS_UPDATE": GuildIntegrationsUpdate,
             "GUILD_MEMBER_ADD": GuildMemberAdd,
-            "GUILD_MEMBER_REMOVE": GuildBanRemove,
+            "GUILD_MEMBER_REMOVE": GuildMemberRemove,
             "GUILD_MEMBER_UPDATE": GuildMemberUpdate,
             "GUILD_ROLE_CREATE": GuildRoleCreate,
             "GUILD_ROLE_UPDATE": GuildRoleUpdate,
