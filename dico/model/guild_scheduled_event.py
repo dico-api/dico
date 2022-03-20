@@ -63,9 +63,7 @@ class GuildScheduledEvent(DiscordObjectBase):
     def __repr__(self):
         return f"<GuildScheduledEvent id={self.id} name={self.name}>"
 
-    def image_url(
-        self, *, extension: str = "webp", size: int = 1024
-    ) -> Optional[str]:
+    def image_url(self, *, extension: str = "webp", size: int = 1024) -> Optional[str]:
         if self.image:
             return cdn_url(
                 "guild-events/{scheduled_event_id}",
