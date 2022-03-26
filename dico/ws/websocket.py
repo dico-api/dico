@@ -138,9 +138,17 @@ class WebSocketClient:
                     break
 
             if self._reconnecting or self._fresh_reconnecting:
-                self.ws = await self.http.session.ws_connect(
-                    self.base_url, **self.WS_KWARGS
-                )
+                wait_time = 10
+                while True:
+                    try:
+                        self.ws = await self.http.session.ws_connect(
+                            self.base_url, **self.WS_KWARGS
+                        )
+                        break
+                    except:  # noqa
+                        self.logger.error(f"Failed reconnection, retrying after {wait_time} seconds...")
+                        await asyncio.sleep(wait_time)
+                        wait_time = min(wait_time+10, 60)
                 self._closed = False
                 self.intended_shutdown = False
             else:
