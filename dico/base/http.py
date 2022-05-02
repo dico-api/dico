@@ -600,7 +600,7 @@ class HTTPRequestBase(ABC):
         """
         body = {}
         if max_age is not None:
-            body["max_ages"] = max_age
+            body["max_age"] = max_age
         if max_uses is not None:
             body["max_uses"] = max_uses
         if temporary is not None:
