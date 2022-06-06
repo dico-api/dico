@@ -287,10 +287,15 @@ class Client(APIClient):
         """
 
         def _filter(state: "VoiceState") -> bool:
+            if not state.guild_id:
+                return False
             if state.guild_id != guild:
                 return False
-            if channel and state.channel_id != channel:
-                return False
+            if channel:
+                if not state.channel_id:
+                    return False
+                if state.channel_id != channel:
+                    return False
             return True
 
         return list(filter(_filter, self.__voice_states.values()))
