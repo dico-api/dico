@@ -146,9 +146,11 @@ class WebSocketClient:
                         )
                         break
                     except:  # noqa
-                        self.logger.error(f"Failed reconnection, retrying after {wait_time} seconds...")
+                        self.logger.error(
+                            f"Failed reconnection, retrying after {wait_time} seconds..."
+                        )
                         await asyncio.sleep(wait_time)
-                        wait_time = min(wait_time+10, 60)
+                        wait_time = min(wait_time + 10, 60)
                 self._closed = False
                 self.intended_shutdown = False
             else:

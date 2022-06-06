@@ -275,6 +275,26 @@ class Client(APIClient):
         """
         return self.__voice_states.get(int(user))
 
+    def get_all_voice_states(
+        self, guild: Guild.TYPING, channel: typing.Optional[Channel] = None
+    ) -> typing.List["VoiceState"]:
+        """
+        Gets guild's all voice states.
+
+        :param guild: Guild to get voice states.
+        :param channel: Voice or Stage channel to get voice states.
+        :return: List[:class:`~.VoiceState`]
+        """
+
+        def _filter(state: "VoiceState") -> bool:
+            if state.guild_id != guild:
+                return False
+            if channel and state.channel_id != channel:
+                return False
+            return True
+
+        return list(filter(_filter, self.__voice_states.values()))
+
     async def wait_ready(self):
         """Waits until bot is ready."""
         if not self.__ready_future.done():
