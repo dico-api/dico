@@ -11,7 +11,7 @@ with open("requirements-dev.txt", "r", encoding="UTF-8") as f:
 
 setuptools.setup(
     name="dico-api",
-    version="0.0.36",
+    version="0.0.37",
     author="eunwoo1104",
     author_email="sions04@naver.com",
     description="Yet another Discord API wrapper for Python.",
