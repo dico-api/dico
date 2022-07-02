@@ -617,6 +617,8 @@ class ChannelTypes(TypeBase):
     GUILD_PUBLIC_THREAD = 11
     GUILD_PRIVATE_THREAD = 12
     GUILD_STAGE_VOICE = 13
+    GUILD_DIRECTORY = 14
+    GUILD_FORUM = 15
 
 
 class VideoQualityModes(TypeBase):
@@ -995,6 +997,7 @@ class MessageTypes(TypeBase):
     THREAD_STARTER_MESSAGE = 21
     GUILD_INVITE_REMINDER = 22
     CONTEXT_MENU_COMMAND = 23
+    AUTO_MODERATION_ACTION = 24
 
 
 class MessageActivity:
