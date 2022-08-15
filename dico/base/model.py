@@ -53,12 +53,13 @@ class DiscordObjectBase(CopyableObject):
     def __hash__(self):
         return hash(self.id)
 
-    def update(self, new_resp: dict, **kwargs: typing.Any):
+    def update(self, new_resp: dict, **kwargs: typing.Any) -> dict:
         orig = self.raw
         for k, v in new_resp.items():
             if orig.get(k) != v:
                 orig[k] = v
         self.__init__(self.client, orig, **kwargs)
+        return orig
 
     @classmethod
     def create(cls, client: "APIClient", resp: dict, **kwargs: typing.Any):
@@ -70,7 +71,7 @@ class DiscordObjectBase(CopyableObject):
         if maybe_exist:
             if prevent_caching:
                 maybe_exist = maybe_exist.copy()
-            maybe_exist.update(resp, **kwargs)
+            orig = maybe_exist.update(resp, **kwargs)
             """
             orig = maybe_exist.raw
             for k, v in resp.items():
@@ -78,7 +79,7 @@ class DiscordObjectBase(CopyableObject):
                     orig[k] = v
             maybe_exist.__init__(client, orig, **kwargs)
             """
-            return maybe_exist
+            return cls(client, orig, **kwargs)
         else:
             ret = cls(client, resp, **kwargs)
             if client.has_cache and not prevent_caching:

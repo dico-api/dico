@@ -1,6 +1,5 @@
 try:
-    from nacl import secret
-    from nacl import utils
+    from nacl import secret, utils
 
     nacl_missing = False
 except ImportError:

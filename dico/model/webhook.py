@@ -1,9 +1,10 @@
 import typing
+
+from ..base.model import TypeBase
 from .channel import Channel, Message
 from .guild import Guild
 from .snowflake import Snowflake
 from .user import User
-from ..base.model import TypeBase
 
 if typing.TYPE_CHECKING:
     from ..api import APIClient
@@ -95,3 +96,4 @@ class Webhook:
 class WebhookTypes(TypeBase):
     INCOMING = 1
     CHANNEL_FOLLOWER = 2
+    APPLICATION = 3

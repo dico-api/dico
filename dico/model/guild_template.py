@@ -1,5 +1,6 @@
-import typing
 import datetime
+import typing
+
 from .guild import Guild
 from .snowflake import Snowflake
 from .user import User

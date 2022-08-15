@@ -1,7 +1,7 @@
-import io
 import base64
+import io
 import pathlib
-from typing import Union, Awaitable, Text
+from typing import Awaitable, Text, Union
 
 try:
     from typing import Literal

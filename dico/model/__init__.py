@@ -8,6 +8,7 @@ from .gateway import *
 from .guild import *
 from .guild_scheduled_event import *
 from .guild_template import *
+from .interactions import *
 from .invite import *
 from .permission import *
 from .snowflake import *
@@ -16,4 +17,3 @@ from .sticker import *
 from .user import *
 from .voice import *
 from .webhook import *
-from .interactions import *

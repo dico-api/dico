@@ -1,12 +1,12 @@
 import typing
 
-from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, TypeBase
+from .snowflake import Snowflake
 
 if typing.TYPE_CHECKING:
+    from ..api import APIClient
     from .channel import Channel
     from .guild import Guild
-    from ..api import APIClient
 
 
 class StageInstance(DiscordObjectBase):
@@ -24,6 +24,9 @@ class StageInstance(DiscordObjectBase):
         self.topic: str = resp["topic"]
         self.privacy_level: PrivacyLevel = PrivacyLevel(resp["privacy_level"])
         self.discoverable_disabled: bool = resp["discoverable_disabled"]
+        self.guild_scheduled_event_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_scheduled_event_id")
+        )
 
     @property
     def guild(self) -> typing.Optional["Guild"]:

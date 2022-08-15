@@ -1,24 +1,23 @@
+import datetime
 import inspect
 import pathlib
-import datetime
+from typing import TYPE_CHECKING, Awaitable, List, Optional, Union, overload
 
-from typing import TYPE_CHECKING, Optional, Union, List, Awaitable, overload
-
+from ..base.http import EmptyObject
+from ..base.model import CopyableObject, DiscordObjectBase, FlagBase, TypeBase
+from ..utils import from_emoji
 from .emoji import Emoji
 from .guild import GuildMember, WelcomeScreenChannel
 from .permission import PermissionFlags, Role
 from .snowflake import Snowflake
 from .sticker import Sticker, StickerItem
 from .user import User
-from ..base.model import CopyableObject, DiscordObjectBase, TypeBase, FlagBase
-from ..base.http import EmptyObject
-from ..utils import from_emoji
 
 if TYPE_CHECKING:
+    from ..api import APIClient
     from .application import Application
     from .guild import Guild
     from .invite import Invite
-    from ..api import APIClient
 
 
 class Channel(DiscordObjectBase):
@@ -93,6 +92,10 @@ class Channel(DiscordObjectBase):
             if self.__permissions
             else self.__permissions
         )
+        self.flags: Optional["ChannelFlags"] = ChannelFlags.from_value(
+            resp.get("flags")
+        )
+        self.total_message_sent: Optional[int] = resp.get("total_message_sent")
 
         # if self.type.dm and self.
 
@@ -630,6 +633,10 @@ class VideoQualityModes(TypeBase):
     FULL = 2
 
 
+class ChannelFlags(FlagBase):
+    PINNED = 1 << 1
+
+
 class SendOnlyChannel:
     """
     Internal class representing temporary messageable channel.
@@ -675,10 +682,10 @@ class Message(DiscordObjectBase):
         interaction_token: Optional[str] = None,
         original_response: Optional[bool] = False,
     ):
-        from .interactions import (
-            MessageInteraction,
+        from .interactions import (  # Prevent circular import.
             Component,
-        )  # Prevent circular import.
+            MessageInteraction,
+        )
 
         super().__init__(client, resp)
         self.channel_id: Snowflake = Snowflake(resp["channel_id"])
@@ -787,6 +794,7 @@ class Message(DiscordObjectBase):
         self.stickers: Optional[List[Sticker]] = [
             Sticker.create(client, x) for x in resp.get("stickers", [])
         ]
+        self.position: Optional[int] = resp.get("position")
 
         # self.stickers: Optional[List[MessageSticker]] = [MessageSticker(x) for x in resp.get("stickers", [])]
 
@@ -1044,6 +1052,7 @@ class MessageFlags(FlagBase):
     HAS_THREAD = 1 << 5
     EPHEMERAL = 1 << 6
     LOADING = 1 << 7
+    FAILED_TO_MENTION_SOME_ROLES_IN_THREAD = 1 << 8
 
 
 class MessageReference:
@@ -1208,6 +1217,12 @@ class ThreadMetadata:
         )
         self.locked: bool = resp["locked"]
         self.invitable: Optional[bool] = resp.get("invitable")
+        self.__create_timestamp = resp.get("create_timestamp")
+        self.create_timestamp: Optional[
+            datetime.datetime
+        ] = self.__create_timestamp and datetime.datetime.fromisoformat(
+            self.__create_timestamp
+        )
 
     @classmethod
     def optional(cls, client, resp):

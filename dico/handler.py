@@ -1,6 +1,8 @@
 import typing
-from .utils import ensure_coro
+import traceback
+
 from .model.event import *
+from .utils import ensure_coro
 
 if typing.TYPE_CHECKING:
     from .client import Client
@@ -89,7 +91,10 @@ class EventHandler:
         return ret
 
     def dispatch_from_raw(self, name: str, resp: dict):
-        ret = self.process_response(name, resp)
-        if hasattr(ret, "_dont_dispatch") and ret._dont_dispatch:
-            return
-        self.client.dispatch(name, ret)
+        try:
+            ret = self.process_response(name, resp)
+            if hasattr(ret, "_dont_dispatch") and ret._dont_dispatch:
+                return
+            self.client.dispatch(name, ret)
+        except Exception as ex:
+            traceback.print_exc()

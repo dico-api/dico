@@ -1,10 +1,11 @@
 import typing
+
+from ..base.model import TypeBase
 from .channel import Channel
 from .guild import Integration
 from .snowflake import Snowflake
 from .user import User
 from .webhook import Webhook
-from ..base.model import TypeBase
 
 if typing.TYPE_CHECKING:
     from ..api import APIClient

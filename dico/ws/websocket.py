@@ -1,14 +1,16 @@
-import json
-import time
-import zlib
-import typing
 import asyncio
+import json
 import logging
+import time
+import typing
+import zlib
+
 import aiohttp
-from .ratelimit import WSRatelimit
+
+from ..handler import EventHandler
 from ..http.async_http import AsyncHTTPRequest
 from ..model import gateway
-from ..handler import EventHandler
+from .ratelimit import WSRatelimit
 
 
 class WebSocketClient:
@@ -203,6 +205,7 @@ class WebSocketClient:
         if resp.op == gateway.Opcodes.DISPATCH:
             if resp.t == "READY":
                 self.session_id = resp.d.get("session_id", self.session_id)
+                self.base_url = resp.d["resume_gateway_url"] + "?" + self.base_url.split("?")[-1]
             self.event_handler.client.dispatch("RAW", resp.raw)
             self.event_handler.dispatch_from_raw(resp.t, resp.d)
 
@@ -395,7 +398,7 @@ class WebSocketClient:
     ):
         resp = await http.request("/gateway/bot", "GET")
         gw = gateway.GetGateway(resp)
-        extra = "compress=zlib-stream" if compress else ""
+        extra = "&compress=zlib-stream" if compress else ""
         base_url = gw.url + f"?v=10&encoding=json" + extra
         ws = await http.session.ws_connect(base_url, **cls.WS_KWARGS)
         return cls(
@@ -424,7 +427,7 @@ class WebSocketClient:
         shard: typing.Optional[typing.List[int]] = None,
         presence: typing.Optional[dict] = None,
     ):
-        extra = "compress=zlib-stream" if compress else ""
+        extra = "&compress=zlib-stream" if compress else ""
         base_url = gw_response.url + f"?v=10&encoding=json" + extra
         ws = await http.session.ws_connect(base_url, **cls.WS_KWARGS)
         return cls(

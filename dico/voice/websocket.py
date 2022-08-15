@@ -1,20 +1,19 @@
-import time
 import asyncio
 import logging
+import time
+from typing import TYPE_CHECKING, List, Optional, Union
 
 import aiohttp
 
-from typing import TYPE_CHECKING, Optional, List, Union
-
+from ..model import GatewayResponse, SpeakingFlags, VoiceOpcodes
+from ..ws.websocket import Ignore, WSClosing
 from .encryptor import Encryptor
 from .opus import OpusEncoder
 from .voice_socket import VoiceSocket
-from ..model import VoiceOpcodes, GatewayResponse, SpeakingFlags
-from ..ws.websocket import Ignore, WSClosing
 
 if TYPE_CHECKING:
     from ..client import Client
-    from ..model import VoiceServerUpdate, VoiceState, Snowflake
+    from ..model import Snowflake, VoiceServerUpdate, VoiceState
 
 
 class VoiceWebsocket:

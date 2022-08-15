@@ -1,10 +1,11 @@
 import typing
-from .user import User
+
 from .snowflake import Snowflake
+from .user import User
 
 if typing.TYPE_CHECKING:
-    from .permission import Role
     from ..api import APIClient
+    from .permission import Role
 
 
 class Emoji:

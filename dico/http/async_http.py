@@ -1,17 +1,15 @@
+import asyncio
 import io
 import json
-import typing
 import logging
-import asyncio
+import typing
+from urllib.parse import quote
 
 import aiohttp
 
-from urllib.parse import quote
-
+from .. import __version__, exception
+from ..base.http import _R, EmptyObject, HTTPRequestBase
 from .ratelimit import RatelimitHandler
-from .. import exception, __version__
-from ..base.http import HTTPRequestBase, EmptyObject, _R
-
 
 ASYNC_RESPONSE = typing.Awaitable[_R]
 

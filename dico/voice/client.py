@@ -1,16 +1,15 @@
-import time
 import asyncio
 import logging
-
+import time
 from typing import TYPE_CHECKING, Optional
 
 from .opus import DELAY_SECONDS
 from .websocket import VoiceWebsocket
 
 if TYPE_CHECKING:
-    from .audio import AudioBase
     from ..client import Client
     from ..model import VoiceServerUpdate, VoiceState
+    from .audio import AudioBase
 
 
 class VoiceClient:

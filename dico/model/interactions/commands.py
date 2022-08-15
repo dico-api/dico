@@ -1,9 +1,10 @@
 import typing
+
+from ...base.model import TypeBase
 from ..channel import ChannelTypes
 from ..permission import Role
 from ..snowflake import Snowflake
 from ..user import User
-from ...base.model import TypeBase
 
 
 class ApplicationCommand:

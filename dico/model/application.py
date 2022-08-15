@@ -1,8 +1,9 @@
 import typing
-from .snowflake import Snowflake
-from .user import User
+
 from ..base.model import FlagBase, TypeBase
 from ..utils import cdn_url
+from .snowflake import Snowflake
+from .user import User
 
 if typing.TYPE_CHECKING:
     from ..api import APIClient
@@ -51,6 +52,12 @@ class Application:
             if self.__flags is not None
             else self.__flags
         )
+        self.tags: typing.Optional[typing.List[str]] = resp.get("tags")
+        self.__install_params = resp.get("install_params")
+        self.install_params: typing.Optional[
+            InstallParams
+        ] = self.__install_params and InstallParams(self.__install_params)
+        self.custom_install_url: typing.Optional[str] = resp.get("custom_install_url")
 
         self.client.application = self
         self.client.application_id = self.id
@@ -101,6 +108,12 @@ class ApplicationFlags(FlagBase):
     GATEWAY_GUILD_MEMBERS_LIMITED = 1 << 15
     VERIFICATION_PENDING_GUILD_LIMIT = 1 << 16
     EMBEDDED = 1 << 17
+
+
+class InstallParams:
+    def __init__(self, resp: dict):
+        self.scopes: typing.List[str] = resp["scopes"]
+        self.permissions: str = resp["permissions"]
 
 
 class Team:

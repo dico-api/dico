@@ -1,6 +1,5 @@
-import struct
 import socket
-
+import struct
 from typing import TYPE_CHECKING
 
 from .opus import SAMPLES_PER_FRAME

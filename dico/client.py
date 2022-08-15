@@ -1,20 +1,20 @@
-import sys
-import typing
 import asyncio
-import logging
 import datetime
+import logging
+import sys
 import traceback
+import typing
 
 from . import utils
 from .api import APIClient
-from .http.async_http import AsyncHTTPRequest
-from .ws.websocket import WebSocketClient
 from .cache import CacheContainer
-from .exception import WebsocketClosed, VoiceTimeout
+from .exception import VoiceTimeout, WebsocketClosed
 from .handler import EventHandler
-from .model import Intents, AllowedMentions, Snowflake, Activity, Guild, Channel, User
+from .http.async_http import AsyncHTTPRequest
+from .model import Activity, AllowedMentions, Channel, Guild, Intents, Snowflake, User
 from .utils import get_shard_id
 from .voice import VoiceClient
+from .ws.websocket import WebSocketClient
 
 if typing.TYPE_CHECKING:
     from .model import VoiceState
@@ -129,6 +129,7 @@ class Client(APIClient):
                 if not self.__ready_future.done():
                     self.__ready_future.set_result(True)
                 self.dispatch("shards_ready")
+            shard = self.__shards[ready.shard_id]
 
     def __voice_state_update(self, voice_state):
         if voice_state.user_id == self.user.id:

@@ -3,12 +3,11 @@ This code is referred from kijk2869/discodo: https://github.com/kijk2869/discodo
 LICENSE(MIT): https://github.com/kijk2869/discodo/blob/master/LICENSE
 """
 
-import os
-import sys
 import array
 import ctypes
 import ctypes.util
-
+import os
+import sys
 
 c_int_ptr = ctypes.POINTER(ctypes.c_int)
 c_int16_ptr = ctypes.POINTER(ctypes.c_int16)

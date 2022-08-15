@@ -1,12 +1,15 @@
+import datetime
 import sys
 import typing
-import datetime
+
+from ..base.model import EventBase
 from .application import Application
 from .channel import Channel, Message, ThreadMember
 from .emoji import Emoji
 from .gateway import Activity
 from .guild import Guild, GuildMember, Integration
 from .guild_scheduled_event import GuildScheduledEvent
+from .interactions import Interaction  # , ApplicationCommand, ApplicationCommandOption
 from .invite import InviteTargetTypes
 from .permission import Role
 from .snowflake import Snowflake
@@ -14,8 +17,6 @@ from .stage import StageInstance
 from .sticker import Sticker
 from .user import User
 from .voice import VoiceState
-from .interactions import Interaction  # , ApplicationCommand, ApplicationCommandOption
-from ..base.model import EventBase
 
 if typing.TYPE_CHECKING:
     from ..client import Client
@@ -28,6 +29,7 @@ class Ready(EventBase):
         self.user: User = User.create(client, resp["user"])
         self.guilds: typing.List[dict] = resp["guilds"]
         self.session_id: str = resp["session_id"]
+        self.resume_gateway_url: str = resp["resume_gateway_url"]
         self.shard: typing.Optional[typing.List[int]] = resp.get("shard")
         self.application: dict = resp["application"]
 
@@ -64,9 +66,17 @@ ApplicationCommandUpdate = ApplicationCommandCreate
 ApplicationCommandDelete = ApplicationCommandCreate
 """
 
+
 # TODO: refactor update/delete objects
 
-ChannelCreate = Channel
+class ChannelCreate(Channel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.guild and self.id not in [*map(lambda r: r["id"], self.guild.raw.get("channels", []))]:
+            if self.guild.raw.get("channels") is None:
+                self.guild.raw["channels"] = []
+            self.guild.raw["channels"].append(self.raw)
+            self.guild.channels.append(self)
 
 
 class ChannelUpdate(Channel):
@@ -84,6 +94,24 @@ class ChannelUpdate(Channel):
 
 
 class ChannelDelete(Channel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.guild:
+            index = -1
+            for i, x in enumerate(self.guild.raw.get("channels", [])):
+                if x["id"] == self.id:
+                    index = i
+                    break
+            if index >= 0:
+                self.guild.raw["channels"].pop(index)
+            index = -1
+            for i, x in enumerate(self.guild.channels):
+                if x.id == self.id:
+                    index = i
+                    break
+            if index >= 0:
+                self.guild.channels.pop(index)
+
     def __del__(self):
         if self.client.has_cache:
             self.client.cache.remove(self.id, self._cache_type)
@@ -288,13 +316,13 @@ class GuildMemberUpdate(GuildMember):
 
     @classmethod
     def create(
-        cls,
-        client: "Client",
-        resp: dict,
-        *,
-        user=None,
-        guild_id=None,
-        cache: bool = False,
+            cls,
+            client: "Client",
+            resp: dict,
+            *,
+            user=None,
+            guild_id=None,
+            cache: bool = False,
     ):
         return super().create(client, resp, user=user, guild_id=guild_id, cache=False)
 
@@ -313,6 +341,9 @@ class GuildRoleCreate(EventBase):
         super().__init__(client, resp)
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
         self.role: Role = Role.create(client, resp["role"], guild_id=self.guild_id)
+        if self.guild and self.role.id not in [*map(lambda r: r["id"], self.guild.raw["roles"])]:
+            self.guild.raw["roles"].append(self.role.raw)
+            self.guild.roles.append(self.role)
 
     @property
     def guild(self) -> typing.Optional[Guild]:
@@ -345,6 +376,21 @@ class GuildRoleDelete(EventBase):
         super().__init__(client, resp)
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
         self.role_id: Snowflake = Snowflake(resp["role_id"])
+        if self.guild:
+            index = -1
+            for i, x in enumerate(self.guild.raw["roles"]):
+                if x["id"] == self.role_id:
+                    index = i
+                    break
+            if index >= 0:
+                self.guild.raw["roles"].pop(index)
+            index = -1
+            for i, x in enumerate(self.guild.roles):
+                if x.id == self.role_id:
+                    index = i
+                    break
+            if index >= 0:
+                self.guild.roles.pop(index)
 
     def __del__(self):
         if self.client.has_cache:
@@ -375,7 +421,7 @@ class GuildScheduledEventUpdate(GuildScheduledEvent):
 
     @classmethod
     def create(
-        cls, client: "Client", resp: dict, **kwargs: typing.Any
+            cls, client: "Client", resp: dict, **kwargs: typing.Any
     ) -> GuildScheduledEvent:
         return GuildScheduledEvent(client, resp)
 

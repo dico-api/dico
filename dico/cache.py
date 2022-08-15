@@ -1,4 +1,5 @@
 import typing
+
 from .model.snowflake import Snowflake
 
 

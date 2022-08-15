@@ -1,24 +1,24 @@
-import typing
 import datetime
+import typing
 
+from ..base.http import EmptyObject
+from ..base.model import AbstractObject, DiscordObjectBase, FlagBase, TypeBase
+from ..utils import cdn_url
 from .emoji import Emoji
 from .extras import BYTES_RESPONSE
 from .guild_scheduled_event import GuildScheduledEvent
-from .permission import Role, PermissionFlags
+from .permission import PermissionFlags, Role
 from .snowflake import Snowflake
 from .stage import StageInstance
 from .sticker import Sticker
 from .user import User
-from ..utils import cdn_url
-from ..base.model import DiscordObjectBase, TypeBase, FlagBase, AbstractObject
-from ..base.http import EmptyObject
 
 if typing.TYPE_CHECKING:
+    from ..api import APIClient
+    from ..cache import GuildCacheContainer
     from .channel import Channel
     from .invite import Invite
     from .voice import VoiceRegion
-    from ..api import APIClient
-    from ..cache import GuildCacheContainer
 
 
 class Guild(DiscordObjectBase):
@@ -348,7 +348,7 @@ class Guild(DiscordObjectBase):
     ):
         return self.client.delete_guild_integration(self, integration, reason=reason)
 
-    def request_widget_settings(self) -> "GuildWidget.RESPONSE":
+    def request_widget_settings(self) -> "GuildWidgetSettings.RESPONSE":
         return self.client.request_guild_widget_settings(self)
 
     def modify_widget(
@@ -357,12 +357,12 @@ class Guild(DiscordObjectBase):
         enabled: bool = None,
         channel: "Channel.TYPING" = EmptyObject,
         reason: str = None,
-    ) -> "GuildWidget.RESPONSE":
+    ) -> "GuildWidgetSettings.RESPONSE":
         return self.client.modify_guild_widget(
             self, enabled=enabled, channel=channel, reason=reason
         )
 
-    def request_widget(self) -> AbstractObject.RESPONSE:
+    def request_widget(self) -> "GuildWidget.RESPONSE":
         return self.client.request_guild_widget(self)
 
     def request_vanity_url(self) -> AbstractObject.RESPONSE:
@@ -486,6 +486,7 @@ class SystemChannelFlags(FlagBase):
     SUPPRESS_JOIN_NOTIFICATIONS = 1 << 0
     SUPPRESS_PREMIUM_SUBSCRIPTIONS = 1 << 1
     SUPPRESS_GUILD_REMINDER_NOTIFICATIONS = 1 << 2
+    SUPPRESS_JOIN_NOTIFICATION_REPLIES = 1 << 3
 
 
 class GuildPreview:
@@ -502,6 +503,25 @@ class GuildPreview:
         self.approximate_member_count: int = resp["approximate_member_count"]
         self.approximate_presence_count: int = resp["approximate_presence_count"]
         self.description: typing.Optional[str] = resp["description"]
+        self.stickers: typing.List[Sticker] = [
+            Sticker(client, x) for x in resp["stickers"]
+        ]
+
+
+class GuildWidgetSettings:
+    RESPONSE = typing.Union[
+        "GuildWidgetSettings", typing.Awaitable["GuildWidgetSettings"]
+    ]
+    RESPONSE_AS_LIST = typing.Union[
+        typing.List["GuildWidgetSettings"],
+        typing.Awaitable[typing.List["GuildWidgetSettings"]],
+    ]
+
+    def __init__(self, resp: dict):
+        self.enabled: bool = resp["enabled"]
+        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp["channel_id"]
+        )
 
 
 class GuildWidget:
@@ -510,11 +530,19 @@ class GuildWidget:
         typing.List["GuildWidget"], typing.Awaitable[typing.List["GuildWidget"]]
     ]
 
-    def __init__(self, resp: dict):
-        self.enabled: bool = resp["enabled"]
-        self.channel_id: typing.Optional[Snowflake] = Snowflake.optional(
-            resp["channel_id"]
-        )
+    def __init__(self, client: "APIClient", resp: dict):
+        from .channel import Channel  # Prevent circular import.
+
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.name: str = resp["name"]
+        self.instant_invite: typing.Optional[str] = resp["instant_invite"]
+        self.channels: typing.List[Channel] = [
+            Channel.create(client, x) for x in resp["channels"]
+        ]
+        self.members: typing.List[User] = [
+            User.create(client, x) for x in resp["members"]
+        ]
+        self.presence_count: int = resp["presence_count"]
 
 
 class GuildMember:

@@ -1,10 +1,12 @@
-import typing
 import datetime
+import typing
+
+from ..base.model import TypeBase
 from .application import Application
 from .channel import Channel
 from .guild import Guild, GuildMember
+from .guild_scheduled_event import GuildScheduledEvent
 from .user import User
-from ..base.model import TypeBase
 
 if typing.TYPE_CHECKING:
     from ..api import APIClient
@@ -53,6 +55,12 @@ class Invite:
             InviteStageInstance(client, self.__stage_instance)
             if self.__stage_instance
             else self.__stage_instance
+        )
+        self.__guild_scheduled_event = resp.get("guild_scheduled_event")
+        self.guild_scheduled_event: typing.Optional[
+            GuildScheduledEvent
+        ] = self.__guild_scheduled_event and GuildScheduledEvent(
+            client, self.__guild_scheduled_event
         )
         self.metadata: InviteMetadata = InviteMetadata.optional(resp)
 

@@ -1,11 +1,10 @@
 import datetime
-from typing import TYPE_CHECKING, Optional, Union, Awaitable, List
-
-from .snowflake import Snowflake
-from .user import User
+from typing import TYPE_CHECKING, Awaitable, List, Optional, Union
 
 from ..base.model import DiscordObjectBase, TypeBase
 from ..utils import cdn_url
+from .snowflake import Snowflake
+from .user import User
 
 if TYPE_CHECKING:
     from ..api import APIClient

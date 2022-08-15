@@ -1,15 +1,14 @@
 import io
 import json
+import logging
 import time
 import typing
-import logging
+from urllib.parse import quote
 
 import requests
 
-from urllib.parse import quote
-
-from .. import exception, __version__
-from ..base.http import HTTPRequestBase, EmptyObject, _R
+from .. import __version__, exception
+from ..base.http import _R, EmptyObject, HTTPRequestBase
 
 RESPONSE = _R
 

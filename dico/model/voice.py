@@ -1,12 +1,13 @@
-import typing
 import datetime
-from .guild import GuildMember, Guild
+import typing
+
+from .guild import Guild, GuildMember
 from .snowflake import Snowflake
 
 if typing.TYPE_CHECKING:
+    from ..api import APIClient
     from .channel import Channel
     from .user import User
-    from ..api import APIClient
 
 
 class VoiceState:

@@ -1,68 +1,71 @@
-import io
 import datetime
-from typing import TYPE_CHECKING, Optional, Union, Type, List, Dict, Awaitable
-from .base.http import HTTPRequestBase, EmptyObject
+import io
+from typing import TYPE_CHECKING, Awaitable, Dict, List, Optional, Type, Union
+
+from .base.http import EmptyObject, HTTPRequestBase
 from .model import (
-    Channel,
-    Message,
-    MessageReference,
-    AllowedMentions,
-    Snowflake,
-    Embed,
-    Attachment,
-    Overwrite,
-    Emoji,
-    User,
-    Interaction,
-    InteractionResponse,
-    Webhook,
-    Guild,
-    ApplicationCommand,
-    Invite,
-    Application,
-    FollowedChannel,
-    ThreadMember,
-    ListThreadsResponse,
-    Component,
-    Role,
-    ApplicationCommandOption,
-    GuildApplicationCommandPermissions,
-    ApplicationCommandPermissions,
-    VerificationLevel,
-    DefaultMessageNotificationLevel,
-    ExplicitContentFilterLevel,
-    SystemChannelFlags,
-    GuildPreview,
-    ChannelTypes,
-    GuildMember,
-    Ban,
-    PermissionFlags,
-    GuildWidget,
+    BYTES_RESPONSE,
     FILE_TYPE,
-    VoiceRegion,
-    Integration,
+    AllowedMentions,
+    Application,
+    ApplicationCommand,
+    ApplicationCommandOption,
+    ApplicationCommandPermissions,
     ApplicationCommandTypes,
-    WelcomeScreen,
-    WelcomeScreenChannel,
-    PrivacyLevel,
-    StageInstance,
+    Attachment,
     AuditLog,
     AuditLogEvents,
-    GuildTemplate,
-    BYTES_RESPONSE,
-    Sticker,
+    Ban,
+    Channel,
+    ChannelTypes,
+    Component,
+    Connection,
+    DefaultMessageNotificationLevel,
+    Embed,
+    Emoji,
+    ExplicitContentFilterLevel,
+    FollowedChannel,
     GetGateway,
-    VideoQualityModes,
-    InviteTargetTypes,
-    WidgetStyle,
+    Guild,
+    GuildApplicationCommandPermissions,
+    GuildMember,
+    GuildPreview,
     GuildScheduledEvent,
     GuildScheduledEventEntityMetadata,
-    GuildScheduledEventPrivacyLevel,
     GuildScheduledEventEntityTypes,
+    GuildScheduledEventPrivacyLevel,
     GuildScheduledEventStatus,
     GuildScheduledEventUser,
+    GuildTemplate,
+    GuildWidget,
+    GuildWidgetSettings,
+    Integration,
+    Interaction,
+    InteractionResponse,
+    Invite,
+    InviteTargetTypes,
+    ListThreadsResponse,
+    Message,
+    MessageReference,
+    Overwrite,
+    PermissionFlags,
+    PrivacyLevel,
+    Role,
+    Snowflake,
+    StageInstance,
+    Sticker,
+    SystemChannelFlags,
+    ThreadMember,
+    User,
+    VerificationLevel,
+    VideoQualityModes,
+    VoiceRegion,
+    Webhook,
+    WelcomeScreen,
+    WelcomeScreenChannel,
+    WidgetStyle,
 )
-from .utils import from_emoji, wrap_to_async, to_image_data
+from .utils import from_emoji, to_image_data, wrap_to_async
 
 if TYPE_CHECKING:
     from .base.model import AbstractObject, DiscordObjectBase
@@ -2004,7 +2007,7 @@ class APIClient:
 
     def request_guild_widget_settings(
         self, guild: Guild.TYPING
-    ) -> GuildWidget.RESPONSE:
+    ) -> GuildWidgetSettings.RESPONSE:
         """
         Requests guild widget settings.
 
@@ -2013,8 +2016,8 @@ class APIClient:
         """
         resp = self.http.request_guild_widget_settings(int(guild))
         if isinstance(resp, dict):
-            return GuildWidget(resp)
-        return wrap_to_async(GuildWidget, None, resp, as_create=False)
+            return GuildWidgetSettings(resp)
+        return wrap_to_async(GuildWidgetSettings, None, resp, as_create=False)
 
     def modify_guild_widget(
         self,
@@ -2023,7 +2026,7 @@ class APIClient:
         enabled: Optional[bool] = None,
         channel: Optional[Channel.TYPING] = EmptyObject,
         reason: Optional[str] = None
-    ) -> GuildWidget.RESPONSE:
+    ) -> GuildWidgetSettings.RESPONSE:
         """
         Modifies guild widget.
 
@@ -2037,10 +2040,10 @@ class APIClient:
             int(guild), enabled, channel, reason=reason
         )  # noqa
         if isinstance(resp, dict):
-            return GuildWidget(resp)
-        return wrap_to_async(GuildWidget, None, resp, as_create=False)
+            return GuildWidgetSettings(resp)
+        return wrap_to_async(GuildWidgetSettings, None, resp, as_create=False)
 
-    def request_guild_widget(self, guild: Guild.TYPING) -> "AbstractObject.RESPONSE":
+    def request_guild_widget(self, guild: Guild.TYPING) -> GuildWidget.RESPONSE:
         """
         Request guild's widget.
 
@@ -2052,8 +2055,8 @@ class APIClient:
 
         resp = self.http.request_guild_widget(int(guild))
         if isinstance(resp, dict):
-            return AbstractObject(resp)
-        return wrap_to_async(AbstractObject, None, resp, as_create=False)
+            return GuildWidget(self, resp)
+        return wrap_to_async(GuildWidget, self, resp, as_create=False)
 
     def request_guild_vanity_url(
         self, guild: Guild.TYPING
@@ -2842,6 +2845,12 @@ class APIClient:
         if isinstance(resp, dict):
             return Channel.create(self, resp)
         return wrap_to_async(Channel, self, resp)
+
+    def request_user_connections(self) -> Connection.RESPONSE_AS_LIST:
+        resp = self.http.request_user_connections()
+        if isinstance(resp, list):
+            return [Connection(self, x) for x in resp]
+        return wrap_to_async(Connection, self, resp)
 
     # Voice
 

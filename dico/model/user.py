@@ -1,14 +1,14 @@
 import typing
 import warnings
 
-from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, FlagBase, TypeBase
 from ..utils import cdn_url
+from .snowflake import Snowflake
 
 if typing.TYPE_CHECKING:
+    from ..api import APIClient
     from .channel import Channel, Message
     from .voice import VoiceState
-    from ..api import APIClient
 
 
 class User(DiscordObjectBase):
@@ -140,9 +140,36 @@ class UserFlags(FlagBase):
     VERIFIED_BOT = 1 << 16
     EARLY_VERIFIED_BOT_DEVELOPER = 1 << 17
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
+    BOT_HTTP_INTERACTIONS = 1 << 19
 
 
 class PremiumTypes(TypeBase):
     NONE = 0
     NITRO_CLASSIC = 1
     NITRO = 2
+
+
+class Connection:
+    RESPONSE_AS_LIST = typing.Union[
+        typing.List["Connection"], typing.Awaitable[typing.List["Connection"]]
+    ]
+
+    def __init__(self, client: "APIClient", resp: dict):
+        from .guild import Integration
+
+        self.id: str = resp["id"]
+        self.name: str = resp["name"]
+        self.type: str = resp["type"]
+        self.revoked: bool = resp.get("revoked")
+        self.integrations: typing.Optional[typing.List[Integration]] = [
+            Integration(client, x) for x in resp.get("integrations")
+        ]
+        self.verified: bool = resp["verified"]
+        self.friend_sync: bool = resp["friend_sync"]
+        self.show_activity: bool = resp["show_activity"]
+        self.visibility: VisibilityTypes = VisibilityTypes(resp["visibility"])
+
+
+class VisibilityTypes(TypeBase):
+    NONE = 0
+    EVERYONE = 1

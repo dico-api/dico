@@ -1,18 +1,18 @@
-import io
-import sys
 import base64
-import typing
-import pathlib
 import inspect
+import io
+import pathlib
+import sys
 import traceback
+import typing
 
 """
 from .model import ChannelTypes, Snowflake
 """
 if typing.TYPE_CHECKING:
     from .api import APIClient
-    from .model import Emoji, Snowflake
     from .base.http import RESPONSE
+    from .model import Emoji, Snowflake
 
 
 async def safe_call(

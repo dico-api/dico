@@ -6,10 +6,9 @@ LICENSE(MIT): https://github.com/Rapptz/discord.py/blob/master/LICENSE
 
 import audioop
 import subprocess
-
 from abc import ABC, abstractmethod
-from typing import Union
 from pathlib import Path
+from typing import Union
 
 from .opus import FRAME_SIZE
 

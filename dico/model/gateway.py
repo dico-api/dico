@@ -1,8 +1,9 @@
-import typing
 import datetime
-from .snowflake import Snowflake
+import typing
+
 from ..base.model import FlagBase, TypeBase
 from ..utils import cdn_url
+from .snowflake import Snowflake
 
 
 class GetGateway:

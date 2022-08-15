@@ -1,12 +1,12 @@
 import typing
 
-from .snowflake import Snowflake
 from ..base.model import DiscordObjectBase, FlagBase
 from ..utils import cdn_url
+from .snowflake import Snowflake
 
 if typing.TYPE_CHECKING:
-    from .guild import Guild
     from ..api import APIClient
+    from .guild import Guild
 
 
 class PermissionFlags(FlagBase):

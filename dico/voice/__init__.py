@@ -1,2 +1,2 @@
+from .audio import Audio, AudioBase
 from .client import VoiceClient
-from .audio import AudioBase, Audio

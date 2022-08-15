@@ -1,13 +1,14 @@
 import typing
+
+from ..base.http import EmptyObject
+from ..base.model import DiscordObjectBase, TypeBase
+from ..utils import cdn_url
 from .snowflake import Snowflake
 from .user import User
-from ..base.model import DiscordObjectBase, TypeBase
-from ..base.http import EmptyObject
-from ..utils import cdn_url
 
 if typing.TYPE_CHECKING:
-    from .guild import Guild
     from ..api import APIClient
+    from .guild import Guild
 
 
 class Sticker(DiscordObjectBase):

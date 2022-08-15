@@ -1,8 +1,8 @@
 import typing
 
+from ...base.model import CopyableObject, TypeBase
 from ..emoji import Emoji
 from ..snowflake import Snowflake
-from ...base.model import TypeBase, CopyableObject
 
 
 class Component(CopyableObject):

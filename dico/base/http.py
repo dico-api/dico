@@ -1,6 +1,6 @@
+import datetime
 import io
 import typing
-import datetime
 from abc import ABC, abstractmethod
 
 
@@ -2348,6 +2348,12 @@ class HTTPRequestBase(ABC):
             {"access_tokens": access_tokens, "nicks": nicks},
             is_json=True,
         )
+
+    def request_user_connections(self) -> RESPONSE:
+        """
+        Sends get user connections request.
+        """
+        return self.request("/users/@me/connections", "GET")
 
     # Voice Requests
 

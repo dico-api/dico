@@ -1,5 +1,5 @@
-import typing
 import datetime
+import typing
 
 
 class Snowflake:
