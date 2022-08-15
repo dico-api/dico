@@ -69,10 +69,13 @@ ApplicationCommandDelete = ApplicationCommandCreate
 
 # TODO: refactor update/delete objects
 
+
 class ChannelCreate(Channel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.guild and self.id not in [*map(lambda r: r["id"], self.guild.raw.get("channels", []))]:
+        if self.guild and self.id not in [
+            *map(lambda r: r["id"], self.guild.raw.get("channels", []))
+        ]:
             if self.guild.raw.get("channels") is None:
                 self.guild.raw["channels"] = []
             self.guild.raw["channels"].append(self.raw)
@@ -316,13 +319,13 @@ class GuildMemberUpdate(GuildMember):
 
     @classmethod
     def create(
-            cls,
-            client: "Client",
-            resp: dict,
-            *,
-            user=None,
-            guild_id=None,
-            cache: bool = False,
+        cls,
+        client: "Client",
+        resp: dict,
+        *,
+        user=None,
+        guild_id=None,
+        cache: bool = False,
     ):
         return super().create(client, resp, user=user, guild_id=guild_id, cache=False)
 
@@ -341,7 +344,9 @@ class GuildRoleCreate(EventBase):
         super().__init__(client, resp)
         self.guild_id: Snowflake = Snowflake(resp["guild_id"])
         self.role: Role = Role.create(client, resp["role"], guild_id=self.guild_id)
-        if self.guild and self.role.id not in [*map(lambda r: r["id"], self.guild.raw["roles"])]:
+        if self.guild and self.role.id not in [
+            *map(lambda r: r["id"], self.guild.raw["roles"])
+        ]:
             self.guild.raw["roles"].append(self.role.raw)
             self.guild.roles.append(self.role)
 
@@ -421,7 +426,7 @@ class GuildScheduledEventUpdate(GuildScheduledEvent):
 
     @classmethod
     def create(
-            cls, client: "Client", resp: dict, **kwargs: typing.Any
+        cls, client: "Client", resp: dict, **kwargs: typing.Any
     ) -> GuildScheduledEvent:
         return GuildScheduledEvent(client, resp)
 

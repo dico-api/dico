@@ -205,7 +205,9 @@ class WebSocketClient:
         if resp.op == gateway.Opcodes.DISPATCH:
             if resp.t == "READY":
                 self.session_id = resp.d.get("session_id", self.session_id)
-                self.base_url = resp.d["resume_gateway_url"] + "?" + self.base_url.split("?")[-1]
+                self.base_url = (
+                    resp.d["resume_gateway_url"] + "?" + self.base_url.split("?")[-1]
+                )
             self.event_handler.client.dispatch("RAW", resp.raw)
             self.event_handler.dispatch_from_raw(resp.t, resp.d)
 
