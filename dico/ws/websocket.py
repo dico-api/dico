@@ -35,6 +35,7 @@ class WebSocketClient:
         self.ws: aiohttp.ClientWebSocketResponse = ws
         self.http: AsyncHTTPRequest = http
         self.base_url: str = base_url
+        self.reconnect_url: str = ""
         self.event_handler: EventHandler = event_handler
         logger_name = "dico.ws"
         if shard:
@@ -144,7 +145,10 @@ class WebSocketClient:
                 while True:
                     try:
                         self.ws = await self.http.session.ws_connect(
-                            self.base_url, **self.WS_KWARGS
+                            self.base_url
+                            if self._fresh_reconnecting
+                            else self.reconnect_url,
+                            **self.WS_KWARGS,
                         )
                         break
                     except:  # noqa
@@ -205,7 +209,7 @@ class WebSocketClient:
         if resp.op == gateway.Opcodes.DISPATCH:
             if resp.t == "READY":
                 self.session_id = resp.d.get("session_id", self.session_id)
-                self.base_url = (
+                self.reconnect_url = (
                     resp.d["resume_gateway_url"] + "?" + self.base_url.split("?")[-1]
                 )
             self.event_handler.client.dispatch("RAW", resp.raw)
