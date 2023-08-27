@@ -127,9 +127,9 @@ class SelectMenu(Component):
     def __init__(
         self,
         *,
-        component_type: typing.Union[int, "ComponentTypes"],
         custom_id: str,
         options: typing.List[typing.Union["SelectOption", dict]],
+        component_type: typing.Union[int, "ComponentTypes"] = ComponentTypes.STRING_SELECT,
         channel_types: typing.List[int] = None,
         placeholder: typing.Optional[str] = None,
         min_values: typing.Optional[int] = None,
