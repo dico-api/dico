@@ -23,7 +23,13 @@ class Component(CopyableObject):
             return ActionRow.create(resp)
         elif resp["type"] == ComponentTypes.BUTTON:
             return Button.create(resp)
-        elif resp["type"] == ComponentTypes.SELECT_MENU:
+        elif resp["type"] in (
+            ComponentTypes.STRING_SELECT,
+            ComponentTypes.USER_SELECT,
+            ComponentTypes.ROLE_SELECT,
+            ComponentTypes.MENTIONABLE_SELECT,
+            ComponentTypes.CHANNEL_SELECT,
+        ):
             return SelectMenu.create(resp)
         elif resp["type"] == ComponentTypes.TEXT_INPUT:
             if "style" not in resp:
@@ -129,7 +135,9 @@ class SelectMenu(Component):
         *,
         custom_id: str,
         options: typing.List[typing.Union["SelectOption", dict]],
-        component_type: typing.Union[int, "ComponentTypes"] = ComponentTypes.STRING_SELECT,
+        component_type: typing.Union[
+            int, "ComponentTypes"
+        ] = ComponentTypes.STRING_SELECT,
         channel_types: typing.List[int] = None,
         placeholder: typing.Optional[str] = None,
         min_values: typing.Optional[int] = None,
@@ -137,7 +145,7 @@ class SelectMenu(Component):
         disabled: typing.Optional[bool] = None,
         **kwargs
     ):
-        super().__init__(ComponentTypes(kwargs["type"]) if "type" in kwargs else ComponentTypes(int(component_type)))
+        super().__init__(kwargs.get("type", component_type))
         self.custom_id: str = custom_id
         self.options: typing.List[SelectOption] = [
             SelectOption.create(x) if isinstance(x, dict) else x for x in options
