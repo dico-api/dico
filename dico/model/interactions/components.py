@@ -1,6 +1,7 @@
 import typing
 
 from ...base.model import CopyableObject, TypeBase
+from ..channel import ChannelTypes
 from ..emoji import Emoji
 from ..snowflake import Snowflake
 
@@ -36,8 +37,12 @@ class Component(CopyableObject):
 class ComponentTypes(TypeBase):
     ACTION_ROW = 1
     BUTTON = 2
-    SELECT_MENU = 3
+    STRING_SELECT = 3
     TEXT_INPUT = 4
+    USER_SELECT = 5
+    ROLE_SELECT = 6
+    MENTIONABLE_SELECT = 7
+    CHANNEL_SELECT = 8
 
 
 class ActionRow(Component):
@@ -124,17 +129,21 @@ class SelectMenu(Component):
         *,
         custom_id: str,
         options: typing.List[typing.Union["SelectOption", dict]],
+        channel_types: typing.List[int] = None,
         placeholder: typing.Optional[str] = None,
         min_values: typing.Optional[int] = None,
         max_values: typing.Optional[int] = None,
         disabled: typing.Optional[bool] = None,
-        **_
-    ):  # Dummy.
+        **_  # Dummy.
+    ):
         super().__init__(ComponentTypes.SELECT_MENU)
         self.custom_id: str = custom_id
         self.options: typing.List[SelectOption] = [
             SelectOption.create(x) if isinstance(x, dict) else x for x in options
         ]
+        self.channel_types: typing.Optional[
+            typing.List[ChannelTypes]
+        ] = channel_types and [ChannelTypes(x) for x in channel_types]
         self.placeholder: typing.Optional[str] = placeholder
         self.min_values: typing.Optional[int] = min_values
         self.max_values: typing.Optional[int] = max_values
@@ -146,6 +155,8 @@ class SelectMenu(Component):
             ret["custom_id"] = self.custom_id
         if self.options is not None:
             ret["options"] = [x.to_dict() for x in self.options]
+        if self.channel_types is not None:
+            ret["channel_types"] = [int(x) for x in self.channel_types]
         if self.placeholder is not None:
             ret["placeholder"] = self.placeholder
         if self.min_values is not None:

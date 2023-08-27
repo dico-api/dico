@@ -21,9 +21,14 @@ class ApplicationCommand:
         self,
         name: str,
         description: str,
+        name_localizations: typing.Optional[typing.Dict[str, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[str, str]] = None,
         command_type: typing.Optional[typing.Union[int, "ApplicationCommandTypes"]] = 1,
         options: typing.Optional[typing.List["ApplicationCommandOption"]] = None,
+        default_member_permissions: typing.Optional[str] = None,
+        dm_permission: typing.Optional[bool] = None,
         default_permission: typing.Optional[bool] = True,
+        nsfw: typing.Optional[bool] = None,
         **resp
     ):
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
@@ -31,10 +36,24 @@ class ApplicationCommand:
         self.application_id: typing.Optional[Snowflake] = Snowflake.optional(
             resp.get("application_id")
         )
+        self.guild_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("guild_id")
+        )
         self.name: str = name
+        self.name_localizations: typing.Optional[
+            typing.Dict[str, str]
+        ] = name_localizations
         self.description: str = description
+        self.description_localizations: typing.Optional[
+            typing.Dict[str, str]
+        ] = description_localizations
         self.options: typing.List[ApplicationCommandOption] = options or []
+        self.default_member_permissions = default_member_permissions
+        self.dm_permission = dm_permission
         self.default_permission: bool = default_permission
+        self.nsfw: typing.Optional[bool] = nsfw
+        self.version: Snowflake = Snowflake(resp["version"])
+
         self.__command_creation = not resp
 
     def __int__(self) -> int:
@@ -46,9 +65,13 @@ class ApplicationCommand:
             "name": self.name,
             "description": self.description,
             "options": [x.to_dict() for x in self.options],
+            "default_member_permissions": self.default_member_permissions,
+            "dm_permission": self.dm_permission,
             "default_permission": self.default_permission,
             "type": int(self.type),
         }
+        if self.nsfw is not None:
+            resp["nsfw"] = self.nsfw
         if self.__command_creation:
             return resp
         resp["id"] = str(self.id)
@@ -76,6 +99,8 @@ class ApplicationCommandOption:
         option_type: typing.Union["ApplicationCommandOptionType", int],
         name: str,
         description: str,
+        name_localizations: typing.Optional[typing.Dict[str, str]] = None,
+        description_localizations: typing.Optional[typing.Dict[str, str]] = None,
         required: typing.Optional[bool] = None,
         choices: typing.Optional[typing.List["ApplicationCommandOptionChoice"]] = None,
         autocomplete: typing.Optional[bool] = None,
@@ -83,13 +108,23 @@ class ApplicationCommandOption:
         channel_types: typing.Optional[
             typing.List[typing.Union[int, ChannelTypes]]
         ] = None,
+        min_value: typing.Optional[typing.Union[int, float]] = None,
+        max_value: typing.Optional[typing.Union[int, float]] = None,
+        min_length: typing.Optional[int] = None,
+        max_length: typing.Optional[int] = None,
         **kw
     ):
         self.type: ApplicationCommandOptionType = ApplicationCommandOptionType(
             int(option_type)
         )
         self.name: str = name
+        self.name_localizations: typing.Optional[
+            typing.Dict[str, str]
+        ] = name_localizations
         self.description: str = description
+        self.description_localizations: typing.Optional[
+            typing.Dict[str, str]
+        ] = description_localizations
         self.required: typing.Optional[bool] = required
         self.choices: typing.Optional[
             typing.List[ApplicationCommandOptionChoice]
@@ -101,6 +136,10 @@ class ApplicationCommandOption:
             if channel_types is not None
             else channel_types
         )
+        self.min_value: typing.Optional[typing.Union[int, float]] = min_value
+        self.max_value: typing.Optional[typing.Union[int, float]] = max_value
+        self.min_length: typing.Optional[int] = min_length
+        self.max_length: typing.Optional[int] = max_length
 
     def to_dict(self) -> dict:
         ret = {
@@ -108,6 +147,10 @@ class ApplicationCommandOption:
             "name": self.name,
             "description": self.description,
         }
+        if self.name_localizations is not None:
+            ret["name_localizations"] = self.name_localizations
+        if self.description_localizations is not None:
+            ret["description_localizations"] = self.description_localizations
         if self.required is not None:
             ret["required"] = self.required
         if self.options is not None:
@@ -118,6 +161,14 @@ class ApplicationCommandOption:
             ret["choices"] = [x.to_dict() for x in self.choices]
         if self.channel_types is not None:
             ret["channel_types"] = [*map(int, self.channel_types)]
+        if self.min_value is not None:
+            ret["min_value"] = self.min_value
+        if self.max_value is not None:
+            ret["max_value"] = self.max_value
+        if self.min_length is not None:
+            ret["min_length"] = self.min_length
+        if self.max_length is not None:
+            ret["max_length"] = self.max_length
         return ret
 
     @classmethod
@@ -145,12 +196,24 @@ class ApplicationCommandOptionType(TypeBase):
 
 
 class ApplicationCommandOptionChoice:
-    def __init__(self, name: str, value: typing.Union[str, int, float], **kw):
+    def __init__(
+        self,
+        name: str,
+        value: typing.Union[str, int, float],
+        name_localizations: typing.Optional[typing.Dict[str, str]] = None,
+        **kw
+    ):
         self.name: str = name
+        self.name_localizations: typing.Optional[
+            typing.Dict[str, str]
+        ] = name_localizations
         self.value: typing.Union[str, int, float] = value
 
     def to_dict(self) -> dict:
-        return {"name": self.name, "value": self.value}
+        ret = {"name": self.name, "value": self.value}
+        if self.name_localizations is not None:
+            ret["name_localizations"] = self.name_localizations
+        return ret
 
     @classmethod
     def create(cls, resp):
@@ -207,6 +270,7 @@ class ApplicationCommandPermissions:
 class ApplicationCommandPermissionType(TypeBase):
     ROLE = 1
     USER = 2
+    CHANNEL = 3
 
 
 class ApplicationCommandInteractionDataOption:

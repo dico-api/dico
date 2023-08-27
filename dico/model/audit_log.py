@@ -3,6 +3,8 @@ import typing
 from ..base.model import TypeBase
 from .channel import Channel
 from .guild import Integration
+from .guild_scheduled_event import GuildScheduledEvent
+from .interactions import ApplicationCommand
 from .snowflake import Snowflake
 from .user import User
 from .webhook import Webhook
@@ -31,6 +33,14 @@ class AuditLog:
         ]
         self.threads: typing.List[Channel] = [
             Channel.create(client, x) for x in resp["threads"]
+        ]
+        self.application_commands: typing.List[ApplicationCommand] = [
+            ApplicationCommand.create(x) for x in resp["application_commands"]
+        ]
+        self.auto_moderation_rules = [x for x in resp["auto_moderation_rules"]]
+        self.guild_scheduled_events: typing.List[GuildScheduledEvent] = [
+            GuildScheduledEvent.create(client, x)
+            for x in resp["guild_scheduled_events"]
         ]
 
 
@@ -116,9 +126,22 @@ class AuditLogEvents(TypeBase):
     STICKER_UPDATE = 91
     STICKER_DELETE = 92
 
+    GUILD_SCHEDULED_EVENT_CREATE = 100
+    GUILD_SCHEDULED_EVENT_UPDATE = 101
+    GUILD_SCHEDULED_EVENT_DELETE = 102
+
     THREAD_CREATE = 110
     THREAD_UPDATE = 111
     THREAD_DELETE = 112
+
+    APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+
+    AUTO_MODERATION_RULE_CREATE = 140
+    AUTO_MODERATION_RULE_UPDATE = 141
+    AUTO_MODERATION_RULE_DELETE = 142
+    AUTO_MODERATION_BLOCK_MESSAGE = 143
+    AUTO_MODERATION_FLAG_TO_CHANNEL = 144
+    AUTO_MODERATION_USER_COMMUNICATION_DISABLED = 145
 
 
 class OptionalAuditEntryInfo:
@@ -137,6 +160,15 @@ class OptionalAuditEntryInfo:
         self.id: typing.Optional[Snowflake] = Snowflake.optional(resp.get("id"))
         self.type: typing.Optional[str] = resp.get("type")
         self.role_name: typing.Optional[str] = resp.get("role_name")
+        self.application_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("application_id")
+        )
+        self.auto_moderation_rule_name: typing.Optional[str] = resp.get(
+            "auto_moderation_rule_name"
+        )
+        self.auto_moderation_rule_trigger_type: typing.Optional[str] = resp.get(
+            "auto_moderation_rule_trigger_type"
+        )
 
     @property
     def channel(self) -> typing.Optional[Channel]:

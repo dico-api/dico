@@ -147,6 +147,9 @@ class Guild(DiscordObjectBase):
             for x in self.__guild_scheduled_events
         ]
         self.premium_progress_bar_enabled: bool = resp["premium_progress_bar_enabled"]
+        self.safety_alerts_channel_id: typing.Optional[Snowflake] = Snowflake.optional(
+            resp.get("safety_alerts_channel_id")
+        )
 
     def icon_url(
         self, *, extension: str = "webp", size: int = 1024
@@ -487,6 +490,8 @@ class SystemChannelFlags(FlagBase):
     SUPPRESS_PREMIUM_SUBSCRIPTIONS = 1 << 1
     SUPPRESS_GUILD_REMINDER_NOTIFICATIONS = 1 << 2
     SUPPRESS_JOIN_NOTIFICATION_REPLIES = 1 << 3
+    SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATIONS = 1 << 4
+    SUPPRESS_ROLE_SUBSCRIPTION_PURCHASE_NOTIFICATION_REPLIES = 1 << 5
 
 
 class GuildPreview:
@@ -642,7 +647,7 @@ class GuildMember:
     @property
     def mention(self) -> str:
         if self.user:
-            return f"<@!{self.user.id}>"
+            return f"<@{self.user.id}>"
 
     @property
     def permissions(self) -> typing.Optional[PermissionFlags]:
@@ -742,6 +747,7 @@ class Integration:
             if self.__application
             else self.__application
         )
+        self.scopes: typing.Optional[str] = resp.get("scopes")
 
     def __int__(self) -> int:
         return int(self.id)
@@ -831,3 +837,53 @@ class WelcomeScreenChannel:
             "emoji_id": str(self.emoji_id),
             "emoji_name": self.emoji_name,
         }
+
+
+class Onboarding:
+    RESPONSE = typing.Union["Onboarding", typing.Awaitable["Onboarding"]]
+
+    def __init__(self, client: "APIClient", resp: dict):
+        self.guild_id: Snowflake = Snowflake(resp["guild_id"])
+        self.prompts: typing.List["OnboardingPrompt"] = [
+            OnboardingPrompt(client, x) for x in resp["prompts"]
+        ]
+        self.default_channel_ids: typing.List[Snowflake] = [
+            Snowflake(x) for x in resp["default_channel_ids"]
+        ]
+        self.enabled: bool = resp["enabled"]
+        self.mode: "OnboardingMode" = OnboardingMode(resp["mode"])
+
+
+class OnboardingPrompt:
+    def __init__(self, client: "APIClient", resp: dict):
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.type: "PromptTypes" = PromptTypes(resp["type"])
+        self.options: typing.List["PromptOption"] = [
+            PromptOption(client, x) for x in resp["options"]
+        ]
+        self.title: str = resp["title"]
+        self.single_select: bool = resp["single_select"]
+        self.required: bool = resp["required"]
+        self.in_onboarding: bool = resp["in_onboarding"]
+
+
+class PromptOption:
+    def __init__(self, client: "APIClient", resp: dict):
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.channel_ids: typing.List[Snowflake] = [
+            Snowflake(x) for x in resp["channel_ids"]
+        ]
+        self.role_ids: typing.List[Snowflake] = [Snowflake(x) for x in resp["role_ids"]]
+        self.emoji: Emoji = Emoji(client, resp["emoji"])
+        self.title: str = resp["title"]
+        self.description: typing.Optional[str] = resp["description"]
+
+
+class OnboardingMode(TypeBase):
+    ONBOARDING_DEFAULT = 0
+    ONBOARDING_ADVANCED = 1
+
+
+class PromptTypes(TypeBase):
+    MULTIPLE_CHOICE = 0
+    DROPDOWN = 1

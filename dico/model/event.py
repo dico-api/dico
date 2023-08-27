@@ -4,12 +4,16 @@ import typing
 
 from ..base.model import EventBase
 from .application import Application
+from .audit_log import AuditLogEntry
 from .channel import Channel, Message, ThreadMember
 from .emoji import Emoji
 from .gateway import Activity
 from .guild import Guild, GuildMember, Integration
 from .guild_scheduled_event import GuildScheduledEvent
-from .interactions import Interaction  # , ApplicationCommand, ApplicationCommandOption
+from .interactions import (  # , ApplicationCommand, ApplicationCommandOption
+    GuildApplicationCommandPermissions,
+    Interaction,
+)
 from .invite import InviteTargetTypes
 from .permission import Role
 from .snowflake import Snowflake
@@ -68,6 +72,12 @@ ApplicationCommandDelete = ApplicationCommandCreate
 
 
 # TODO: refactor update/delete objects
+
+
+class ApplicationCommandPermissionsUpdate(GuildApplicationCommandPermissions):
+    @classmethod
+    def create(cls, client: "Client", resp: dict, **kwargs):
+        return cls(resp)
 
 
 class ChannelCreate(Channel):
@@ -230,6 +240,12 @@ class GuildDelete(GuildCreate):
     def __del__(self):
         if self.client.has_cache:
             self.client.cache.remove(self.id, self._cache_type)
+
+
+class GuildAuditLogEntryCreate(AuditLogEntry):
+    @classmethod
+    def create(cls, client, resp, **kwargs):
+        return cls(client, resp)
 
 
 class GuildBanAdd(EventBase):

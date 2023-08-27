@@ -1,5 +1,5 @@
-import typing
 import traceback
+import typing
 
 from .model.event import *
 from .utils import ensure_coro
@@ -33,6 +33,8 @@ class EventHandler:
             # "APPLICATION_COMMAND_CREATE": ApplicationCommandCreate,
             # "APPLICATION_COMMAND_UPDATE": ApplicationCommandUpdate,
             # "APPLICATION_COMMAND_DELETE": ApplicationCommandDelete,
+            "APPLICATION_COMMAND_PERMISSIONS_UPDATE": ApplicationCommandPermissionsUpdate,
+            # todo: auto moderation rule events
             "CHANNEL_CREATE": ChannelCreate,
             "CHANNEL_UPDATE": ChannelUpdate,
             "CHANNEL_DELETE": ChannelDelete,
@@ -46,6 +48,7 @@ class EventHandler:
             "GUILD_CREATE": GuildCreate,
             "GUILD_UPDATE": GuildUpdate,
             "GUILD_DELETE": GuildDelete,
+            "GUILD_AUDIT_LOG_ENTRY_CREATE": GuildAuditLogEntryCreate,
             "GUILD_BAN_ADD": GuildBanAdd,
             "GUILD_BAN_REMOVE": GuildBanRemove,
             "GUILD_EMOJIS_UPDATE": GuildEmojisUpdate,

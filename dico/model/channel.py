@@ -96,6 +96,26 @@ class Channel(DiscordObjectBase):
             resp.get("flags")
         )
         self.total_message_sent: Optional[int] = resp.get("total_message_sent")
+        self.available_tags: Optional[List[ForumTag]] = "available_tags" in resp and [
+            ForumTag(x) for x in resp["available_tags"]
+        ]
+        self.applied_tags: Optional[List[Snowflake]] = "applied_tags" in resp and [
+            Snowflake(x) for x in resp["applied_tags"]
+        ]
+        self.default_reaction_emoji: Optional[DefaultReaction] = resp.get(
+            "default_reaction_emoji"
+        ) and DefaultReaction(resp["default_reaction_emoji"])
+        self.default_thread_rate_limit_per_user: Optional[int] = resp.get(
+            "default_thread_rate_limit_per_user"
+        )
+        self.default_sort_order: Optional[SortOrderTypes] = resp.get(
+            "default_sort_order"
+        ) and SortOrderTypes(resp["default_sort_order"])
+        self.default_forum_layout: Optional[
+            ForumLayoutTypes
+        ] = "default_forum_layout" in resp and ForumLayoutTypes(
+            resp["default_forum_layout"]
+        )
 
         # if self.type.dm and self.
 
@@ -635,6 +655,18 @@ class VideoQualityModes(TypeBase):
 
 class ChannelFlags(FlagBase):
     PINNED = 1 << 1
+    REQUIRE_TAG = 1 << 4
+
+
+class SortOrderTypes(TypeBase):
+    LATEST_ACTIVITY = 0
+    CREATION_DATE = 1
+
+
+class ForumLayoutTypes(TypeBase):
+    NOT_SET = 0
+    LIST_VIEW = 1
+    GALLERY_VIEW = 2
 
 
 class SendOnlyChannel:
@@ -1257,6 +1289,21 @@ class ThreadMember:
     def create(cls, *args):
         """This is just a placeholder to prevent AttributeError."""
         return cls(*args)
+
+
+class DefaultReaction:
+    def __init__(self, resp: dict):
+        self.emoji_id: Optional[Snowflake] = Snowflake.optional(resp["emoji_id"])
+        self.emoji_name: Optional[str] = resp["emoji_name"]
+
+
+class ForumTag:
+    def __init__(self, resp: dict):
+        self.id: Snowflake = Snowflake(resp["id"])
+        self.name: str = resp["name"]
+        self.moderated: bool = resp["moderated"]
+        self.emoji_id: Optional[Snowflake] = Snowflake.optional(resp["emoji_id"])
+        self.emoji_name: Optional[str] = resp["emoji_name"]
 
 
 class Embed(CopyableObject):

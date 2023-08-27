@@ -12,6 +12,8 @@ from .model import (
     ApplicationCommandOption,
     ApplicationCommandPermissions,
     ApplicationCommandTypes,
+    ApplicationRoleConnection,
+    ApplicationRoleConnectionMetadata,
     Attachment,
     AuditLog,
     AuditLogEvents,
@@ -47,6 +49,8 @@ from .model import (
     ListThreadsResponse,
     Message,
     MessageReference,
+    Onboarding,
+    OnboardingMode,
     Overwrite,
     PermissionFlags,
     PrivacyLevel,
@@ -120,6 +124,32 @@ class APIClient:
         self.application: Optional[Application] = None
         self.application_id: Optional[Snowflake] = Snowflake.ensure_snowflake(
             application_id
+        )
+
+    # Application Role Connection Metadata
+
+    def request_application_role_connection_metadata_records(
+        self, application: Application.TYPING
+    ) -> ApplicationRoleConnectionMetadata.RESPONSE_AS_LIST:
+        resp = self.http.request_application_role_connection_metadata_records(
+            int(application)
+        )
+        if isinstance(resp, list):
+            return [ApplicationRoleConnectionMetadata(x) for x in resp]
+        return wrap_to_async(
+            ApplicationRoleConnectionMetadata, None, resp, as_create=False
+        )
+
+    def update_application_role_connection_metadata_records(
+        self, application: Application.TYPING, data: List[dict]
+    ) -> ApplicationRoleConnectionMetadata.RESPONSE_AS_LIST:
+        resp = self.http.update_application_role_connection_metadata_records(
+            int(application), data
+        )
+        if isinstance(resp, list):
+            return [ApplicationRoleConnectionMetadata(x) for x in resp]
+        return wrap_to_async(
+            ApplicationRoleConnectionMetadata, None, resp, as_create=False
         )
 
     # Audit Log
@@ -910,7 +940,8 @@ class APIClient:
         message: Optional[Message.TYPING] = None,
         *,
         name: str,
-        auto_archive_duration: int,
+        auto_archive_duration: Optional[int] = None,
+        rate_limit_per_user: Optional[int] = EmptyObject,
         thread_type: Union[ChannelTypes, int] = None,
         invitable: bool = None,
         reason: Optional[str] = None
@@ -925,6 +956,7 @@ class APIClient:
         :param message: Message to create thread from.
         :param str name: Name of the thread.
         :param int auto_archive_duration: When to archive thread in minutes.
+        :param rate_limit_per_user:
         :param thread_type: Type of thread.
         :type thread_type: Union[ChannelTypes, int]
         :param bool invitable: Whether this thread can be invitable.
@@ -932,8 +964,13 @@ class APIClient:
         :return: :class:`~.Channel`
         """
         channel = (
-            self.http.start_thread_with_message(
-                int(channel), int(message), name, auto_archive_duration, reason=reason
+            self.http.start_thread_from_message(
+                int(channel),
+                int(message),
+                name,
+                auto_archive_duration,
+                rate_limit_per_user,
+                reason=reason,
             )
             if message
             else self.http.start_thread_without_message(
@@ -942,8 +979,33 @@ class APIClient:
                 auto_archive_duration,
                 int(thread_type),
                 invitable,
+                rate_limit_per_user,
                 reason=reason,
             )
+        )
+        if isinstance(channel, dict):
+            channel = Channel.create(self, channel)
+        return wrap_to_async(Channel, self, channel)
+
+    def start_thread_in_forum_channel(
+        self,
+        channel: Channel.TYPING,
+        name: str,
+        message: dict,
+        auto_archive_duration: Optional[int] = None,
+        rate_limit_per_user: Optional[int] = EmptyObject,
+        applied_tags: Optional[List[Snowflake]] = None,
+        *,
+        reason: Optional[str] = None
+    ) -> Channel.RESPONSE:
+        channel = self.http.start_thread_in_forum_channel(
+            int(channel),
+            name,
+            message,
+            auto_archive_duration,
+            rate_limit_per_user,
+            applied_tags,
+            reason=reason,
         )
         if isinstance(channel, dict):
             channel = Channel.create(self, channel)
@@ -2134,6 +2196,33 @@ class APIClient:
             return WelcomeScreen(resp)
         return wrap_to_async(WelcomeScreen, None, resp, as_create=False)
 
+    def request_guild_onboarding(self, guild: Guild.TYPING) -> Onboarding.RESPONSE:
+        resp = self.http.request_guild_onboarding(int(guild))
+        if isinstance(resp, dict):
+            return Onboarding(self, resp)
+        return wrap_to_async(Onboarding, self, resp, as_create=False)
+
+    def modify_guild_onboarding(
+        self,
+        guild: Guild.TYPING,
+        prompts: List[dict],
+        default_channels: List[Channel.TYPING],
+        enabled: bool,
+        mode: Union[OnboardingMode, int],
+        reason: Optional[str] = None,
+    ) -> Onboarding.RESPONSE:
+        resp = self.http.modify_guild_onboarding(
+            int(guild),
+            prompts,
+            [str(int(x)) for x in default_channels],
+            enabled,
+            int(mode),
+            reason=reason,
+        )
+        if isinstance(resp, dict):
+            return Onboarding(self, resp)
+        return wrap_to_async(Onboarding, self, resp, as_create=False)
+
     def modify_user_voice_state(
         self,
         guild: Guild.TYPING,
@@ -2851,6 +2940,28 @@ class APIClient:
         if isinstance(resp, list):
             return [Connection(self, x) for x in resp]
         return wrap_to_async(Connection, self, resp)
+
+    def request_user_application_role_connections(
+        self, application: Application.TYPING
+    ) -> ApplicationRoleConnection.RESPONSE:
+        resp = self.http.request_user_application_role_connections(int(application))
+        if isinstance(resp, dict):
+            return ApplicationRoleConnection(resp)
+        return wrap_to_async(ApplicationRoleConnection, None, resp, as_create=False)
+
+    def update_user_application_role_connections(
+        self,
+        application: Application.TYPING,
+        platform_name: str = EmptyObject,
+        platform_username: str = EmptyObject,
+        metadata: dict = EmptyObject,
+    ) -> ApplicationRoleConnection.RESPONSE:
+        resp = self.http.update_user_application_role_connections(
+            int(application), platform_name, platform_username, metadata
+        )
+        if isinstance(resp, dict):
+            return ApplicationRoleConnection(resp)
+        return wrap_to_async(ApplicationRoleConnection, None, resp, as_create=False)
 
     # Voice
 

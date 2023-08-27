@@ -3,6 +3,7 @@ import warnings
 
 from ..base.model import DiscordObjectBase, FlagBase, TypeBase
 from ..utils import cdn_url
+from .application_role_connection_metadata import ApplicationRoleConnectionMetadata
 from .snowflake import Snowflake
 
 if typing.TYPE_CHECKING:
@@ -23,6 +24,7 @@ class User(DiscordObjectBase):
         super().__init__(client, resp)
         self.username: typing.Optional[str] = resp.get("username")
         self.discriminator: typing.Optional[str] = resp.get("discriminator")
+        self.global_name: typing.Optional[str] = resp.get("global_name")
         self.avatar: typing.Optional[str] = resp.get("avatar")
         self.bot: typing.Optional[bool] = resp.get("bot")
         self.system: typing.Optional[bool] = resp.get("system")
@@ -35,12 +37,17 @@ class User(DiscordObjectBase):
         self.flags: UserFlags = UserFlags.from_value(resp.get("flags", 0))
         self.premium_type: PremiumTypes = PremiumTypes(resp.get("premium_type", 0))
         self.public_flags: UserFlags = UserFlags.from_value(resp.get("public_flags", 0))
+        self.avatar_decoration: typing.Optional[str] = resp.get("avatar_decoration")
 
         # self.voice_state: typing.Optional["VoiceState"] = self.raw.get("voice_state")  # Filled later.
         self.dm_channel_id: typing.Optional[Snowflake] = None
 
     def __str__(self) -> str:
-        return f"{self.username}#{self.discriminator}"
+        return (
+            self.username
+            if self.discriminator == "0"
+            else f"{self.username}#{self.discriminator}"
+        )
 
     @property
     def mention(self) -> str:
@@ -71,6 +78,18 @@ class User(DiscordObjectBase):
             return cdn_url(
                 "banners/{user_id}",
                 image_hash=self.banner,
+                extension=extension,
+                size=size,
+                user_id=self.id,
+            )
+
+    def avatar_decoration_url(
+        self, *, extension: str = "webp", size: int = 1024
+    ) -> typing.Optional[str]:
+        if self.avatar_decoration:
+            return cdn_url(
+                "avatar-decorations/{user_id}",
+                image_hash=self.avatar_decoration,
                 extension=extension,
                 size=size,
                 user_id=self.id,
@@ -173,3 +192,16 @@ class Connection:
 class VisibilityTypes(TypeBase):
     NONE = 0
     EVERYONE = 1
+
+
+class ApplicationRoleConnection:
+    RESPONSE = typing.Union[
+        "ApplicationRoleConnection", typing.Awaitable["ApplicationRoleConnection"]
+    ]
+
+    def __init__(self, resp: dict):
+        self.platform_name: typing.Optional[str] = resp["platform_name"]
+        self.platform_username: typing.Optional[str] = resp["platform_username"]
+        self.metadata: ApplicationRoleConnectionMetadata = (
+            ApplicationRoleConnectionMetadata(resp["metadata"])
+        )

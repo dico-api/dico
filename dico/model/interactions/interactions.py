@@ -1,7 +1,7 @@
 import typing
 
 from ...base.model import FlagBase, TypeBase
-from ..channel import AllowedMentions, Channel, Embed, Message
+from ..channel import AllowedMentions, Attachment, Channel, Embed, Message
 from ..guild import GuildMember
 from ..permission import Role
 from ..snowflake import Snowflake
@@ -169,12 +169,25 @@ class ResolvedData:
             Snowflake(k): Message.create(client, v)
             for k, v in resp.get("messages", {}).items()
         }
+        self.attachments: typing.Dict[Snowflake, Attachment] = {
+            Snowflake(k): Attachment(client, v)
+            for k, v in resp.get("attachments", {}).items()
+        }
 
     def get(
         self, value: Snowflake.TYPING
-    ) -> typing.Optional[typing.Union[User, GuildMember, Role, Channel, Message]]:
+    ) -> typing.Optional[
+        typing.Union[User, GuildMember, Role, Channel, Message, Attachment]
+    ]:
         value = Snowflake.ensure_snowflake(value)
-        for x in [self.members, self.users, self.roles, self.channels, self.messages]:
+        for x in [
+            self.members,
+            self.users,
+            self.roles,
+            self.channels,
+            self.messages,
+            self.attachments,
+        ]:
             if value in x:
                 return x.get(value)
         return value

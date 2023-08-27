@@ -58,6 +58,9 @@ class Application:
             InstallParams
         ] = self.__install_params and InstallParams(self.__install_params)
         self.custom_install_url: typing.Optional[str] = resp.get("custom_install_url")
+        self.role_connections_verification_url: typing.Optional[str] = resp.get(
+            "role_connections_verification_url"
+        )
 
         self.client.application = self
         self.client.application_id = self.id
@@ -108,6 +111,9 @@ class ApplicationFlags(FlagBase):
     GATEWAY_GUILD_MEMBERS_LIMITED = 1 << 15
     VERIFICATION_PENDING_GUILD_LIMIT = 1 << 16
     EMBEDDED = 1 << 17
+    GATEWAY_MESSAGE_CONTENT = 1 << 18
+    GATEWAY_MESSAGE_CONTENT_LIMITED = 1 << 19
+    APPLICATION_COMMAND_BADGE = 1 << 23
 
 
 class InstallParams:

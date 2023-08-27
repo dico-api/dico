@@ -56,6 +56,20 @@ class HTTPRequestBase(ABC):
         """
         pass
 
+    # Application Role Connection Metadata
+
+    def request_application_role_connection_metadata_records(self, application_id):
+        return self.request(
+            f"/applications/{application_id}/role-connections/metadata", "GET"
+        )
+
+    def update_application_role_connection_metadata_records(
+        self, application_id, data: typing.List[dict]
+    ):
+        return self.request(
+            f"/applications/{application_id}/role-connections/metadata", "PUT", data
+        )
+
     # Audit Log Requests
 
     def request_guild_audit_log(
@@ -716,12 +730,13 @@ class HTTPRequestBase(ABC):
         """
         return self.request(f"/channels/{channel_id}/recipients/{user_id}", "DELETE")
 
-    def start_thread_with_message(
+    def start_thread_from_message(
         self,
         channel_id,
         message_id,
         name: str,
-        auto_archive_duration: int,
+        auto_archive_duration: int = None,
+        rate_limit_per_user: typing.Optional[int] = EmptyObject,
         reason: str = None,
     ) -> RESPONSE:
         """
@@ -731,9 +746,14 @@ class HTTPRequestBase(ABC):
         :param message_id: ID of the message to create thread.
         :param name: Name of the thread channel.
         :param auto_archive_duration: Duration in minute to automatically close after recent activity.
+        :param rate_limit_per_user:
         :param reason: Reason of the action.
         """
-        body = {"name": name, "auto_archive_duration": auto_archive_duration}
+        body = {"name": name}
+        if auto_archive_duration is not None:
+            body["auto_archive_duration"] = auto_archive_duration
+        if rate_limit_per_user is not EmptyObject:
+            body["rate_limit_per_user"] = rate_limit_per_user
         return self.request(
             f"/channels/{channel_id}/messages/{message_id}/threads",
             "POST",
@@ -746,9 +766,10 @@ class HTTPRequestBase(ABC):
         self,
         channel_id,
         name: str,
-        auto_archive_duration: int,
+        auto_archive_duration: typing.Optional[int] = None,
         thread_type: int = None,
         invitable: bool = None,
+        rate_limit_per_user: typing.Optional[int] = EmptyObject,
         reason: str = None,
     ) -> RESPONSE:
         """
@@ -759,13 +780,43 @@ class HTTPRequestBase(ABC):
         :param auto_archive_duration: Duration in minute to automatically close after recent activity.
         :param thread_type: Type of the thread.
         :param invitable: Whether this thread is invitable.
+        :param rate_limit_per_user:
         :param reason: Reason of the action.
         """
-        body = {"name": name, "auto_archive_duration": auto_archive_duration}
+        body = {"name": name}
+        if auto_archive_duration is not None:
+            body["auto_archive_duration"] = auto_archive_duration
+        if rate_limit_per_user is not EmptyObject:
+            body["rate_limit_per_user"] = rate_limit_per_user
         if thread_type is not None:
             body["type"] = thread_type
         if invitable is not None:
             body["invitable"] = invitable
+        return self.request(
+            f"/channels/{channel_id}/threads",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
+
+    def start_thread_in_forum_channel(
+        self,
+        channel_id,
+        name: str,
+        message: dict,
+        auto_archive_duration: typing.Optional[int] = None,
+        rate_limit_per_user: typing.Optional[int] = EmptyObject,
+        applied_tags: typing.List[str] = None,
+        reason: str = None,
+    ):
+        body = {"name": name, "message": message}
+        if auto_archive_duration is not None:
+            body["auto_archive_duration"] = auto_archive_duration
+        if rate_limit_per_user is not EmptyObject:
+            body["rate_limit_per_user"] = rate_limit_per_user
+        if applied_tags is not None:
+            body["applied_tags"] = applied_tags
         return self.request(
             f"/channels/{channel_id}/threads",
             "POST",
@@ -1790,6 +1841,33 @@ class HTTPRequestBase(ABC):
             reason_header=reason,
         )
 
+    def request_guild_onboarding(self, guild_id):
+        return self.request(f"/guilds/{guild_id}/onboarding", "GET")
+
+    def modify_guild_onboarding(
+        self,
+        guild_id,
+        prompts: list,
+        default_channel_ids: list,
+        enabled: bool,
+        mode: int,
+        reason: str = None,
+    ):
+        body = {
+            "prompts": prompts,
+            "default_channel_ids": default_channel_ids,
+            "enabled": enabled,
+            "mode": mode,
+            "reason": reason,
+        }
+        return self.request(
+            f"/guilds/{guild_id}/onboarding",
+            "PUT",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
+
     def modify_user_voice_state(
         self,
         guild_id,
@@ -2354,6 +2432,32 @@ class HTTPRequestBase(ABC):
         Sends get user connections request.
         """
         return self.request("/users/@me/connections", "GET")
+
+    def request_user_application_role_connections(self, application_id) -> RESPONSE:
+        return self.request(
+            f"/users/@me/connections/{application_id}/role-connection", "GET"
+        )
+
+    def update_user_application_role_connections(
+        self,
+        application_id,
+        platform_name: str = EmptyObject,
+        platform_username: str = EmptyObject,
+        metadata: dict = EmptyObject,
+    ) -> RESPONSE:
+        body = {}
+        if platform_name is not EmptyObject:
+            body["platform_name"] = platform_name
+        if platform_username is not EmptyObject:
+            body["platform_username"] = platform_username
+        if metadata is not EmptyObject:
+            body["metadata"] = metadata
+        return self.request(
+            f"/users/@me/connections/{application_id}/role-connection",
+            "PUT",
+            body,
+            is_json=True,
+        )
 
     # Voice Requests
 
