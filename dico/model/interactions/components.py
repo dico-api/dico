@@ -127,6 +127,7 @@ class SelectMenu(Component):
     def __init__(
         self,
         *,
+        component_type: typing.Union[int, "ComponentTypes"],
         custom_id: str,
         options: typing.List[typing.Union["SelectOption", dict]],
         channel_types: typing.List[int] = None,
@@ -134,9 +135,9 @@ class SelectMenu(Component):
         min_values: typing.Optional[int] = None,
         max_values: typing.Optional[int] = None,
         disabled: typing.Optional[bool] = None,
-        **_  # Dummy.
+        **kwargs
     ):
-        super().__init__(ComponentTypes.SELECT_MENU)
+        super().__init__(ComponentTypes(kwargs["type"]) if "type" in kwargs else ComponentTypes(int(component_type)))
         self.custom_id: str = custom_id
         self.options: typing.List[SelectOption] = [
             SelectOption.create(x) if isinstance(x, dict) else x for x in options
