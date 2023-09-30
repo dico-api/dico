@@ -68,6 +68,9 @@ from .model import (
     WelcomeScreen,
     WelcomeScreenChannel,
     WidgetStyle,
+    AutoModerationRule,
+    AutoModerationEventTypes,
+    TriggerTypes,
 )
 from .utils import from_emoji, to_image_data, wrap_to_async
 
@@ -185,6 +188,96 @@ class APIClient:
         if isinstance(resp, dict):
             return AuditLog(self, resp)
         return wrap_to_async(AuditLog, self, resp, as_create=False)
+
+    # Auto Moderation Requests
+
+    def list_auto_moderation_rule_for_guild(
+        self, guild: Guild.TYPING
+    ) -> AutoModerationRule.RESPONSE_AS_LIST:
+        resp = self.http.list_auto_moderation_rule_for_guild(int(guild))
+        if isinstance(resp, list):
+            return [AutoModerationRule(x) for x in resp]
+        return wrap_to_async(AutoModerationRule, None, resp, as_create=False)
+
+    def request_auto_moderation_rule(
+        self, guild: Guild.TYPING, auto_moderation_rule_id: Snowflake.TYPING
+    ) -> AutoModerationRule.RESPONSE:
+        resp = self.http.request_auto_moderation_rule(
+            int(guild), int(auto_moderation_rule_id)
+        )
+        if isinstance(resp, dict):
+            return AutoModerationRule(resp)
+        return wrap_to_async(AutoModerationRule, None, resp, as_create=False)
+
+    def create_auto_moderation_rule(
+        self,
+        guild: Guild.TYPING,
+        name: str,
+        event_type: Union[AutoModerationEventTypes, int],
+        trigger_type: Union[TriggerTypes, int],
+        actions: List[dict],
+        trigger_metadata: dict = None,
+        enabled: bool = None,
+        exempt_roles: List[Role.TYPING] = None,
+        exempt_channels: List[Channel.TYPING] = None,
+        reason: str = None,
+    ) -> AutoModerationRule.RESPONSE:
+        body = {
+            "name": name,
+            "event_type": int(event_type),
+            "trigger_type": int(trigger_type),
+            "actions": actions,
+        }
+        if trigger_metadata is not None:
+            body["trigger_metadata"] = trigger_metadata
+        if enabled is not None:
+            body["enabled"] = enabled
+        if exempt_roles is not None:
+            body["exempt_roles"] = [int(x) for x in exempt_roles]
+        if exempt_channels is not None:
+            body["exempt_channels"] = [int(x) for x in exempt_channels]
+        resp = self.http.create_auto_moderation_rule(int(guild), **body, reason=reason)
+        if isinstance(resp, dict):
+            return AutoModerationRule(resp)
+        return wrap_to_async(AutoModerationRule, None, resp, as_create=False)
+
+    def modify_auto_moderation_rule(
+        self,
+        guild: Guild.TYPING,
+        auto_moderation_rule_id: Snowflake.TYPING,
+        name: str = None,
+        event_type: Union[AutoModerationEventTypes, int] = None,
+        trigger_metadata: dict = None,
+        actions: List[dict] = None,
+        enabled: bool = None,
+        exempt_roles: List[Role.TYPING] = None,
+        exempt_channels: List[Channel.TYPING] = None,
+        reason: str = None,
+    ) -> AutoModerationRule.RESPONSE:
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if event_type is not None:
+            body["event_type"] = int(event_type)
+        if actions is not None:
+            body["actions"] = actions
+        if trigger_metadata is not None:
+            body["trigger_metadata"] = trigger_metadata
+        if enabled is not None:
+            body["enabled"] = enabled
+        if exempt_roles is not None:
+            body["exempt_roles"] = [int(x) for x in exempt_roles]
+        if exempt_channels is not None:
+            body["exempt_channels"] = [int(x) for x in exempt_channels]
+        resp = self.http.modify_auto_moderation_rule(int(guild), int(auto_moderation_rule_id), **body, reason=reason)
+        if isinstance(resp, dict):
+            return AutoModerationRule(resp)
+        return wrap_to_async(AutoModerationRule, None, resp, as_create=False)
+
+    def delete_auto_moderation_rule(
+        self, guild: Guild.TYPING, auto_moderation_rule_id: Snowflake.TYPING
+    ):
+        return self.http.delete_auto_moderation_rule(int(guild), int(auto_moderation_rule_id))
 
     # Channel
 
@@ -2952,9 +3045,9 @@ class APIClient:
     def update_user_application_role_connections(
         self,
         application: Application.TYPING,
-        platform_name: str = EmptyObject,
-        platform_username: str = EmptyObject,
-        metadata: dict = EmptyObject,
+        platform_name: str = None,
+        platform_username: str = None,
+        metadata: dict = None,
     ) -> ApplicationRoleConnection.RESPONSE:
         resp = self.http.update_user_application_role_connections(
             int(application), platform_name, platform_username, metadata

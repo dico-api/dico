@@ -58,14 +58,16 @@ class HTTPRequestBase(ABC):
 
     # Application Role Connection Metadata
 
-    def request_application_role_connection_metadata_records(self, application_id):
+    def request_application_role_connection_metadata_records(
+        self, application_id
+    ) -> RESPONSE:
         return self.request(
             f"/applications/{application_id}/role-connections/metadata", "GET"
         )
 
     def update_application_role_connection_metadata_records(
         self, application_id, data: typing.List[dict]
-    ):
+    ) -> RESPONSE:
         return self.request(
             f"/applications/{application_id}/role-connections/metadata", "PUT", data
         )
@@ -99,6 +101,95 @@ class HTTPRequestBase(ABC):
         if limit is not None:
             params["limit"] = limit
         return self.request(f"/guilds/{guild_id}/audit-logs", "GET", params=params)
+
+    # Auto Moderation Requests
+
+    def list_auto_moderation_rule_for_guild(self, guild_id) -> RESPONSE:
+        return self.request(f"/guilds/{guild_id}/auto-moderation/rules", "GET")
+
+    def request_auto_moderation_rule(
+        self, guild_id, auto_moderation_rule_id
+    ) -> RESPONSE:
+        return self.request(
+            f"/guilds/{guild_id}/auto-moderation/rules/{auto_moderation_rule_id}", "GET"
+        )
+
+    def create_auto_moderation_rule(
+        self,
+        guild_id,
+        name: str,
+        event_type: int,
+        trigger_type: int,
+        actions: list,
+        trigger_metadata: dict = None,
+        enabled: bool = None,
+        exempt_roles: list = None,
+        exempt_channels: list = None,
+        reason: str = None,
+    ) -> RESPONSE:
+        body = {
+            "name": name,
+            "event_type": event_type,
+            "trigger_type": trigger_type,
+            "actions": actions,
+        }
+        if trigger_metadata is not None:
+            body["trigger_metadata"] = trigger_metadata
+        if enabled is not None:
+            body["enabled"] = enabled
+        if exempt_roles is not None:
+            body["exempt_roles"] = exempt_roles
+        if exempt_channels is not None:
+            body["exempt_channels"] = exempt_channels
+        return self.request(
+            f"/guilds/{guild_id}/auto-moderation/rules",
+            "POST",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
+
+    def modify_auto_moderation_rule(
+        self,
+        guild_id,
+        auto_moderation_rule_id,
+        name: str = None,
+        event_type: int = None,
+        actions: list = None,
+        trigger_metadata: dict = None,
+        enabled: bool = None,
+        exempt_roles: list = None,
+        exempt_channels: list = None,
+        reason: str = None,
+    ) -> RESPONSE:
+        body = {}
+        if name is not None:
+            body["name"] = name
+        if event_type is not None:
+            body["event_type"] = event_type
+        if actions is not None:
+            body["actions"] = actions
+        if trigger_metadata is not None:
+            body["trigger_metadata"] = trigger_metadata
+        if enabled is not None:
+            body["enabled"] = enabled
+        if exempt_roles is not None:
+            body["exempt_roles"] = exempt_roles
+        if exempt_channels is not None:
+            body["exempt_channels"] = exempt_channels
+        return self.request(
+            f"/guilds/{guild_id}/auto-moderation/rules/{auto_moderation_rule_id}",
+            "PATCH",
+            body,
+            is_json=True,
+            reason_header=reason,
+        )
+
+    def delete_auto_moderation_rule(self, guild_id, auto_moderation_rule_id):
+        return self.request(
+            f"/guilds/{guild_id}/auto-moderation/rules/{auto_moderation_rule_id}",
+            "DELETE",
+        )
 
     # Channel Requests
 
@@ -809,7 +900,7 @@ class HTTPRequestBase(ABC):
         rate_limit_per_user: typing.Optional[int] = EmptyObject,
         applied_tags: typing.List[str] = None,
         reason: str = None,
-    ):
+    ) -> RESPONSE:
         body = {"name": name, "message": message}
         if auto_archive_duration is not None:
             body["auto_archive_duration"] = auto_archive_duration
@@ -1841,7 +1932,7 @@ class HTTPRequestBase(ABC):
             reason_header=reason,
         )
 
-    def request_guild_onboarding(self, guild_id):
+    def request_guild_onboarding(self, guild_id) -> RESPONSE:
         return self.request(f"/guilds/{guild_id}/onboarding", "GET")
 
     def modify_guild_onboarding(
@@ -1852,7 +1943,7 @@ class HTTPRequestBase(ABC):
         enabled: bool,
         mode: int,
         reason: str = None,
-    ):
+    ) -> RESPONSE:
         body = {
             "prompts": prompts,
             "default_channel_ids": default_channel_ids,
@@ -1960,7 +2051,7 @@ class HTTPRequestBase(ABC):
 
     def request_guild_scheduled_event(
         self, guild_id, guild_scheduled_event_id, with_user_count: bool = None
-    ):
+    ) -> RESPONSE:
         """
         Sends get guild scheduled event request.
 
@@ -1990,7 +2081,7 @@ class HTTPRequestBase(ABC):
         description: str = None,
         entity_type: int = None,
         status: int = None,
-    ):
+    ) -> RESPONSE:
         """
         Sends modify guild scheduled event request.
 
@@ -2051,7 +2142,7 @@ class HTTPRequestBase(ABC):
         with_member: bool = None,
         before: str = None,
         after: str = None,
-    ):
+    ) -> RESPONSE:
         """
         Sends get guild scheduled event users request.
 
@@ -2441,16 +2532,16 @@ class HTTPRequestBase(ABC):
     def update_user_application_role_connections(
         self,
         application_id,
-        platform_name: str = EmptyObject,
-        platform_username: str = EmptyObject,
-        metadata: dict = EmptyObject,
+        platform_name: str = None,
+        platform_username: str = None,
+        metadata: dict = None,
     ) -> RESPONSE:
         body = {}
-        if platform_name is not EmptyObject:
+        if platform_name is not None:
             body["platform_name"] = platform_name
-        if platform_username is not EmptyObject:
+        if platform_username is not None:
             body["platform_username"] = platform_username
-        if metadata is not EmptyObject:
+        if metadata is not None:
             body["metadata"] = metadata
         return self.request(
             f"/users/@me/connections/{application_id}/role-connection",
