@@ -52,7 +52,7 @@ class ApplicationCommand:
         self.dm_permission = dm_permission
         self.default_permission: bool = default_permission
         self.nsfw: typing.Optional[bool] = nsfw
-        self.version: Snowflake = Snowflake(resp["version"])
+        self.version: Snowflake = Snowflake.optional(resp.get("version"))
 
         self.__command_creation = not resp
 
