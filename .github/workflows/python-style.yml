@@ -8,10 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Python 3.7
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.7'
 
@@ -19,4 +19,6 @@ jobs:
         run: pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Check Style
-        run: black --check dico
+        run: |
+            black --check dico
+            isort -c --profile=black dico

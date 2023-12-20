@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Awaitable
+from typing import Awaitable, List, Optional, Union
 
 from ..base.model import TypeBase
 from .snowflake import Snowflake

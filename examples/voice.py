@@ -1,6 +1,6 @@
 import re
-import dico
 
+import dico
 
 client = dico.Client("YOUR_BOT_TOKEN")
 client.on_ready = lambda ready: print(f"Bot ready, with {len(ready.guilds)} guilds.")

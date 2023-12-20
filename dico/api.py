@@ -17,6 +17,8 @@ from .model import (
     Attachment,
     AuditLog,
     AuditLogEvents,
+    AutoModerationEventTypes,
+    AutoModerationRule,
     Ban,
     Channel,
     ChannelTypes,
@@ -60,6 +62,7 @@ from .model import (
     Sticker,
     SystemChannelFlags,
     ThreadMember,
+    TriggerTypes,
     User,
     VerificationLevel,
     VideoQualityModes,
@@ -68,9 +71,6 @@ from .model import (
     WelcomeScreen,
     WelcomeScreenChannel,
     WidgetStyle,
-    AutoModerationRule,
-    AutoModerationEventTypes,
-    TriggerTypes,
 )
 from .utils import from_emoji, to_image_data, wrap_to_async
 
@@ -269,7 +269,9 @@ class APIClient:
             body["exempt_roles"] = [int(x) for x in exempt_roles]
         if exempt_channels is not None:
             body["exempt_channels"] = [int(x) for x in exempt_channels]
-        resp = self.http.modify_auto_moderation_rule(int(guild), int(auto_moderation_rule_id), **body, reason=reason)
+        resp = self.http.modify_auto_moderation_rule(
+            int(guild), int(auto_moderation_rule_id), **body, reason=reason
+        )
         if isinstance(resp, dict):
             return AutoModerationRule(resp)
         return wrap_to_async(AutoModerationRule, None, resp, as_create=False)
@@ -277,7 +279,9 @@ class APIClient:
     def delete_auto_moderation_rule(
         self, guild: Guild.TYPING, auto_moderation_rule_id: Snowflake.TYPING
     ):
-        return self.http.delete_auto_moderation_rule(int(guild), int(auto_moderation_rule_id))
+        return self.http.delete_auto_moderation_rule(
+            int(guild), int(auto_moderation_rule_id)
+        )
 
     # Channel
 

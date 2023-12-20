@@ -1,3 +1,4 @@
 sphinx
 sphinx-press-theme
-black
+black==23.10.1
+isort==5.13.2
