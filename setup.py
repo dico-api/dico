@@ -13,7 +13,7 @@ setuptools.setup(
     name="dico-api",
     version="0.0.38",
     author="eunwoo1104",
-    author_email="sions04@naver.com",
+    author_email="choi@eunwoo.dev",
     description="Yet another Discord API wrapper for Python.",
     long_description=long_description,
     long_description_content_type="text/markdown",

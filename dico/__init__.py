@@ -2,7 +2,7 @@
 dico
 ~~~~~~~~~~~~~~~~~~~~~~~~
 Yet another Discord API wrapper for Python.
-:copyright: (c) 2021 dico-api
+:copyright: (c) 2021-present dico-api
 :license: MIT
 """
 
@@ -22,3 +22,6 @@ from .model.event import *
 from .model.gateway import Intents, Activity, ActivityTypes
 from .model.interactions import *
 """
+
+# TODO: clean up those imports
+# TODO: try to find better way to sync versions between init and setup
